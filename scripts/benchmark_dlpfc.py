@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import multiprocessing as mp
 import os
 import sys
 import time
@@ -100,7 +101,7 @@ def main():
             for sd in args.seeds for s in args.slices for m in args.methods
             if (m, s, sd) not in done]
     print(f"{len(jobs)} runs to do ({len(done)} already done)", flush=True)
-    with ProcessPoolExecutor(args.workers) as ex, open(args.out, "a") as f:
+    with ProcessPoolExecutor(args.workers, mp_context=mp.get_context("spawn")) as ex, open(args.out, "a") as f:
         futs = {ex.submit(run_one, j): j for j in jobs}
         for fut in as_completed(futs):
             r = fut.result()
