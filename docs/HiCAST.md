@@ -82,3 +82,120 @@ the multi-hop GCN and L_sim matter, and that two blocks beat three.
     but the code samples one random node per edge.
 12. **Reproducibility.** Clustering requires an R installation (rpy2 + mclust) with
     hard-coded Windows paths in `configure_r_environment`.
+
+---
+
+## 4. HiCAST: the proposed method
+
+HiCAST (**Hi**erarchical **C**ontrastive **A**daptive **S**patial **T**ranscriptomics)
+keeps HiSTaR's core idea, a hierarchical graph VAE whose levels see increasingly large
+neighbourhoods. It changes the parts listed in §3. Code: `hicast/model.py`.
+
+| # | Component | Addresses | Implementation |
+|---|---|---|---|
+| 1 | **Expression-aware graph** | weakness 2 | each spatial KNN edge is weighted by `exp(-(1-cos(x_i,x_j))/τ)` on the top-30 PCs, so edges crossing domain boundaries count less (optional refinement from the learned embedding) |
+| 2 | **Node-adaptive hop attention** | 6 | `H_k = Â^k XW`, k = 0..K (K = 3 / 6 per level); each spot computes its own softmax attention over hops |
+| 3 | **Correct hierarchical VAE** | 7, 8 | proper KL with warm-up; masking (token *replaces* 30 % of spots) only during training; posterior means at inference, so embeddings are deterministic |
+| 4 | **Spatial local–global contrast** | (new signal) | DGI-style: a bilinear discriminator separates (spot, neighbourhood-summary) pairs from feature-shuffled corruptions |
+| 5 | **Attention fusion of levels** | 9 | per-spot attention over projected F0, F1, F2 instead of concatenation |
+| 6 | **Learned loss balancing** | 1 | homoscedastic-uncertainty weighting (Kendall et al., 2018) over the reconstruction, cross-level, local–global and edge losses; no λ grid search |
+| 7 | **Batch-aware** | 10 | cross-slice mutual-nearest-neighbour edges + batch-conditional decoder |
+| 8 | **Scalable, R-free** | 11, 12 | edge loss with negative sampling, O(\|E\|); clustering with an EEE Gaussian mixture (scikit-learn `tied`), which is the same model as mclust EEE |
+
+The cross-level term ended up being **HiSTaR's own cosine loss**. The two InfoNCE
+replacements I designed (instance-level and neighbourhood-level) were both worse in
+tuning (§5.2).
+
+## 5. Experiments
+
+### 5.1 Protocol
+* **Data:** all 12 human DLPFC Visium slices (spatialLIBD), layer annotations from
+  `layer_guess_reordered`; 7 domains (5 for donor 2).
+* **Identical preprocessing for every method:** seurat_v3 HVGs (2000) → normalise →
+  log1p → scale → PCA (200). Graph: spatial KNN, k = 6.
+* **Identical clustering:** EEE Gaussian mixture on the embedding; ARI/NMI/FMS on
+  annotated spots.
+* **Baseline:** port of the official HiSTaR code with the published defaults
+  (λ_sim = 0.3, 200 + 200 epochs). Also tested: the same model with deterministic
+  inference (weakness 7 fixed).
+* **No test-set tuning:** all HiCAST design choices were made on **donor 1 only**
+  (151507–151510, seed 0). Donors 2 and 3 were used only for the final run.
+* 3 seeds per (method, slice), CPU only (1 thread per run).
+
+Reproduce: `python scripts/benchmark_dlpfc.py --data <DLPFC dir> --seeds 0 1 2 --methods histar histar_deterministic hicast`
+
+### 5.2 Tuning on donor 1 (seed 0, mean ARI over 4 slices)
+
+| Variant | Mean ARI |
+|---|---|
+| HiSTaR | 0.492 |
+| HiCAST, first design (instance InfoNCE cross-level loss) | 0.40 (151673 only, 2 seeds) |
+| HiCAST, neighbourhood InfoNCE cross-level loss | 0.384 |
+| … neighbourhood InfoNCE + initial-value-scaled losses | 0.415 |
+| **HiCAST, cosine cross-level loss (final)** | **0.528** (seed 1: 0.492) |
+| final − adaptive hops | 0.532 |
+| final − graph refinement | 0.528 |
+| final − expression-aware graph | 0.496 |
+| final, 300 epochs | 0.511 |
+| final − cross-level loss | 0.447 |
+| final, hand-set loss weights | 0.446 |
+| final, initial-value-scaled losses | 0.373 |
+| final − attention fusion (concatenate) | 0.398 |
+| final − local–global contrast | 0.365 |
+
+Raw runs: `results/tuning/*.jsonl`.
+
+### 5.3 Final benchmark (12 slices × 3 seeds)
+
+| Method | Median ARI | Mean ARI | Median NMI | Median FMS | Donor 1 ARI (tuning) | Donors 2+3 ARI (held out) | Train time / slice |
+|---|---|---|---|---|---|---|---|
+| HiSTaR (official code) | **0.509** | **0.491** | **0.648** | **0.608** | 0.478 | **0.497** | 116 s |
+| HiSTaR, deterministic eval | 0.502 | 0.487 | 0.654 | 0.594 | 0.472 | 0.495 | 117 s |
+| **HiCAST** | 0.493 | 0.482 | 0.634 | 0.594 | **0.504** | 0.470 | 248 s |
+
+Per slice (mean ± std of ARI over 3 seeds; best in bold):
+
+| Slice | Donor | HiSTaR | HiSTaR (deterministic eval) | HiCAST |
+|---|---|---|---|---|
+| 151507 | 1 (tuning) | 0.477 ± 0.042 | 0.469 ± 0.052 | **0.574** ± 0.042 |
+| 151508 | 1 (tuning) | **0.504** ± 0.028 | 0.453 ± 0.009 | 0.485 ± 0.027 |
+| 151509 | 1 (tuning) | 0.414 ± 0.072 | 0.438 ± 0.061 | **0.498** ± 0.018 |
+| 151510 | 1 (tuning) | 0.515 ± 0.036 | **0.529** ± 0.033 | 0.459 ± 0.064 |
+| 151669 | 2 | **0.411** ± 0.022 | 0.329 ± 0.068 | 0.352 ± 0.032 |
+| 151670 | 2 | **0.364** ± 0.052 | 0.364 ± 0.051 | 0.265 ± 0.066 |
+| 151671 | 2 | **0.590** ± 0.003 | 0.589 ± 0.003 | 0.529 ± 0.021 |
+| 151672 | 2 | 0.525 ± 0.056 | **0.568** ± 0.128 | 0.565 ± 0.009 |
+| 151673 | 3 | 0.535 ± 0.027 | **0.555** ± 0.008 | 0.543 ± 0.022 |
+| 151674 | 3 | 0.541 ± 0.052 | 0.549 ± 0.052 | **0.630** ± 0.057 |
+| 151675 | 3 | **0.523** ± 0.040 | 0.516 ± 0.036 | 0.487 ± 0.035 |
+| 151676 | 3 | **0.489** ± 0.035 | 0.488 ± 0.034 | 0.392 ± 0.032 |
+
+HiCAST beats HiSTaR on 5 of 12 slices; Wilcoxon signed-rank p = 0.68. Raw runs:
+`results/dlpfc_main.jsonl`.
+
+## 6. Conclusions and lessons
+
+1. **HiCAST does not improve on HiSTaR.** The donor-1 gain (+0.026 ARI) did not
+   carry over to new donors (−0.027), and the overall difference is not significant.
+   The gain was partly tuning noise: seed-to-seed standard deviation is 0.02–0.07
+   ARI for both methods.
+2. **HiSTaR's published numbers did not reproduce here.** With the official code
+   and defaults, median ARI was 0.509 (paper: 0.65), and 0.535 on #151673 (paper:
+   0.718). Likely causes are per-slice λ_sim tuning (Table S6), the unpublished
+   preprocessing script, mclust in R versus the equivalent GMM here, and seed
+   selection. The ranking against other methods in the paper should be read with
+   this in mind.
+3. **The inference-masking bug does not matter for accuracy** (0.502 vs 0.509), but
+   fixing it makes results reproducible from run to run.
+4. **What did help, from the donor-1 ablations:** the local–global contrastive loss
+   (+0.16), attention fusion of levels (+0.13), learned loss balancing (+0.08 over
+   hand-set weights) and the expression-aware graph (+0.03), all *within* the HiCAST
+   architecture.
+5. **What did not help:** InfoNCE cross-level losses (they push apart spots that
+   belong to the same domain), per-spot hop attention, and graph refinement.
+6. **Promising next steps:** (a) select HiCAST's configuration by an unsupervised
+   criterion (e.g. silhouette or embedding stability) per slice instead of one
+   donor; (b) ensemble over seeds (consensus clustering), since variance is as large
+   as the method differences; (c) a count-based (NB/ZINB) decoder on HVGs; (d)
+   evaluate the batch-integration path (MNN edges + conditional decoder) on
+   multi-slice data, which is implemented but not yet benchmarked.
