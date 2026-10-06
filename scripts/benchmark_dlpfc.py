@@ -73,7 +73,7 @@ def main():
     ap.add_argument("--cache", default=None)
     ap.add_argument("--slices", nargs="+", default=DLPFC_SLICES)
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
-    ap.add_argument("--methods", nargs="+", default=["histar", "hicast"])
+    ap.add_argument("--methods", nargs="*", default=["histar", "hicast"])
     ap.add_argument("--config", nargs="*", default=[], help="NAME=JSON HiCAST/HiSTaR variants")
     ap.add_argument("--workers", type=int, default=4)
     args = ap.parse_args()
