@@ -137,8 +137,11 @@ class HiCAST:
     """Train HiCAST on one slice (or several slices with ``batch``) and return embeddings.
 
     Ablation switches (all True = full model):
-      expr_graph, refine_graph, adaptive_hops, xlevel, local_global, fusion,
+      expr_graph, refine_graph, adaptive_hops, local_global, fusion,
       auto_balance, batch_decoder
+    ``xlevel_mode`` selects the cross-level objective: "cos" (HiSTaR's cosine
+    similarity, the tuned default), "nbr" (neighbourhood InfoNCE), "spot"
+    (instance InfoNCE) or "none". Both InfoNCE variants were worse in tuning.
     """
 
     LOSSES = ("rec", "xlevel", "lg", "edge")
@@ -146,9 +149,9 @@ class HiCAST:
     def __init__(self, X, coords, batch=None, k=6, epochs=600, lr=1e-3, weight_decay=1e-4,
                  hops=(3, 6), z_dim=32, out_dim=32, beta_kl=1e-3, mask_rate=0.3,
                  refine_at=(0.5,), refine_mix=0.5, mnn_k=3, n_contrast=2048, tau=0.5,
-                 xlevel_mode="nbr", balance="kendall", device="cpu", seed=0, verbose=False,
+                 xlevel_mode="cos", balance="kendall", device="cpu", seed=0, verbose=False,
                  **ablation):
-        self.opts = dict(expr_graph=True, refine_graph=True, adaptive_hops=True, xlevel=True,
+        self.opts = dict(expr_graph=True, refine_graph=False, adaptive_hops=True,
                          local_global=True, fusion=True, auto_balance=True, batch_decoder=True)
         unknown = set(ablation) - set(self.opts)
         if unknown:
@@ -219,13 +222,15 @@ class HiCAST:
         idx = torch.randperm(n, device=self.device)[: self.n_contrast]
         if self.xlevel_mode == "none":
             L["xlevel"] = z.new_zeros(())
-        elif not self.opts["xlevel"]:        # HiSTaR's cosine similarity loss
+        elif self.xlevel_mode == "cos":      # HiSTaR's cosine similarity loss
             L["xlevel"] = -F.cosine_similarity(z1, z2, dim=1).mean()
         elif self.xlevel_mode == "spot":     # instance-level InfoNCE (same spot = positive)
             L["xlevel"] = info_nce(m.head1(z1[idx]), m.head2(z2[idx]), self.tau)
-        else:                                # neighbourhood InfoNCE: fine spot <-> smoothed coarse context
+        elif self.xlevel_mode == "nbr":      # neighbourhood InfoNCE: fine spot <-> smoothed coarse context
             ctx = torch.sparse.mm(self.adj, z2)
             L["xlevel"] = info_nce(m.head1(z1[idx]), m.head2(ctx[idx]), self.tau)
+        else:
+            raise ValueError(f"unknown xlevel_mode {self.xlevel_mode!r}")
 
         if self.opts["local_global"]:
             perm = torch.randperm(n, device=self.device)
@@ -282,7 +287,7 @@ class HiCAST:
             opt.step()
             if self.verbose and (ep % 100 == 0 or ep == self.epochs - 1):
                 print(ep, f"{loss.item():.4f}", {k: round(v.item(), 4) for k, v in L.items()})
-            self.history.append({k: float(v) for k, v in L.items()})
+            self.history.append({k: v.item() for k, v in L.items()})
         return self
 
     @torch.no_grad()
