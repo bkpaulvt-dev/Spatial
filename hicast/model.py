@@ -217,7 +217,9 @@ class HiCAST:
         L = {"rec": sce(x_hat[mask], self.X[mask]) + 0.1 * F.mse_loss(x_hat, self.X)}
 
         idx = torch.randperm(n, device=self.device)[: self.n_contrast]
-        if not self.opts["xlevel"]:          # HiSTaR's cosine similarity loss
+        if self.xlevel_mode == "none":
+            L["xlevel"] = z.new_zeros(())
+        elif not self.opts["xlevel"]:        # HiSTaR's cosine similarity loss
             L["xlevel"] = -F.cosine_similarity(z1, z2, dim=1).mean()
         elif self.xlevel_mode == "spot":     # instance-level InfoNCE (same spot = positive)
             L["xlevel"] = info_nce(m.head1(z1[idx]), m.head2(z2[idx]), self.tau)
@@ -258,7 +260,7 @@ class HiCAST:
             tot = sum(L[k] / self.L0[k] for k in self.LOSSES)
         elif self.opts["auto_balance"]:
             tot = sum(torch.exp(-self.log_vars[i]) * L[k] + self.log_vars[i]
-                      for i, k in enumerate(self.LOSSES))
+                      for i, k in enumerate(self.LOSSES) if L[k].requires_grad)
         else:
             tot = 10 * L["rec"] + 0.3 * L["xlevel"] + L["lg"] + 0.1 * L["edge"]
         return tot + beta * kl
