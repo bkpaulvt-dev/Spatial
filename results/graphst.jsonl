@@ -1,0 +1,6 @@
+{"dataset": "starmap", "slice": "20180417_BZ5_control", "seed": 0, "time": 22.389666080474854, "method": "graphst", "ARI": 0.25642436638576976, "NMI": 0.381825340724418}
+{"dataset": "starmap", "slice": "20180417_BZ5_control", "seed": 0, "time": 22.389666080474854, "method": "graphst_refined", "ARI": 0.28248742898046286, "NMI": 0.4683691587037396}
+{"dataset": "starmap", "slice": "20180417_BZ5_control", "seed": 0, "time": 22.389666080474854, "method": "graphst+robust", "ARI": 0.3897535137527451, "NMI": 0.48272899843603295}
+{"dataset": "starmap", "slice": "20180419_BZ9_control", "seed": 0, "time": 22.957860469818115, "method": "graphst", "ARI": 0.3909240172190937, "NMI": 0.3962850905820372}
+{"dataset": "starmap", "slice": "20180419_BZ9_control", "seed": 0, "time": 22.957860469818115, "method": "graphst_refined", "ARI": 0.5334545628814611, "NMI": 0.5460901566456507}
+{"dataset": "starmap", "slice": "20180419_BZ9_control", "seed": 0, "time": 22.957860469818115, "method": "graphst+robust", "ARI": 0.44465353145773595, "NMI": 0.42047784328275706}
