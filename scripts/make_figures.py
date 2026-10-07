@@ -177,3 +177,26 @@ handles = [plt.Line2D([], [], marker="o", ls="", color=cmap(i), ms=5, label=l.re
 fig.legend(handles=handles, ncol=7, frameon=False, loc="lower center", bbox_to_anchor=(0.5, -0.05), fontsize=8)
 fig.savefig(f"{FIG}/fig5_spatial_151673.png"); plt.close(fig)
 print("figures written")
+
+# ---- Fig 7: clustering lottery on fixed embeddings ----
+if os.path.exists(R("clustering_lottery.jsonl")):
+    Lt = [json.loads(l) for l in open(R("clustering_lottery.jsonl"))]
+    fig, axs = plt.subplots(2, 1, figsize=(7.2, 4.4), sharex=True, sharey=True)
+    for ax, m, t in [(axs[0], "histar", "HiSTaR embedding (one training run per slice)"),
+                     (axs[1], "anisost", "AnisoST embedding (deterministic)")]:
+        for r in Lt:
+            if r["method"] != m: continue
+            i = slices.index(r["slice"]); a = [f["ARI"] for f in r["fits"]]
+            ax.plot([i, i], [min(a), max(a)], color=GRID, lw=6, solid_capstyle="round", zorder=1)
+            ax.scatter(np.full(len(a), i), a, s=9, color=GRAY, zorder=2, linewidths=0)
+            ax.scatter(i, r["ARI_bestll"], s=46, color=BLUE, edgecolor="white", lw=1, zorder=3)
+            ax.scatter(i, r["ARI_standard3"], s=46, facecolor="none", edgecolor=INK, lw=1.2, zorder=4)
+        ax.set_title(t, fontsize=8.5, color=INK, loc="left"); ax.set_ylabel("ARI")
+        for xv in (3.5, 7.5): ax.axvline(xv, color=GRID, lw=1)
+    axs[1].set_xticks(range(len(slices)), slices, rotation=45)
+    h = [plt.Line2D([], [], marker="o", ls="", color=GRAY, ms=4, label="Single-start GMM fit (20 per slice)"),
+         plt.Line2D([], [], marker="o", ls="", color=BLUE, ms=6, label="Best log-likelihood of the 20"),
+         plt.Line2D([], [], marker="o", ls="", mfc="none", mec=INK, ms=6, label="Standard 3-start fit")]
+    fig.legend(handles=h, ncol=3, frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.03), fontsize=7.5)
+    fig.savefig(f"{FIG}/fig7_clustering_lottery.png"); plt.close(fig)
+    print("fig7 written")
