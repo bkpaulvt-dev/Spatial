@@ -9,3 +9,5 @@ paper/*.bbl
 paper/*.blg
 paper/*.out
 results/emb/
+paper/build.log
+paper/last.log

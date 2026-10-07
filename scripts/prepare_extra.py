@@ -1,6 +1,6 @@
 """Prepare the STARmap (mouse mPFC) and MERFISH (mouse hypothalamus) sections with domain labels.
 
-Source: the BASS-Analysis repository (Li & Zhou, Nat. Biotechnol. 2022), which packages
+Source: the BASS-Analysis repository (Li & Zhou, Genome Biol. 2022), which packages
 STARmap (Wang et al., Science 2018; 3 sections, 166 genes, layers L1, L2/3, L5, L6) and
 MERFISH animal 1 (Moffitt et al., Science 2018; Bregma -0.04 to -0.24, 155 genes,
 8 annotated regions). Fetch and convert (needs R):
