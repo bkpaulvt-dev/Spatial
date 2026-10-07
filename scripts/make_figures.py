@@ -18,10 +18,22 @@ plt.rcParams.update({"font.size": 9, "axes.edgecolor": INK2, "axes.labelcolor": 
                      "savefig.dpi": 300, "savefig.bbox": "tight", "font.family": "DejaVu Sans"})
 
 a = pd.read_json(R("anisost_main.jsonl"), lines=True); b = pd.read_json(R("dlpfc_main.jsonl"), lines=True)
-d = pd.concat([a, b], ignore_index=True); d["slice"] = d["slice"].astype(str)
+parts = [a, b]
+if os.path.exists(R("baselines.jsonl")):
+    parts.append(pd.read_json(R("baselines.jsonl"), lines=True).drop(columns="job"))
+d = pd.concat(parts, ignore_index=True); d["slice"] = d["slice"].astype(str)
+HAS_BASE = len(parts) == 3
 NAMES = {"anisost": "AnisoST (ours)", "linear_diffusion": "Linear diffusion + robust GMM",
          "anisost_single_gmm": "AnisoST, single-start GMM", "histar": "HiSTaR",
-         "histar_deterministic": "HiSTaR (deterministic eval)", "hicast": "HiCAST", "pca_gmm": "PCA + GMM (non-spatial)"}
+         "histar_deterministic": "HiSTaR (deterministic eval)", "hicast": "HiCAST", "pca_gmm": "PCA + GMM (non-spatial)",
+         "histar_rerun": "HiSTaR (re-run)", "histar+robust": "HiSTaR + robust GMM",
+         "banksy_l0.2": "BANKSY λ=0.2", "banksy_l0.2+robust": "BANKSY λ=0.2 + robust GMM",
+         "banksy_l0.8": "BANKSY λ=0.8", "banksy_l0.8+robust": "BANKSY λ=0.8 + robust GMM",
+         "spagcn": "SpaGCN", "spagcn_refined": "SpaGCN (refined)"}
+TABLE = ["anisost", "linear_diffusion", "anisost_single_gmm", "histar", "histar_deterministic", "hicast", "pca_gmm"]
+if HAS_BASE:
+    TABLE[3:3] = ["banksy_l0.2+robust", "banksy_l0.2", "banksy_l0.8+robust", "banksy_l0.8",
+                  "histar+robust", "spagcn_refined", "spagcn"]
 donor = lambda s: 1 if s < "151600" else (2 if s < "151673" else 3)
 slices = sorted(d.slice.unique())
 P = d.groupby(["method", "slice"]).ARI.mean().unstack(0)
@@ -29,7 +41,7 @@ P = d.groupby(["method", "slice"]).ARI.mean().unstack(0)
 # ---- Table 1 (markdown) ----
 lines = ["| Method | Median ARI | Mean ARI | Mean ARI donor 1 (tuning) | Mean ARI donors 2+3 (held out) | Median NMI | Seed SD | Δ vs AnisoST (Wilcoxon p) | Time / slice |",
          "|---|---|---|---|---|---|---|---|---|"]
-for m in ["anisost", "linear_diffusion", "anisost_single_gmm", "histar", "histar_deterministic", "hicast", "pca_gmm"]:
+for m in TABLE:
     x = d[d.method == m]; held = x[x.slice.map(donor) > 1]; tun = x[x.slice.map(donor) == 1]
     sd = x.groupby("slice").ARI.std().mean()
     if m == "anisost": cmp = "—"
@@ -37,12 +49,13 @@ for m in ["anisost", "linear_diffusion", "anisost_single_gmm", "histar", "histar
         diff = P[m] - P["anisost"]; cmp = f"{diff.mean():+.3f} (p = {wilcoxon(P['anisost'], P[m]).pvalue:.3f})"
     lines.append(f"| {NAMES[m]} | {x.ARI.median():.3f} | {x.ARI.mean():.3f} | {tun.ARI.mean():.3f} | {held.ARI.mean():.3f} | "
                  f"{x.NMI.median():.3f} | {sd:.3f} | {cmp} | {x.time.median():.1f} s |")
-per = ["| Slice | Donor | AnisoST | Linear diff. | HiSTaR | HiCAST | PCA+GMM |", "|---|---|---|---|---|---|---|"]
+PER = ["anisost", "linear_diffusion", "histar", "hicast", "pca_gmm"] + (["banksy_l0.2+robust", "spagcn_refined"] if HAS_BASE else [])
+per = ["| Slice | Donor | " + " | ".join(NAMES[m] for m in PER) + " |", "|---" * (len(PER) + 2) + "|"]
 S = d.groupby(["method", "slice"]).ARI.agg(["mean", "std"])
 for s in slices:
     row = [s, str(donor(s))]
-    best = max(P.loc[s, m] for m in ["anisost", "linear_diffusion", "histar", "hicast", "pca_gmm"])
-    for m in ["anisost", "linear_diffusion", "histar", "hicast", "pca_gmm"]:
+    best = max(P.loc[s, m] for m in PER)
+    for m in PER:
         mu, sd = S.loc[(m, s)]; t = f"{mu:.3f} ± {sd:.3f}"
         row.append(f"**{t}**" if np.isclose(mu, best) else t)
     per.append("| " + " | ".join(row) + " |")
@@ -78,6 +91,26 @@ for i, m in enumerate(order):
 ax.set_yticks(range(len(order)), [NAMES[m] for m in order]); ax.set_xlabel("Mean ARI over 12 slices (95% bootstrap CI)")
 ax.set_xlim(0, 0.7); ax.grid(axis="y", visible=False)
 fig.savefig(f"{FIG}/fig2_ablation.png"); plt.close(fig)
+
+# ---- Fig 6: clustering-matched comparison (standard 3-start vs 20-start GMM) ----
+if HAS_BASE:
+    pairs = [("PCA (non-spatial)", None, "pca_gmm"), ("HiSTaR", "histar_rerun", "histar+robust"),
+             ("BANKSY λ=0.8", "banksy_l0.8", "banksy_l0.8+robust"), ("BANKSY λ=0.2", "banksy_l0.2", "banksy_l0.2+robust"),
+             ("AnisoST", "anisost_single_gmm", "anisost")]
+    fig, ax = plt.subplots(figsize=(5.2, 2.4))
+    for i, (lab, m0, m1) in enumerate(pairs):
+        v1 = P[m1].mean()
+        if m0:
+            v0 = P[m0].mean(); ax.scatter(v0, i, color=GRAY, s=40, zorder=3)
+            ax.plot([v0, v1], [i, i], color=GRAY, lw=1.5)
+        if True:
+            ax.scatter(v1, i, color=BLUE, s=40, zorder=3)
+            ax.text(v1 + 0.006, i, f"{v1:.3f}", va="center", fontsize=8, color=INK)
+    ax.set_yticks(range(len(pairs)), [p[0] for p in pairs]); ax.set_xlabel("Mean ARI over 12 slices")
+    ax.scatter([], [], color=GRAY, label="Standard GMM (3 starts)"); ax.scatter([], [], color=BLUE, label="Robust GMM (20 starts, best likelihood)")
+    ax.legend(frameon=False, loc="lower center", bbox_to_anchor=(0.4, 1.0), ncol=2, fontsize=7.5)
+    ax.grid(axis="y", visible=False)
+    fig.savefig(f"{FIG}/fig6_clustering_matched.png"); plt.close(fig)
 
 # ---- Fig 3: sensitivity sweep ----
 if os.path.exists(R("anisost_sweep.jsonl")):
