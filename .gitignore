@@ -8,3 +8,4 @@ paper/*.log
 paper/*.bbl
 paper/*.blg
 paper/*.out
+results/emb/
