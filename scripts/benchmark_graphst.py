@@ -81,6 +81,7 @@ def main():
     ap.add_argument("--out", default=os.path.join(ROOT, "results", "graphst.jsonl"))
     ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
     ap.add_argument("--datasets", nargs="+", default=["dlpfc", "starmap", "merfish"])
+    ap.add_argument("--slices", nargs="*", default=None, help="restrict to these section ids")
     ap.add_argument("--workers", type=int, default=4)
     a = ap.parse_args()
     os.makedirs(os.path.join(ROOT, "results", "emb"), exist_ok=True)
@@ -88,7 +89,8 @@ def main():
     done = set()
     if os.path.exists(a.out):
         done = {(r["dataset"], r["slice"], r["seed"]) for r in map(json.loads, open(a.out))}
-    jobs = [(ds, s, sd, a.data) for sd in a.seeds for ds in a.datasets for s in secs[ds] if (ds, s, sd) not in done]
+    jobs = [(ds, s, sd, a.data) for sd in a.seeds for ds in a.datasets for s in secs[ds]
+            if (ds, s, sd) not in done and (a.slices is None or s in a.slices)]
     print(f"{len(jobs)} jobs", flush=True)
     with ProcessPoolExecutor(a.workers, mp_context=mp.get_context("spawn")) as ex, open(a.out, "a") as f:
         futs = {ex.submit(run, j): j for j in jobs}
