@@ -78,7 +78,18 @@ clustering step itself. We ask: (1) do HiSTaR's published DLPFC results reproduc
 official code; (2) on a \emph{fixed} embedding, how much does ARI change with the initialisation of
 the mixture model, and with perturbations that leave the data essentially unchanged (spot order,
 negligible noise) under R mclust; (3) does selecting fits by likelihood help; and (4) do encoders
-still differ once every embedding is clustered the same way, across three technologies?
+still differ once every embedding is clustered the same way, across three technologies? The study design is summarised in
+Fig.~\ref{fig:overview}.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{fig0_overview.pdf}
+\caption{Study design. \textbf{a}--\textbf{d}: data, methods, clustering protocols and evaluation.
+\textbf{e}: a real example of the clustering lottery. One fixed HiSTaR embedding of DLPFC section
+151669 was clustered with the same tied-covariance Gaussian mixture from two different random
+starts; only the initialisation differs, yet ARI is 0.23 in one run and 0.67 in the other.}
+\label{fig:overview}
+\end{figure*}
 
 \section{Materials and methods}
 
