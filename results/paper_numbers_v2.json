@@ -7,6 +7,9 @@
    "banksy_l0.2+robust": 0.518,
    "banksy_l0.8": 0.494,
    "banksy_l0.8+robust": 0.518,
+   "graphst": 0.514,
+   "graphst+robust": 0.531,
+   "graphst_refined": 0.548,
    "histar": 0.491,
    "histar+robust": 0.544,
    "linear_diffusion": 0.558,
@@ -55,6 +58,9 @@
    "banksy_l0.2+robust": 0.04,
    "banksy_l0.8": 0.067,
    "banksy_l0.8+robust": 0.046,
+   "graphst": NaN,
+   "graphst+robust": NaN,
+   "graphst_refined": NaN,
    "histar": 0.047,
    "histar+robust": 0.067,
    "linear_diffusion": 0.007,
@@ -103,6 +109,9 @@
    "banksy_l0.2+robust": 5.4,
    "banksy_l0.8": 5.4,
    "banksy_l0.8+robust": 5.4,
+   "graphst": 1376.1,
+   "graphst+robust": 1376.1,
+   "graphst_refined": 1376.1,
    "histar": 64.9,
    "histar+robust": 64.9,
    "linear_diffusion": 3.0,
@@ -159,18 +168,18 @@
    "p_holm": 0.005
   },
   "linear_diffusion_vs_graphst": {
-   "delta": 0.273,
-   "wins": 8,
-   "n": 8,
-   "p": 0.0078,
-   "p_holm": 0.0469
+   "delta": 0.135,
+   "wins": 14,
+   "n": 20,
+   "p": 0.0027,
+   "p_holm": 0.0163
   },
   "linear_diffusion_vs_graphst+robust": {
-   "delta": 0.235,
-   "wins": 8,
-   "n": 8,
-   "p": 0.0078,
-   "p_holm": 0.0469
+   "delta": 0.11,
+   "wins": 16,
+   "n": 20,
+   "p": 0.0027,
+   "p_holm": 0.0163
   },
   "linear_diffusion_vs_banksy_l0.8+robust": {
    "delta": 0.048,
@@ -221,11 +230,12 @@
    }
   },
   "graphst": {
-   "delta": 0.038,
-   "wins": 5,
-   "n": 8,
-   "p": 0.3125,
+   "delta": 0.025,
+   "wins": 13,
+   "n": 20,
+   "p": 0.114,
    "per_dataset": {
+    "dlpfc": 0.017,
     "starmap": 0.096,
     "merfish": 0.003
    }
@@ -274,6 +284,15 @@
    "median_rho": 0.482,
    "n": 12.0
   },
+  "dlpfc/graphst": {
+   "mean_range": 0.128,
+   "max_range": 0.292,
+   "mean_single": 0.511,
+   "mean_oracle": 0.567,
+   "mean_best_ll": 0.531,
+   "median_rho": 0.36,
+   "n": 12.0
+  },
   "dlpfc/histar": {
    "mean_range": 0.211,
    "max_range": 0.439,
@@ -290,6 +309,15 @@
    "mean_oracle": 0.433,
    "mean_best_ll": 0.36,
    "median_rho": -0.363,
+   "n": 5.0
+  },
+  "merfish/graphst": {
+   "mean_range": 0.027,
+   "max_range": 0.044,
+   "mean_single": 0.242,
+   "mean_oracle": 0.256,
+   "mean_best_ll": 0.242,
+   "median_rho": -0.041,
    "n": 5.0
   },
   "merfish/histar": {
@@ -310,6 +338,15 @@
    "median_rho": 0.465,
    "n": 3.0
   },
+  "starmap/graphst": {
+   "mean_range": 0.062,
+   "max_range": 0.11,
+   "mean_single": 0.446,
+   "mean_oracle": 0.492,
+   "mean_best_ll": 0.481,
+   "median_rho": 0.235,
+   "n": 3.0
+  },
   "starmap/histar": {
    "mean_range": 0.41,
    "max_range": 0.542,
@@ -321,10 +358,10 @@
   }
  },
  "lottery_all": {
-  "mean_range": 0.213,
+  "mean_range": 0.173,
   "max_range": 0.542,
-  "oracle_minus_single": 0.102,
-  "n_embeddings": 40
+  "oracle_minus_single": 0.083,
+  "n_embeddings": 60
  },
  "mclust": {
   "dlpfc/anisost/jitter1pct": {
@@ -337,6 +374,18 @@
    "mean_range": 0.141,
    "max_range": 0.281,
    "frac_runs_dARI_gt_0.05": 0.433,
+   "n_sections": 12
+  },
+  "dlpfc/graphst/jitter1pct": {
+   "mean_range": 0.106,
+   "max_range": 0.324,
+   "frac_runs_dARI_gt_0.05": 0.108,
+   "n_sections": 12
+  },
+  "dlpfc/graphst/permute": {
+   "mean_range": 0.104,
+   "max_range": 0.259,
+   "frac_runs_dARI_gt_0.05": 0.108,
    "n_sections": 12
   },
   "dlpfc/histar/jitter1pct": {
@@ -363,6 +412,18 @@
    "frac_runs_dARI_gt_0.05": 0.5,
    "n_sections": 5
   },
+  "merfish/graphst/jitter1pct": {
+   "mean_range": 0.061,
+   "max_range": 0.088,
+   "frac_runs_dARI_gt_0.05": 0.1,
+   "n_sections": 5
+  },
+  "merfish/graphst/permute": {
+   "mean_range": 0.057,
+   "max_range": 0.072,
+   "frac_runs_dARI_gt_0.05": 0.06,
+   "n_sections": 5
+  },
   "merfish/histar/jitter1pct": {
    "mean_range": 0.103,
    "max_range": 0.147,
@@ -387,6 +448,18 @@
    "frac_runs_dARI_gt_0.05": 0.0,
    "n_sections": 3
   },
+  "starmap/graphst/jitter1pct": {
+   "mean_range": 0.212,
+   "max_range": 0.254,
+   "frac_runs_dARI_gt_0.05": 0.667,
+   "n_sections": 3
+  },
+  "starmap/graphst/permute": {
+   "mean_range": 0.0,
+   "max_range": 0.0,
+   "frac_runs_dARI_gt_0.05": 0.0,
+   "n_sections": 3
+  },
   "starmap/histar/jitter1pct": {
    "mean_range": 0.389,
    "max_range": 0.528,
@@ -401,9 +474,9 @@
   }
  },
  "mclust_vs_sklearn": {
-  "frac_mclust_ll_ge_best20": 0.5,
-  "mean_ARI_mclust": 0.39,
-  "mean_ARI_best20": 0.517,
-  "n": 40
+  "frac_mclust_ll_ge_best20": 0.417,
+  "mean_ARI_mclust": 0.402,
+  "mean_ARI_best20": 0.495,
+  "n": 60
  }
 }

@@ -37,9 +37,8 @@ encoder and how much to this final clustering step is rarely measured.\\
 \textbf{Results:} We evaluated two graph deep-learning methods (HiSTaR, GraphST), BANKSY,
 SpaGCN and training-free graph-diffusion baselines on 20 annotated sections from three
 technologies (10x Visium, STARmap, MERFISH), with three seeds each. With its official code,
-HiSTaR reached a median ARI of 0.51 on DLPFC instead of the reported 0.65. On 40 fixed
-embeddings, refitting the same mixture model from different random starts changed ARI by 0.21 on
-average and by up to 0.54; selecting the best of 20 fits by ARI would inflate results by 0.10.
+HiSTaR reached a median ARI of 0.51 on DLPFC instead of the reported 0.65. On 60 fixed embeddings, refitting the same mixture model from different random starts changed ARI by
+0.17 on average and by up to 0.54; selecting the best of 20 fits by ARI would inflate results by 0.08.
 R mclust is deterministic for a given input, but merely permuting the order of the spots changed
 its ARI by up to 0.29, and adding noise at 1\% of the feature scale by up to 0.53. Selecting fits
 by likelihood did not resolve this: likelihood and ARI were negatively correlated on MERFISH.
@@ -154,12 +153,14 @@ step alone produces differences of this size. \todo{Report the outcome of contac
 
 \subsection{On a fixed embedding, the clustering step alone moves ARI by up to 0.54}
 Figure~\ref{fig:lottery} shows the ARI of 20 single-start fits of the same mixture model on each
-fixed embedding. Across the 40 HiSTaR and AnisoST embeddings, the ARI range within an embedding
-was 0.21 on average and reached 0.54 (HiSTaR, STARmap). Ranges were largest on STARmap (0.25--0.41
-on average), intermediate on DLPFC (0.21--0.23) and smallest on MERFISH (0.11--0.15). The best of
-the 20 fits by ARI exceeded the average single fit by 0.10: choosing a clustering run by its
-agreement with the labels, explicitly or by trying a few seeds, would inflate a reported result by
-about as much as the gap between most published methods. \todo{Add GraphST lottery numbers.}
+fixed embedding. Across the 60 HiSTaR, GraphST and AnisoST embeddings, the ARI range within an
+embedding was 0.17 on average and reached 0.54 (HiSTaR, STARmap). The size of the effect depended
+on the embedding: average ranges were 0.21--0.23 for HiSTaR and AnisoST on DLPFC, 0.25--0.41 on
+STARmap and 0.11--0.15 on MERFISH, whereas GraphST's 20-dimensional PCA embeddings were more stable
+(0.13 on DLPFC, 0.06 on STARmap, 0.03 on MERFISH). The best of the 20 fits by ARI exceeded the
+average single fit by 0.08: choosing a clustering run by its agreement with the labels, explicitly
+or by trying a few seeds, would inflate a reported result by about as much as the gap between most
+published methods.
 
 \begin{figure*}[t]
 \centering
@@ -174,12 +175,14 @@ log-likelihood (label-free). Open circle: R mclust with default settings on the 
 mclust initialises EM by model-based hierarchical agglomeration, so one call on a fixed embedding
 always returns the same partition. That partition, however, depended on details that carry no
 information (Fig.~\ref{fig:mclust}). Randomly permuting the order of the spots changed ARI by
-0.11--0.14 on average within an embedding on DLPFC (up to 0.29) and by 0.09--0.14 on MERFISH; on
-DLPFC, 22--43\% of the permutations moved ARI by more than 0.05. Adding noise at 1\% of each
+0.11--0.14 on average within an embedding on DLPFC (up to 0.29) and by 0.09--0.14 on MERFISH; on DLPFC, 22--43\% of the permutations moved ARI by more than 0.05 for HiSTaR and AnisoST, and
+11\% for GraphST. Adding noise at 1\% of each
 feature's standard deviation had similar effects, and on STARmap changed the ARI of HiSTaR
 embeddings by 0.39 on average (up to 0.53). On all three STARmap sections mclust's default fit was
 degenerate for the AnisoST embedding, with one cluster holding about 95\% of the cells and the
-others only 8--31 cells each (ARI 0.00--0.06), a failure the random-start fits did not show.
+others only 8--31 cells each (ARI 0.00--0.06), a failure the random-start fits did not show. Over all 60 embeddings, mclust's default fit had
+a lower mean ARI (0.40) than the best-likelihood fit of 20 random starts (0.50) and reached a
+log-likelihood at least as high in only 42\% of cases.
 
 \begin{figure*}[t]
 \centering
@@ -193,8 +196,8 @@ deviation (blue); 10 perturbations per section and embedding.}
 \subsection{Choosing fits by likelihood is not a remedy}
 A natural fix is to run many starts and keep the most likely fit. It helped some embeddings and
 not others. Across all 20 sections, it raised HiSTaR's mean ARI by 0.053 (14/20 sections,
-$p=0.004$) but did not change BANKSY $\lambda=0.8$ (+0.003, 9/20, $p=0.68$; negative on STARmap and
-MERFISH). The reason is visible in Fig.~\ref{fig:lottery}: likelihood and ARI were positively
+$p=0.004$) and GraphST's by 0.025 (13/20, $p=0.11$), and did not change BANKSY $\lambda=0.8$
+(+0.003, 9/20, $p=0.68$; negative on STARmap and MERFISH). The reason is visible in Fig.~\ref{fig:lottery}: likelihood and ARI were positively
 related on DLPFC and STARmap (median Spearman $\rho$ 0.22--0.53) but negatively on MERFISH
 ($-0.36$ to $-0.57$), where the best-fitting mixture separates cell types rather than anatomical
 regions. Better optimisation of the mixture model is therefore not the same as better domains.
@@ -203,13 +206,17 @@ regions. Better optimisation of the mixture model is therefore not the same as b
 Table~\ref{tab:main} and Fig.~\ref{fig:matched} compare all methods under both protocols.
 Linear graph diffusion had the highest or near-highest mean ARI on all three datasets (DLPFC
 0.558, STARmap 0.705, MERFISH 0.497). Over the 20 sections it outperformed HiSTaR with standard
-clustering (+0.126, 17/20 sections, Holm-adjusted $p=0.005$), SpaGCN (+0.234, 20/20, $p<0.001$) and
-\todo{GraphST over all 20 sections, after the DLPFC runs finish}; differences to HiSTaR with robust
+clustering (+0.126, 17/20 sections, Holm-adjusted $p=0.005$), GraphST with its own mclust clustering (+0.135, 14/20, adjusted $p=0.016$) and with robust
+clustering (+0.110, 16/20, adjusted $p=0.016$), and SpaGCN (+0.234, 20/20, $p<0.001$). Even with its
+label refinement, GraphST did not reach linear diffusion on any dataset (DLPFC 0.548, STARmap
+0.550, MERFISH 0.366). Differences to HiSTaR with robust
 clustering (+0.074, 14/20, adjusted $p=0.069$) and to BANKSY $\lambda=0.8$ (+0.048 to +0.051,
 adjusted $p=0.069$) were not significant after correction. The ranking of the deep methods relative
 to the baselines changed with the clustering protocol (Fig.~\ref{fig:matched}). The deep methods
 were also the least stable: HiSTaR's seed-to-seed standard deviation of ARI was 0.047 on DLPFC and
-0.18 on STARmap, against 0.003--0.04 for the training-free baselines.
+0.18 on STARmap, against 0.003--0.04 for the training-free baselines, and they were the slowest
+(median 23~min per DLPFC section for GraphST and 1--2~min for HiSTaR on one CPU thread, against
+3~s for linear diffusion).
 
 \begin{table*}[t]
 \centering
@@ -239,8 +246,7 @@ edge-preserving variant; the simpler linear diffusion was the more robust baseli
 
 \section{Discussion}
 The final clustering step of spatial domain methods is a substantial and under-reported source of
-variance. On fixed embeddings from three technologies, random initialisation alone spanned 0.2 ARI
-on average, and the R implementation used by most published methods changed its answer when the
+variance. On fixed embeddings from three technologies, random initialisation alone spanned 0.17 ARI on average, and the R implementation used by most published methods changed its answer when the
 spots were merely reordered. Better likelihood did not reliably mean better domains, and under
 matched clustering a training-free diffusion baseline was not outperformed by the deep encoders we
 tested. These results agree with recent large benchmarks
