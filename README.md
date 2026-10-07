@@ -11,13 +11,15 @@ Spatial-domain identification for spatial transcriptomics.
   fusion of levels, learned loss balancing, optional batch-aware graph and decoder.
 * **`scripts/benchmark_dlpfc.py`**: resumable, parallel benchmark (methods × slices × seeds).
 
-## New: AnisoST (training-free) — `docs/AnisoST.md`
+## New: AnisoST and a clustering-matched benchmark — `docs/AnisoST.md`
 
-Edge-preserving (Perona–Malik) diffusion on the spatial graph + likelihood-selected Gaussian
-mixture clustering. No training, ~3 s per slice on one CPU core. On 12 DLPFC slices × 3 seeds
-(tuned on donor 1 only), **mean ARI 0.551 vs 0.491 for HiSTaR (p = 0.012) and 0.482 for HiCAST
-(p = 0.005)**, with half the seed variance. Ablations show that most of the gain comes from graph
-smoothing and robust clustering; anisotropy specifically improves accuracy at layer boundaries.
+AnisoST: edge-preserving (Perona–Malik) diffusion on the spatial graph + a 20-start Gaussian
+mixture. No training, ~3 s per slice on one CPU core, mean ARI 0.551 on 12 DLPFC slices × 3 seeds.
+Under the standard single-fit clustering it beats HiSTaR, HiCAST, BANKSY and SpaGCN. **But when
+every method gets the same 20-start clustering, HiSTaR (0.544) and BANKSY (0.518) are statistically
+tied with it** (SpaGCN stays worse). The main finding is that the clustering step alone moves
+HiSTaR by +0.053 ARI, as much as typical published method gaps. AnisoST matches the deep
+models at 20–70× lower cost and with lower seed variance.
 
 ```python
 from anisost import AnisoST
