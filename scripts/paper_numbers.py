@@ -8,7 +8,8 @@ R = lambda f: os.path.join(ROOT, "results", f)
 out = {}
 
 # ---- clustering lottery ----
-L = [json.loads(l) for l in open(R("clustering_lottery.jsonl"))]
+L = [r for r in map(json.loads, open(R("clustering_lottery.jsonl"))) if r.get("dataset", "dlpfc") == "dlpfc"
+     and r["method"] in ("histar", "anisost")]   # DLPFC-only analysis (v1); all datasets: paper_v2.py
 rows = []
 for r in L:
     a = np.array([f["ARI"] for f in r["fits"]]); ll = np.array([f["ll"] for f in r["fits"]])
