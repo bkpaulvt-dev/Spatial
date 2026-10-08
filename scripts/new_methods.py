@@ -279,7 +279,8 @@ def _run_r(method, a, k, seed, ds, timeout=6 * 3600):
         p = subprocess.run(["Rscript", os.path.join(HERE, "run_r_method.R"), method, td, str(k), str(seed), ds],
                            capture_output=True, text=True, timeout=timeout)
         if p.returncode != 0:
-            raise RuntimeError(f"{method} failed: {p.stderr[-1500:]}")
+            raise RuntimeError(f"{method} failed (exit code {p.returncode}; -9 = killed, e.g. out of memory): "
+                               f"{p.stderr[-1200:]} | stdout: {p.stdout[-300:]}")
         lab = pd.read_csv(os.path.join(td, "labels.csv")).set_index("barcode").loc[bc, "label"].to_numpy()
     return lab.astype(int), None
 
