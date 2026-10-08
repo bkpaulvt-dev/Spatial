@@ -13,3 +13,10 @@
 {"method": "ccst", "dataset": "starmap", "slice": "20180417_BZ5_control", "status": "ok", "ARI": 0.47473989638752107, "n_clusters_found": 4, "emb_dim": 30, "time": 1324.6858241558075}
 {"method": "deepst", "dataset": "starmap", "slice": "20180417_BZ5_control", "status": "ok", "ARI": 0.4638252938558471, "n_clusters_found": 11, "emb_dim": 28, "time": 116.72800922393799}
 {"method": "bass", "dataset": "starmap", "slice": "20180417_BZ5_control", "status": "ok", "ARI": 0.8148335300256433, "n_clusters_found": 4, "emb_dim": null, "time": 140.52568745613098}
+{"method": "bass", "dataset": "dlpfc", "slice": "151673", "status": "ok", "ARI": 0.6018816058002171, "n_clusters_found": 7, "emb_dim": null, "time": 1045.0484607219696}
+{"method": "stagate", "dataset": "dlpfc", "slice": "151673", "status": "ok", "ARI": 0.5823156308191886, "n_clusters_found": 7, "emb_dim": 30, "time": 1426.5082340240479}
+{"method": "spaceflow", "dataset": "dlpfc", "slice": "151673", "status": "ok", "ARI": 0.350718554131273, "n_clusters_found": 7, "emb_dim": 50, "time": 620.9254939556122}
+{"method": "bayesspace", "dataset": "dlpfc", "slice": "151673", "status": "ok", "ARI": 0.5590809207678534, "n_clusters_found": 7, "emb_dim": null, "time": 2997.6250920295715}
+{"method": "ccst", "dataset": "dlpfc", "slice": "151673", "status": "ok", "ARI": 0.32345193136891826, "n_clusters_found": 7, "emb_dim": 30, "time": 2399.896090745926}
+{"method": "spatial_mgcn", "dataset": "dlpfc", "slice": "151673", "status": "ok", "ARI": 0.4166797483079129, "n_clusters_found": 7, "emb_dim": 64, "time": 1843.504546403885, "ARI_label_selected_epoch": 0.5048540910571548}
+{"method": "deepst", "dataset": "dlpfc", "slice": "151673", "status": "ok", "ARI": 0.5363593520251756, "n_clusters_found": 7, "emb_dim": 28, "time": 681.9281122684479}
