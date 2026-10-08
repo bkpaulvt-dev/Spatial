@@ -1,0 +1,2 @@
+{"method": "nichepca", "dataset": "dlpfc", "slice": "151507", "seed": 0, "status": "ok", "time": 93.87527823448181, "ARI": 0.3538274444596849, "NMI": 0.5030834153296674, "n_found": 7, "ARI_robust": 0.4960949590910717, "NMI_robust": 0.6568272424969285}
+{"method": "sedr", "dataset": "dlpfc", "slice": "151507", "seed": 0, "status": "ok", "time": 162.20866537094116, "ARI": 0.5474268685776352, "NMI": 0.6840191806939989, "n_found": 7, "ARI_robust": 0.4973940914259201, "NMI_robust": 0.661411803691251}
