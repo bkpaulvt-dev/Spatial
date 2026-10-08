@@ -12,4 +12,5 @@ results/emb/
 paper/build.log
 paper/last.log
 dist/
-results/new_methods.jsonl   # live file while the benchmark runs; see new_methods_snapshot.jsonl
+# live file while the benchmark runs (hourly copies: results/new_methods_snapshot.jsonl)
+results/new_methods.jsonl
