@@ -49,15 +49,20 @@ def main():
     ap.add_argument("--splits", nargs="+", default=["dev", "test"]); ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--threads", type=int, default=1); ap.add_argument("--timeout", type=int, default=6 * 3600)
     ap.add_argument("--retry-errors", action="store_true"); ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--shard", default="0/1", help="i/n: run only jobs with index %% n == i of the sorted job list, "
+                    "so a benchmark can be split across machines (merge the .jsonl files afterwards)")
+    ap.add_argument("--out", default=OUT, help="result file (use a different file per machine)")
     a = ap.parse_args()
     done = set()
-    if os.path.exists(OUT):
-        for r in map(json.loads, open(OUT)):
+    if os.path.exists(a.out):
+        for r in map(json.loads, open(a.out)):
             if r["status"] == "ok" or not a.retry_errors:
                 done.add(r["id"])
     jobs = [(ds, sec, m, s) for (ds, sec, sp_) in sections() for m in a.methods for s in a.seeds
             if sp_ in a.splits and (not a.datasets or ds in a.datasets) and (not a.sections or sec in a.sections)
             and not (m in VISIUM_ONLY and ds != "dlpfc") and job_id(ds, sec, m, s) not in done]
+    si, sn = map(int, a.shard.split("/"))
+    jobs = [j for n, j in enumerate(sorted(jobs)) if n % sn == si]
     serial = [j for j in jobs if j[2] in SERIAL]
     par = [j for j in jobs if j[2] not in SERIAL]
     print(f"{len(jobs)} jobs ({len(par)} parallel, {len(serial)} serial), {len(done)} already recorded", flush=True)
@@ -70,7 +75,7 @@ def main():
             futs = [ex.submit(run, j, a.timeout, a.threads) for j in batch]
             for fut in as_completed(futs):
                 r = fut.result()
-                with open(OUT, "a") as f:
+                with open(a.out, "a") as f:
                     f.write(json.dumps(r) + "\n")
                 met = r.get("metrics", {})
                 print(f"{r['id']:<60} {r['status']:<5} ARI={met.get('ARI', float('nan')):.3f} "
