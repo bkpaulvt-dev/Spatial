@@ -217,3 +217,23 @@ choose what matters for them.
 - **Save per-spot predictions for every run** (not only scores). Needed for 3B/3C/3D, the invariance tests, consensus analysis and error maps; the first benchmark runs did not keep them.
 - Pilot finding for 3B (macro-F1 / missed domains): the AnisoST baseline recovers **no spot of annotated Layer 4 in 12 of 12 DLPFC sections** (Layer 4 = 6-9% of spots), although ARI is 0.44-0.76 (151672: ARI 0.76 with one layer missed). Global ARI hides missed thin domains; to be measured for all methods.
 - Spatial-coherence metrics are unit free (distances divided by the median spot spacing); CHAOS is close to 1.0 for any smooth partition on a lattice, so it mainly flags isolated spots and has little discriminative power otherwise.
+
+## 17. Phase 1 status (implemented and tested in this repository)
+| Component | Where | State |
+|---|---|---|
+| Metric panel 3A-3D, 3E, 3I, 3K, 3M (+ unit tests, validated against earlier ARI results) | `spatialbench/metrics.py`, `tests/test_metrics.py` | done |
+| Dataset registry with label provenance, frozen dev/test split | `configs/datasets.yaml`, `spatialbench/data.py` | done (3 datasets; provenance of 2 flagged unverified) |
+| Per-section QC and difficulty indices; flags fixed in advance | `spatialbench/qc.py`, `scripts/run_qc.py`, `results/qc/` | done for the 20 current sections |
+| Resource measurement (time, CPU, peak memory incl. subprocesses, energy estimate / RAPL, OOM/timeout flags, scaling exponent, cloud cost) | `spatialbench/resources.py` | done; GPU path untested (no GPU here) |
+| Invariance harness + pilot (permutation, rescaling, translation, rotation, reflection, feature order, expression scale) | `spatialbench/invariance.py`, `results/invariance_pilot.json` | done; pilot on 3 training-free methods x 2 sections |
+| Leakage audit: scanner + reviewed findings | `scripts/audit_leakage.py`, `docs/LEAKAGE_AUDIT.md` | done for 14 repositories; authors not contacted |
+| Method configuration registry (source and deviations of every setting) | `configs/methods.yaml` | done; publication fields unverified |
+| Pre-registration draft | `docs/PROTOCOL.md` | draft v0.1, to be frozen |
+| Unified runner: 17 adapters, per-job runner, resumable queue | `scripts/adapters.py`, `scripts/bench_run.py`, `scripts/bench_queue.py` | done; smoke-tested on 3 methods |
+| Not started | see sections 2, 4.5-4.10, 5.3, 7, 9-11 | needs data access, GPU cluster, literature collection |
+
+### Pilot invariance finding (training-free methods, 2 sections, 3 seeds, 2 repeats)
+Coordinate rescaling (x100, x0.01), translation, rotation, reflection, feature-order permutation and expression
+rescaling changed nothing (violation 0.00). **Only the order of the spots did** (violation 0.00-0.21; PCA+GMM on
+MERFISH 0.21): the mixture-model initialisation depends on row order, the same mechanism as the R mclust
+sensitivity measured earlier. To be repeated for all methods.

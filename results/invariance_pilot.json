@@ -1,0 +1,206 @@
+{
+ "dlpfc/151673/pca_gmm": {
+  "seed_baseline": 0.9855372596143561,
+  "consistency": {
+   "permute_spots": 0.9947118694711055,
+   "rescale_coords_x100": 1.0,
+   "rescale_coords_x0.01": 1.0,
+   "translate_coords": 1.0,
+   "rotate_coords_37deg": 1.0,
+   "reflect_coords": 1.0,
+   "permute_features": 1.0,
+   "scale_expression_x2": 1.0
+  },
+  "violation": {
+   "permute_spots": 0.0,
+   "rescale_coords_x100": 0.0,
+   "rescale_coords_x0.01": 0.0,
+   "translate_coords": 0.0,
+   "rotate_coords_37deg": 0.0,
+   "reflect_coords": 0.0,
+   "permute_features": 0.0,
+   "scale_expression_x2": 0.0
+  },
+  "pass": {
+   "permute_spots": true,
+   "rescale_coords_x100": true,
+   "rescale_coords_x0.01": true,
+   "translate_coords": true,
+   "rotate_coords_37deg": true,
+   "reflect_coords": true,
+   "permute_features": true,
+   "scale_expression_x2": true
+  },
+  "n_seeds": 3
+ },
+ "dlpfc/151673/linear_diffusion": {
+  "seed_baseline": 1.0,
+  "consistency": {
+   "permute_spots": 0.9684982312432531,
+   "rescale_coords_x100": 1.0,
+   "rescale_coords_x0.01": 1.0,
+   "translate_coords": 1.0,
+   "rotate_coords_37deg": 1.0,
+   "reflect_coords": 1.0,
+   "permute_features": 1.0,
+   "scale_expression_x2": 1.0
+  },
+  "violation": {
+   "permute_spots": 0.03150176875674693,
+   "rescale_coords_x100": 0.0,
+   "rescale_coords_x0.01": 0.0,
+   "translate_coords": 0.0,
+   "rotate_coords_37deg": 0.0,
+   "reflect_coords": 0.0,
+   "permute_features": 0.0,
+   "scale_expression_x2": 0.0
+  },
+  "pass": {
+   "permute_spots": false,
+   "rescale_coords_x100": true,
+   "rescale_coords_x0.01": true,
+   "translate_coords": true,
+   "rotate_coords_37deg": true,
+   "reflect_coords": true,
+   "permute_features": true,
+   "scale_expression_x2": true
+  },
+  "n_seeds": 3
+ },
+ "dlpfc/151673/anisost": {
+  "seed_baseline": 0.997210835474713,
+  "consistency": {
+   "permute_spots": 0.8943037595373984,
+   "rescale_coords_x100": 1.0,
+   "rescale_coords_x0.01": 1.0,
+   "translate_coords": 1.0,
+   "rotate_coords_37deg": 1.0,
+   "reflect_coords": 1.0,
+   "permute_features": 1.0,
+   "scale_expression_x2": 1.0
+  },
+  "violation": {
+   "permute_spots": 0.10290707593731463,
+   "rescale_coords_x100": 0.0,
+   "rescale_coords_x0.01": 0.0,
+   "translate_coords": 0.0,
+   "rotate_coords_37deg": 0.0,
+   "reflect_coords": 0.0,
+   "permute_features": 0.0,
+   "scale_expression_x2": 0.0
+  },
+  "pass": {
+   "permute_spots": false,
+   "rescale_coords_x100": true,
+   "rescale_coords_x0.01": true,
+   "translate_coords": true,
+   "rotate_coords_37deg": true,
+   "reflect_coords": true,
+   "permute_features": true,
+   "scale_expression_x2": true
+  },
+  "n_seeds": 3
+ },
+ "merfish/-0.14/pca_gmm": {
+  "seed_baseline": 0.5925138327209162,
+  "consistency": {
+   "permute_spots": 0.3865620366519779,
+   "rescale_coords_x100": 1.0,
+   "rescale_coords_x0.01": 1.0,
+   "translate_coords": 1.0,
+   "rotate_coords_37deg": 1.0,
+   "reflect_coords": 1.0,
+   "permute_features": 1.0,
+   "scale_expression_x2": 1.0
+  },
+  "violation": {
+   "permute_spots": 0.20595179606893826,
+   "rescale_coords_x100": 0.0,
+   "rescale_coords_x0.01": 0.0,
+   "translate_coords": 0.0,
+   "rotate_coords_37deg": 0.0,
+   "reflect_coords": 0.0,
+   "permute_features": 0.0,
+   "scale_expression_x2": 0.0
+  },
+  "pass": {
+   "permute_spots": false,
+   "rescale_coords_x100": true,
+   "rescale_coords_x0.01": true,
+   "translate_coords": true,
+   "rotate_coords_37deg": true,
+   "reflect_coords": true,
+   "permute_features": true,
+   "scale_expression_x2": true
+  },
+  "n_seeds": 3
+ },
+ "merfish/-0.14/linear_diffusion": {
+  "seed_baseline": 0.7254709482616115,
+  "consistency": {
+   "permute_spots": 0.9367201683877246,
+   "rescale_coords_x100": 1.0,
+   "rescale_coords_x0.01": 1.0,
+   "translate_coords": 1.0,
+   "rotate_coords_37deg": 1.0,
+   "reflect_coords": 1.0,
+   "permute_features": 1.0,
+   "scale_expression_x2": 1.0
+  },
+  "violation": {
+   "permute_spots": 0.0,
+   "rescale_coords_x100": 0.0,
+   "rescale_coords_x0.01": 0.0,
+   "translate_coords": 0.0,
+   "rotate_coords_37deg": 0.0,
+   "reflect_coords": 0.0,
+   "permute_features": 0.0,
+   "scale_expression_x2": 0.0
+  },
+  "pass": {
+   "permute_spots": true,
+   "rescale_coords_x100": true,
+   "rescale_coords_x0.01": true,
+   "translate_coords": true,
+   "rotate_coords_37deg": true,
+   "reflect_coords": true,
+   "permute_features": true,
+   "scale_expression_x2": true
+  },
+  "n_seeds": 3
+ },
+ "merfish/-0.14/anisost": {
+  "seed_baseline": 0.9996934250448684,
+  "consistency": {
+   "permute_spots": 0.9394137311302895,
+   "rescale_coords_x100": 1.0,
+   "rescale_coords_x0.01": 1.0,
+   "translate_coords": 1.0,
+   "rotate_coords_37deg": 1.0,
+   "reflect_coords": 1.0,
+   "permute_features": 1.0,
+   "scale_expression_x2": 1.0
+  },
+  "violation": {
+   "permute_spots": 0.06027969391457888,
+   "rescale_coords_x100": 0.0,
+   "rescale_coords_x0.01": 0.0,
+   "translate_coords": 0.0,
+   "rotate_coords_37deg": 0.0,
+   "reflect_coords": 0.0,
+   "permute_features": 0.0,
+   "scale_expression_x2": 0.0
+  },
+  "pass": {
+   "permute_spots": false,
+   "rescale_coords_x100": true,
+   "rescale_coords_x0.01": true,
+   "translate_coords": true,
+   "rotate_coords_37deg": true,
+   "reflect_coords": true,
+   "permute_features": true,
+   "scale_expression_x2": true
+  },
+  "n_seeds": 3
+ }
+}
