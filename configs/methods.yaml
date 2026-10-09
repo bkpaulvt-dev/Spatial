@@ -1,0 +1,130 @@
+# WARNING: the "publication" fields (journal, volume, pages) were written from memory and are NOT
+# verified; check each against the original article before they are used in the manuscript.
+# One entry per benchmarked method: where the code and settings come from, and every deviation.
+# Arm A ("as published") = the settings below. Arm B (equal tuning budget) is defined in docs/PROTOCOL.md.
+# settings_source: tutorial | paper | package_default | our_rule (a documented unit-free rule; never tuned on test labels)
+schema_version: 1
+methods:
+  histar:
+    publication: "Yu et al., J Transl Med 2025;23:1416"
+    kind: deep graph VAE
+    code: {source: "PyTorch port of the official code (hicast/histar.py)", commit: "TO RECORD (official repository commit)"}
+    settings_source: paper
+    settings: {lambda_sim: 0.3, epochs: "200 + 200", knn: 6, embedding: "[F0,F1,F2] concat"}
+    clustering: {official: "R mclust EEE", ours_standard: "3-start tied-covariance GMM", ours_robust: "20-start GMM, best likelihood"}
+    deviations: ["masking at inference removed in 'deterministic' variant only; headline uses published behaviour",
+                 "per-section lambda_sim tuning described in the paper's supplement is NOT applied"]
+  graphst:
+    publication: "Long et al., Nat Commun 2023;14:1155"
+    kind: deep graph contrastive autoencoder
+    code: {source: "pip GraphST 1.1.1; tutorials from JinmiaoChenLab/GraphST", commit: d62b0b7}
+    settings_source: tutorial
+    settings: {epochs: 600, hvg: "3000 (Visium) / all genes (targeted panels)", embedding_pcs: 20, refinement_radius: 50}
+    clustering: {official: "R mclust EEE on 20 PCs of the embedding"}
+    deviations: ["reported with and without the tutorial's label refinement (graphst vs graphst_refined)"]
+  banksy:
+    publication: "Singhal et al., Nat Genet 2024;56:431"
+    kind: neighbourhood-augmented features (non-deep)
+    code: {source: "pip pybanksy 1.3.5", commit: 9278996}
+    settings_source: tutorial
+    settings: {k_geom: 18, max_m: 1, decay: scaled_gaussian, lambda: [0.2, 0.8], pcs: 20}
+    clustering: {official: "Leiden / mclust (package)", ours_standard: "3-start GMM", ours_robust: "20-start GMM"}
+    deviations: ["both recommended lambdas are run: 0.2 (cell typing) and 0.8 (domain segmentation)"]
+  spagcn:
+    publication: "Hu et al., Nat Methods 2021;18:1342"
+    kind: graph convolutional network
+    code: {source: "pip SpaGCN 1.2.7", commit: dc7a1c2}
+    settings_source: tutorial
+    settings: {p: 0.5, resolution_search_to_K: true, lr: 0.05, epochs: 200, histology: false}
+    clustering: {official: "iterative DEC clustering (own)"}
+    deviations: ["no histology image used (not available for all sections)", "reported with and without the hexagonal refinement"]
+  stagate:
+    publication: "Dong & Zhang, Nat Commun 2022;13:1739"
+    kind: deep graph attention autoencoder
+    code: {source: "QIFEIDKN/STAGATE_pyG, installed from the clone", commit: ae1158c}
+    settings_source: tutorial
+    settings: {hvg: 3000, hidden: [512, 30], epochs: 1000, lr: 0.001, radius: "1.1 spot spacings (tutorial: 150 full-resolution px) on Visium; 6-NN on single-cell data"}
+    clustering: {official: "R mclust EEE"}
+    deviations: ["radius expressed in spot spacings because our coordinates are on another scale (gives 5.8 neighbours per spot, as in the tutorial)",
+                 "torch_sparse replaced by a stub only if the compiled extension is unavailable (it was compiled from source here)"]
+  sedr:
+    publication: "Xu et al., Genome Med 2024;16:12"
+    kind: deep masked graph autoencoder
+    code: {source: "JinmiaoChenLab/SEDR, installed from the clone", commit: ef48360}
+    settings_source: tutorial
+    settings: {norm_target_sum: 1e6, hvg: 2000, pcs: 200, graph_k: 12, training: "DEC (N=1)"}
+    clustering: {official: "R mclust EEE (seed 2023)"}
+    deviations: ["mclust called as SEDR.mclust_R does, without its line that hard-codes the authors' R_HOME (breaks R's LAPACK in a running session)"]
+  spaceflow:
+    publication: "Ren et al., Nat Commun 2022;13:4076"
+    kind: deep graph infomax with spatial regularisation
+    code: {source: "pip SpaceFlow 1.0.4", commit: 58d1ab0}
+    settings_source: package_default
+    settings: {z_dim: 50, spatial_regularization_strength: 0.1, epochs: 1000, knn: 10, hvg: "3000 (Visium) / all"}
+    clustering: {official: "Leiden at a fixed resolution", ours: "Leiden with resolution search to the given K"}
+    deviations: ["networkx>=3 alias for removed to_scipy_sparse_matrix", "all-zero genes removed (cell_ranger HVG binning fails on them with pandas 3)"]
+  nichepca:
+    publication: "NichePCA, Bioinformatics 2025;41(1):btaf005"
+    kind: training-free (neighbour aggregation + PCA)
+    code: {source: "pip nichepca 0.1.0", commit: "package 0.1.0"}
+    settings_source: package_default
+    settings: {knn: 6, pcs: 30, clustering: "Leiden with resolution search to K"}
+    clustering: {official: "Leiden"}
+    deviations: []
+  ccst:
+    publication: "Li et al., Nat Comput Sci 2022 (CCST; volume and pages to verify)"
+    kind: deep graph infomax (4 GCN layers)
+    code: {source: "xiaoyeye/CCST, re-implemented in scripts/new_methods.py because of PyTorch 1.7 pins", commit: 890de27}
+    settings_source: tutorial
+    settings: {lambda_I: "0.3 Visium / 0.8 single cell", hidden: 256, epochs: 5000, lr: 1e-6, pcs_for_kmeans: 30}
+    clustering: {official: "k-means (n_init=100)"}
+    deviations: ["graph threshold chosen to give about 6 neighbours per cell (the authors hand-pick a threshold per dataset)"]
+  spatial_mgcn:
+    publication: "Wang et al., Brief Bioinform 2023 (Spatial-MGCN)"
+    kind: deep multi-view graph convolution
+    code: {source: "cs-wangbo/Spatial-MGCN, repository modules used directly", commit: cf4412d}
+    settings_source: tutorial
+    settings: {lr: 0.001, weight_decay: 5e-4, k: 14, radius: "4.1 spot spacings (560 px)", hidden: [128, 64], alpha_beta_gamma: [1, 10, 0.1], epochs: 201}
+    clustering: {official: "k-means each epoch; epoch chosen by ARI against the annotation (LEAKAGE, see docs/LEAKAGE_AUDIT.md)", ours: "final epoch (label-free); label-selected value recorded separately"}
+    deviations: ["unannotated spots kept (the released script deletes them before training)", "label-free epoch rule"]
+  deepst:
+    publication: "Xu et al., Nucleic Acids Res 2022;50:e131"
+    kind: deep graph + augmentation (no histology)
+    code: {source: "JiangBioLab/DeepST (deepstkit), used from the clone", commit: e37997f}
+    settings_source: tutorial
+    settings: {pre_epochs: 500, epochs: 500, pcs: 200, graph: KDTree, augmentation: BallTree, use_morphological: false}
+    clustering: {official: "Leiden at the given K + spatial refinement"}
+    deviations: ["no histology features", "memory-heavy: run one job at a time"]
+  bass:
+    publication: "Li & Zhou, Genome Biol 2022;23:168"
+    kind: Bayesian hierarchical model
+    code: {source: "zhengli09/BASS, installed from the clone", commit: 5c2690f}
+    settings_source: tutorial
+    settings: {DLPFC: {C: 20, geneSelect: sparkx, nSE: 3000, nPC: 20, scaleFeature: false, nsample: 10000}, STARmap: {C: 15, nPC: 20}, MERFISH: {C: 20, nPC: 20}}
+    clustering: {official: "own (joint cell-type and domain model)"}
+    deviations: ["each section analysed separately (the authors' MERFISH/DLPFC analyses are multi-sample)"]
+  bayesspace:
+    publication: "Zhao et al., Nat Biotechnol 2021;39:1375"
+    kind: Bayesian statistical model
+    code: {source: "edward130603/BayesSpace tag v1.5.1 (older release; newer ones need unavailable dependencies)", commit: ba8b422}
+    settings_source: package_default
+    settings: {platform: Visium, pcs: 15, hvg: 2000, init: mclust, model: t, gamma: 3, nrep: 50000, burn_in: 1000}
+    clustering: {official: "own MCMC"}
+    deviations: ["Visium only (needs a hexagonal spot lattice)"]
+  linear_diffusion:
+    publication: "this work (baseline)"
+    kind: training-free
+    settings_source: our_rule
+    settings: {knn: 6, alpha: 0.5, steps: 10, pcs: 30, clustering: "20-start GMM, best likelihood"}
+    deviations: ["settings fixed on DLPFC donor 1 before any other data were analysed"]
+  anisost:
+    publication: "this work (baseline)"
+    kind: training-free, edge-preserving diffusion
+    settings_source: our_rule
+    settings: {knn: 6, alpha: 0.5, steps: 10, q: 0.5, pcs: 30, clustering: "20-start GMM"}
+    deviations: ["same as linear_diffusion"]
+  pca_gmm:
+    publication: "this work (non-spatial reference)"
+    kind: training-free
+    settings_source: our_rule
+    settings: {pcs: 30, clustering: "20-start GMM"}
