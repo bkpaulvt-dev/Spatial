@@ -16,3 +16,5 @@ dist/
 results/new_methods.jsonl
 tests/__pycache__/
 .pytest_cache/
+# per-spot predictions / embeddings of the unified runner are archived on Zenodo, not in git
+results/runs/
