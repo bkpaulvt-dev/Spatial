@@ -14,3 +14,5 @@ paper/last.log
 dist/
 # live file while the benchmark runs (hourly copies: results/new_methods_snapshot.jsonl)
 results/new_methods.jsonl
+tests/__pycache__/
+.pytest_cache/

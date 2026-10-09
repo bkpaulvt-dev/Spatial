@@ -212,3 +212,8 @@ choose what matters for them.
 | 15.6 | Pre-registration: protocol, QC rules and configuration files are committed/archived with a timestamp before test results are generated | C |
 | 15.7 | Author review: method developers are invited to check their configuration before submission; responses are reported | C |
 | 15.8 | QC thresholds and preprocessing rules are identical for every method and fixed before any method is run | C |
+
+## 16. Implementation notes (Phase 1 findings)
+- **Save per-spot predictions for every run** (not only scores). Needed for 3B/3C/3D, the invariance tests, consensus analysis and error maps; the first benchmark runs did not keep them.
+- Pilot finding for 3B (macro-F1 / missed domains): the AnisoST baseline recovers **no spot of annotated Layer 4 in 12 of 12 DLPFC sections** (Layer 4 = 6-9% of spots), although ARI is 0.44-0.76 (151672: ARI 0.76 with one layer missed). Global ARI hides missed thin domains; to be measured for all methods.
+- Spatial-coherence metrics are unit free (distances divided by the median spot spacing); CHAOS is close to 1.0 for any smooth partition on a lattice, so it mainly flags isolated spots and has little discriminative power otherwise.

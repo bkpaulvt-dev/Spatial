@@ -1,0 +1,70 @@
+# Dataset registry for the benchmark. Every entry records technology, tissue, label provenance and the
+# frozen development/test split. `verified: false` means the field was filled from memory of the
+# source publication and MUST be confirmed against the original paper before submission.
+# Label provenance classes: expert (drawn/assigned by anatomists/pathologists), marker (derived from
+# known marker genes), reference_atlas (registered to an anatomical reference), algorithm (obtained by
+# a clustering/segmentation algorithm: circular for evaluating other algorithms), unknown.
+schema_version: 1
+datasets:
+  dlpfc:
+    name: Human dorsolateral prefrontal cortex (spatialLIBD)
+    technology: 10x Visium
+    generation: spot-based, whole-transcriptome
+    species: human
+    tissue: dorsolateral prefrontal cortex
+    resolution: 55 um spots, ~100 um centre-to-centre
+    n_sections: 12
+    n_domains: {donor2: 5, other: 7}
+    label_provenance: {class: expert, verified: false,
+      note: "layer_guess_reordered: manual cortical layer annotation (Maynard et al. 2021) from cytoarchitecture and marker genes; confirm in the source paper"}
+    source: {counts: "https://spatial-dlpfc.s3.us-east-2.amazonaws.com/h5/<id>_filtered_feature_bc_matrix.h5",
+             labels: "JinmiaoChenLab/SEDR_analyses data/DLPFC/<id>/metadata.tsv",
+             citation: "Maynard et al., Nat Neurosci 2021"}
+    license: {status: to_check}
+    sections:
+      "151507": {donor: Br5292, split: dev}
+      "151508": {donor: Br5292, split: dev}
+      "151509": {donor: Br5292, split: dev}
+      "151510": {donor: Br5292, split: dev}
+      "151669": {donor: Br5595, split: test}
+      "151670": {donor: Br5595, split: test}
+      "151671": {donor: Br5595, split: test}
+      "151672": {donor: Br5595, split: test}
+      "151673": {donor: Br8100, split: test}
+      "151674": {donor: Br8100, split: test}
+      "151675": {donor: Br8100, split: test}
+      "151676": {donor: Br8100, split: test}
+  starmap:
+    name: Mouse medial prefrontal cortex (STARmap)
+    technology: STARmap
+    generation: imaging, targeted panel (166 genes), single cell
+    species: mouse
+    tissue: medial prefrontal cortex
+    resolution: single cell
+    n_sections: 3
+    label_provenance: {class: unknown, verified: false,
+      note: "layer labels as distributed in the BASS-Analysis repository (column z); how they were derived is not yet confirmed; classify before ranking on this dataset"}
+    source: {counts: "BASS-Analysis data/starmap_mpfc.RData", citation: "Wang et al., Science 2018; Li & Zhou, Genome Biol 2022"}
+    license: {status: to_check}
+    sections:
+      "20180417_BZ5_control": {split: dev}
+      "20180419_BZ9_control": {split: test}
+      "20180424_BZ14_control": {split: test}
+  merfish:
+    name: Mouse hypothalamic preoptic region (MERFISH, animal 1)
+    technology: MERFISH
+    generation: imaging, targeted panel (155 genes), single cell
+    species: mouse
+    tissue: hypothalamic preoptic region
+    resolution: single cell
+    n_sections: 5
+    label_provenance: {class: reference_atlas, verified: false,
+      note: "anatomical region labels distributed in BASS-Analysis (column z), believed to come from the original MERFISH study's registration to an anatomical atlas; confirm"}
+    source: {counts: "BASS-Analysis data/MERFISH_Animal1.RData", citation: "Moffitt et al., Science 2018; Li & Zhou, Genome Biol 2022"}
+    license: {status: to_check}
+    sections:
+      "-0.04": {split: dev}
+      "-0.09": {split: test}
+      "-0.14": {split: test}
+      "-0.19": {split: test}
+      "-0.24": {split: test}
