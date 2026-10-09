@@ -46,15 +46,66 @@ standardized, QC-checked, leakage-free data resource spanning ten years of spati
 | T9 | Downstream: recovery of domain marker genes / domain-specific spatially variable genes | E | ⬜ |
 | T10 | Scalability task: up to 10^6 cells (see §11) | C | ⬜ |
 
-## 3. Metrics
-| # | Metric family | Pri |
-|---|---|---|
-| 3.1 | Partition agreement: ARI, AMI/NMI, FMI, V-measure, homogeneity, completeness | C |
-| 3.2 | Per-domain F1 after Hungarian matching; macro-F1 (sensitive to small domains) | C |
-| 3.3 | Spatial quality: CHAOS, PAS, label Moran's I, boundary F1, Hausdorff | C |
-| 3.4 | Label-free quality: silhouette, Davies–Bouldin, spatial continuity, marker enrichment | E |
-| 3.5 | **Can label-free metrics select good models?** Correlation of label-free with label-based metrics, i.e. is unsupervised model selection possible | E |
-| 3.6 | Metric agreement: rank correlation of methods across metrics; aggregate score with weights reported | C |
+## 3. Metrics: a comprehensive, multi-perspective panel
+No single score is reported alone. Metrics are grouped into perspectives; each perspective is
+summarised separately, and any overall score is shown with its sensitivity to the weights.
+
+**3A. Partition agreement with the annotation (label-based, global)** [C]
+ARI, AMI, NMI, Fowlkes–Mallows, V-measure, homogeneity, completeness, purity, Jaccard (pair-counting).
+ARI and NMI behave differently with unbalanced domains, so both are always shown.
+
+**3B. Per-domain and class-balanced accuracy** [C]
+Hungarian-matched accuracy, balanced accuracy, macro- and weighted-F1, per-domain precision/recall,
+**recall as a function of domain size** (are small and rare domains found?), count of missed and
+spurious domains, over- and under-segmentation (split/merge counts).
+
+**3C. Spatial structure and shape** [C]
+CHAOS (spatial chaos), PAS (fraction of isolated spots), label Moran's I / Geary's C, number of
+connected components per domain (fragmentation), domain compactness, boundary F1 and boundary
+displacement (mean and Hausdorff distance), area error per domain.
+
+**3D. Tissue topology** [E]
+For layered tissues, preservation of layer order (rank correlation of predicted vs true laminar order);
+for all tissues, similarity between the predicted and true domain-adjacency graphs (which domains touch
+which).
+
+**3E. Label-free internal quality** [E]
+Expression silhouette, Davies–Bouldin, Calinski–Harabasz, spatial silhouette, within-domain expression
+homogeneity. Used for **3J** (can they select good models without labels?).
+
+**3F. Biological validity** [E]
+Recovery of known domain markers (precision@k against curated marker lists), enrichment of
+domain-specific spatially variable genes, pathway coherence of domain markers, consistency with
+cell-type composition from deconvolution, agreement with histology where available [O].
+
+**3G. Stability and consistency** [C]
+Pairwise ARI between runs over training seeds, over clustering starts and over input permutations
+(self-consistency); agreement between adjacent serial sections; invariance-violation rate (§6);
+robustness curves under perturbations (§7), summarised as area under the degradation curve.
+
+**3H. Multi-section integration** (task T3) [E]
+iLISI and batch ASW (mixing), cLISI and label ASW (conservation), kBET, cross-section label consistency.
+
+**3I. Model-selection metrics** (task T2) [C]
+|K̂ − K|, fraction of sections with the correct K, accuracy at the estimated K.
+
+**3J. Metric meta-analysis** [C]
+Correlation and redundancy between metrics; cases where metrics disagree on the ranking; bias of each
+metric towards many/few or large/small domains (tested on simulated partitions); how well label-free
+metrics (3E) predict label-based ones (3A–3C).
+
+**3K. Uncertainty-aware reporting** [C]
+Every metric with bootstrap confidence intervals; differences reported relative to the noise floor (§4.6);
+probability of superiority between methods (§4.7).
+
+**3L. Efficiency and practicality** (detailed in §11) [C]
+Runtime, peak memory, energy, cloud cost, scaling exponent, failure rate, installability.
+
+**3M. Aggregation** [C]
+Per-perspective scores (min–max or rank normalised per dataset); overall score as a weighted mean with
+weights stated in advance; **ranking robustness to weight choice** (rankings under many random weight
+vectors, reported as rank distributions); separate leaderboards per perspective so that readers can
+choose what matters for them.
 
 ## 4. Reproducibility and variance (the "noise floor")
 | # | Analysis | Pri | Status |
