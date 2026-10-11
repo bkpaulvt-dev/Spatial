@@ -335,3 +335,5 @@
 {"method": "bayesspace", "dataset": "dlpfc", "slice": "151670", "seed": 0, "status": "ok", "time": 2826.3583681583405, "ARI": 0.4287186045278845, "NMI": 0.5453716191943239, "n_found": 5}
 {"method": "bayesspace", "dataset": "dlpfc", "slice": "151671", "seed": 0, "status": "ok", "time": 3326.8171644210815, "ARI": 0.5072020154666169, "NMI": 0.6355211612155217, "n_found": 5}
 {"method": "bayesspace", "dataset": "dlpfc", "slice": "151672", "seed": 0, "status": "ok", "time": 3257.6257343292236, "ARI": 0.4349938016202114, "NMI": 0.5901464358530791, "n_found": 5}
+{"method": "bayesspace", "dataset": "dlpfc", "slice": "151673", "seed": 0, "status": "ok", "time": 2945.54546046257, "ARI": 0.5590809207678534, "NMI": 0.6958478870194896, "n_found": 7}
+{"method": "bayesspace", "dataset": "dlpfc", "slice": "151674", "seed": 0, "status": "ok", "time": 2885.5320858955383, "ARI": 0.2957352751007449, "NMI": 0.4832085487767113, "n_found": 7}
