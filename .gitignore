@@ -18,3 +18,12 @@ tests/__pycache__/
 # per-spot predictions / embeddings of the unified runner are archived on Zenodo, not in git
 results/runs/
 # live result file of the unified runner while it runs (hourly copy: results/benchmark_runs_snapshot.jsonl)
+
+# live outputs of the running R-mclust jobs (committed with git add -f when complete)
+results/mclust_lottery_ccst.csv
+results/mclust_lottery_deepst.csv
+results/mclust_lottery_nichepca.csv
+results/mclust_lottery_sedr.csv
+results/mclust_lottery_spaceflow.csv
+results/mclust_lottery_spatial_mgcn.csv
+results/mclust_lottery_stagate.csv
