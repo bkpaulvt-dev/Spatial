@@ -234,7 +234,7 @@ deviation (blue); 10 perturbations per section and embedding.}
 A natural fix is to run many starts and keep the most likely fit. It helped some methods and
 hurt others. Replacing each method's standard clustering by this matched protocol raised mean ARI for \nGainPos{} of
 \nGainTot{} methods and lowered it for \nGainNeg. For example, it raised HiSTaR's mean ARI by \gainHistar{} (\gainWinsHistar/\gainNHistar{} sections,
-$p=\gainPHistar$) and GraphST's by \gainGraphst{} (\gainWinsGraphst/\gainNGraphst, $p=\gainPGraphst$), but changed SEDR's by \gainSedr{}
+\gainPHistar) and GraphST's by \gainGraphst{} (\gainWinsGraphst/\gainNGraphst, \gainPGraphst), but changed SEDR's by \gainSedr{}
 and Spatial-MGCN's by \gainMgcn. The reason is visible in Fig.~\ref{fig:lottery}: likelihood and ARI were positively
 related on DLPFC (median Spearman $\rho$ \rhoDlpfcMed) but not on MERFISH (median $\rho$ \rhoMerfishMed; negative for
 \rhoNegMerfish{} of \lotNMethods{} methods), where the best-fitting mixture can separate cell types rather than anatomical
@@ -247,11 +247,11 @@ Across all methods and both protocols, the highest mean ARI was reached by \best
 a mean ARI of \meanLinDlpfc, \meanLinStarmap{} and \meanLinMerfish{} on the three datasets (average over datasets \overallLin, against \overallBass{} for BASS and \overallBanksyHi{} for BANKSY $\lambda=0.8$).
 Over the \nSections{} sections it had a higher mean ARI than most competitors: the difference was significant after Holm
 correction in \nPooledSig{} of the \nPooled{} comparisons, including HiSTaR with standard
-clustering (+\dLinHistar, \winsLinHistar/20 sections, Holm-adjusted $p=\pLinHistar$), GraphST with its own mclust clustering (+\dLinGraphst, \winsLinGraphst/20, adjusted $p=\pLinGraphst$),
-SpaGCN (+\dLinSpagcn, \winsLinSpagcn/20, $p=\pLinSpagcn$), NichePCA (+\dLinNichepca, adjusted $p=\pLinNichepca$), SpaceFlow (+\dLinSpaceflow, $p=\pLinSpaceflow$),
-CCST (+\dLinCcst, $p=\pLinCcst$), DeepST (+\dLinDeepst, $p=\pLinDeepst$) and Spatial-MGCN (+\dLinMgcn, $p=\pLinMgcn$).
-The differences to BANKSY $\lambda=0.8$ (+\dLinBanksyHi, adjusted $p=\pLinBanksyHi$), AnisoST (+\dLinAniso, $p=\pLinAniso$), SEDR (+\dLinSedr, $p=\pLinSedr$), BASS (+\dLinBass, $p=\pLinBass$), STAGATE
-and HiSTaR with robust clustering (+\dLinStagateRob{} and +\dLinHistarRob, adjusted $p=\pLinStagateRob{}$ and $p=\pLinHistarRob$) were not significant: these methods are
+clustering (+\dLinHistar, \winsLinHistar/20 sections, Holm-adjusted \pLinHistar), GraphST with its own mclust clustering (+\dLinGraphst, \winsLinGraphst/20, adjusted \pLinGraphst),
+SpaGCN (+\dLinSpagcn, \winsLinSpagcn/20, \pLinSpagcn), NichePCA (+\dLinNichepca, adjusted \pLinNichepca), SpaceFlow (+\dLinSpaceflow, \pLinSpaceflow),
+CCST (+\dLinCcst, \pLinCcst), DeepST (+\dLinDeepst, \pLinDeepst) and Spatial-MGCN (+\dLinMgcn, \pLinMgcn).
+The differences to BANKSY $\lambda=0.8$ (+\dLinBanksyHi, adjusted \pLinBanksyHi), AnisoST (+\dLinAniso, \pLinAniso), SEDR (+\dLinSedr, \pLinSedr), BASS (+\dLinBass, \pLinBass), STAGATE
+and HiSTaR with robust clustering (+\dLinStagateRob{} and +\dLinHistarRob, adjusted \pLinStagateRob{} and \pLinHistarRob) were not significant: these methods are
 statistically indistinguishable from the baseline with \nSections{} sections, which is not evidence that they are equivalent. The ranking of the deep methods relative
 to the baselines changed with the clustering protocol (Fig.~\ref{fig:matched}). The deep methods
 were also the least stable: HiSTaR's seed-to-seed standard deviation of ARI was 0.047 on DLPFC and

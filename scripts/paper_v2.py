@@ -227,6 +227,7 @@ MAC = {}
 def mac(name, val, dec=3):
     v = val if isinstance(val, str) else f"{val:.{dec}f}"
     v = v.replace("<", "\\ensuremath{<}")
+    if v.startswith("p"): v = "$" + v.replace("\\ensuremath{<}", "<") + "$"
     if v.startswith("-"): v = "\\ensuremath{-}" + v[1:]
     MAC[name] = v
 MCN = {"linear_diffusion": "Lin", "anisost": "Aniso", "pca_gmm": "Pca", "histar": "Histar", "graphst": "Graphst",
@@ -252,8 +253,7 @@ pn = {"histar": "Histar", "histar+robust": "HistarRob", "graphst": "Graphst", "g
 for k, v in out["pooled"].items():
     y = k.split("_vs_", 1)[1]
     if y in pn:
-        mac(f"dLin{pn[y]}", v["delta"]); mac(f"winsLin{pn[y]}", str(v["wins"])); mac(f"pLin{pn[y]}", v["p_holm"] if v["p_holm"] >= 0.001 else "<0.001", 3) \
-            if isinstance(v["p_holm"], str) else mac(f"pLin{pn[y]}", ("%.3f" % v["p_holm"]) if v["p_holm"] >= 0.001 else "<0.001")
+        mac(f"dLin{pn[y]}", v["delta"]); mac(f"winsLin{pn[y]}", str(v["wins"])); mac(f"pLin{pn[y]}", ("p=%.3f" % v["p_holm"]) if v["p_holm"] >= 0.001 else "p<0.001")
 sig = [k for k, v in out["pooled"].items() if v["p_holm"] < 0.05 and v["delta"] > 0]
 mac("nPooled", str(len(out["pooled"]))); mac("nPooledSig", str(len(sig)))
 mac("nPooledNotSig", str(len(out["pooled"]) - len(sig)))
@@ -269,7 +269,7 @@ GN = {"histar": "Histar", "graphst": "Graphst", "anisost_single_gmm": "Aniso", "
       **{m: MCN[m] for _, m in NEW}}
 for k, v in Gx.items():
     mac(f"gain{GN[k]}", f"{v[0]:+.3f}"); mac(f"gainWins{GN[k]}", str(v[1])); mac(f"gainN{GN[k]}", str(v[2]))
-    mac(f"gainP{GN[k]}", f"{v[3]:.3f}" if v[3] >= 0.001 else "<0.001")
+    mac(f"gainP{GN[k]}", f"p={v[3]:.3f}" if v[3] >= 0.001 else "p<0.001")
 mac("nGainPos", str(sum(v[0] > 0.005 for v in Gx.values()))); mac("nGainNeg", str(sum(v[0] < -0.005 for v in Gx.values())))
 mac("nGainTot", str(len(Gx)))
 # sklearn lottery
