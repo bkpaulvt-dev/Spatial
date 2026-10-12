@@ -63,9 +63,8 @@ def arrow(x0, x1):
 box(1, 21, "Data", ["3 technologies, 20 sections", "", "DLPFC, 10x Visium (12)", "STARmap mPFC (3)",
                     "MERFISH hypothalamus (5)", "", "expert domain labels", "(used only for scoring)"], "a")
 arrow(22.8, 25.2)
-box(26, 22, "Methods", ["Deep: HiSTaR, GraphST", "Published: BANKSY, SpaGCN",
-                                       "Training-free: linear", "  diffusion, AnisoST, PCA", "",
-                                       "3 training seeds each;", "one fixed embedding per", "section kept for (c)"], "b")
+box(26, 22, "Methods", ["13 published methods:", "HiSTaR, GraphST, BANKSY,", "SpaGCN, STAGATE, SEDR,", "SpaceFlow, NichePCA, CCST,",
+                                       "Spatial-MGCN, DeepST,", "BASS, BayesSpace", "+ training-free: linear", "  diffusion, AnisoST, PCA"], "b")
 arrow(48.8, 51.2)
 box(52, 24.5, "Clustering protocols", ["Standard: one mclust-style fit", "Robust: best likelihood of 20",
                                        "Lottery: 20 single random starts", "R mclust perturbations:",
