@@ -58,3 +58,28 @@ def test_end_to_end_tiny_run(tmp_path):
     r = json.load(open(tmp_path / "metrics.json"))
     assert r["esm_test"]["activity"]["auroc"] is not None
     assert (tmp_path / "test_predictions.csv").exists()
+
+
+def test_build_dataset_merges_sources_and_flags_conflicts(tmp_path):
+    from amp import build_dataset as bd
+    (tmp_path / "pos.csv").write_text("Name,Sequence\na,KKLLKWLKK\nb,kkllkwlkk\nc,GIGKFLHSAK\nd,AX-BBBB\n")
+    (tmp_path / "neg.fasta").write_text(">n1\nKKLLKWLKK\n>n2\nDDEEGGSSAA\n")
+    (tmp_path / "hemo.tsv").write_text("seq\tlabel\tHC50\nGIGKFLHSAK\tpositive\t12\nDDEEGGSSAA\tnegative\t>500\n"
+                                       "KKLLKWLKK\tpositive\t80\nLLLLKKKKGG\tpositive\t150\n")
+    spec = dict(sources=[
+        dict(name="pos", path=str(tmp_path / "pos.csv"), seq_col="Sequence", labels={"activity": 1}),
+        dict(name="neg", path=str(tmp_path / "neg.fasta"), labels={"activity": 0}),
+        dict(name="hemo", path=str(tmp_path / "hemo.tsv"), seq_col="seq", task="hemolysis", label_col="label",
+             map={"positive": 1, "negative": 0}),
+        dict(name="hc50", path=str(tmp_path / "hemo.tsv"), seq_col="seq", task="hemolysis", label_col="HC50",
+             threshold={"op": "<=", "value": 100, "label": 1, "else": 0}),
+    ])
+    wide, s = bd.build(spec)
+    w = wide.set_index("sequence")
+    assert np.isnan(w.loc["KKLLKWLKK", "activity"])           # positive in one source, negative in another
+    assert w.loc["GIGKFLHSAK", "activity"] == 1 and w.loc["GIGKFLHSAK", "hemolysis"] == 1
+    assert np.isnan(w.loc["LLLLKKKKGG", "hemolysis"])         # 'positive' label vs HC50=150 > threshold
+    assert w.loc["DDEEGGSSAA", "hemolysis"] == 0 and w.loc["DDEEGGSSAA", "activity"] == 0
+    assert "AXBBBB" not in w.index and s["per_source"]["pos"]["dropped"]["non-standard/empty"] == 1
+    assert s["per_source"]["hc50"]["unresolved_labels"] == 1  # ">500" is dropped, not guessed
+    assert s["label_conflicts_set_to_unknown"] >= 1

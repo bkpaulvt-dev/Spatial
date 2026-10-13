@@ -10,6 +10,18 @@ Optional `cluster` column (e.g. from `mmseqs easy-cluster --min-seq-id 0.4`) ove
 Collect data yourself from APD3 / DBAASP / DRAMP / HemoPI etc.; take **experimentally tested** negatives where you can.
 Duplicate sequences are merged; conflicting labels become unknown.
 
+## Building the CSV from database downloads
+Export formats vary by database/version, so you map columns in a JSON spec (example in the docstring of
+`amp/build_dataset.py`) instead of relying on hard-coded parsers:
+```bash
+python -m amp.build_dataset inspect apd3_export.csv          # list columns + categorical values
+python -m amp.build_dataset build --spec spec.json --out peptides.csv   # also writes peptides.csv.report.json
+```
+It cleans sequences (standard residues, length 5-100), merges duplicates, sets conflicting labels to unknown
+(counted in the report), drops unresolvable numeric cells such as ">100" rather than guessing, and records the
+source of each row. Check the report before training; keep untested "assumed negative" sets in separate sources
+so you can ablate them.
+
 ## Run (one process per GPU)
 ```bash
 pip install -r amp/requirements.txt
