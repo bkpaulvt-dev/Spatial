@@ -78,11 +78,14 @@ and does released code select models using the labels? The study design is summa
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{fig0_overview.pdf}
-\caption{Study design. \textbf{a}--\textbf{d}: data, methods, clustering protocols and evaluation.
-\textbf{e}: a real example of the clustering lottery. One fixed HiSTaR embedding of DLPFC section
-151669 was clustered with the same tied-covariance Gaussian mixture from two different random
-starts; only the initialisation differs, yet ARI is 0.23 in one run and 0.67 in the other.}
+\includegraphics[width=\linewidth]{nar_fig1_pipeline.pdf}
+\caption{Study design. (1) Three technologies with expert annotations (thumbnails: DLPFC section 151673, STARmap section BZ5 and
+MERFISH Bregma $-0.14$, coloured by the annotation, which is used only for scoring). (2) Shared preprocessing and the spatial 6-nearest-neighbour graph;
+the true number of domains is given to every method. (3) \nMethodsPub{} published methods and three training-free baselines, grouped into families
+(colours used throughout). (4) Each embedding is clustered with the method's own algorithm and with a 20-start Gaussian mixture, re-clustered from
+20 single random starts, and clustered with R mclust after permuting the spot order or adding noise. (5) Agreement, per-domain, spatial and cost
+metrics, compared with a hierarchical bootstrap over donors and datasets. The three questions and where they are answered are shown below.
+Icons: Bioicons (CC0) and Servier Medical Art (CC BY 3.0).}
 \label{fig:overview}
 \end{figure*}
 
