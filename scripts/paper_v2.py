@@ -356,6 +356,37 @@ for ds in DS:
     k = max(cand, key=cand.get); base_k = k.replace("+robust", "").replace("anisost_single_gmm", "anisost")
     mac(f"best{DSM[ds]}", LAB.get(base_k, base_k)); mac(f"best{DSM[ds]}Val", cand[k])
     top = sorted(cand, key=cand.get, reverse=True)[:3]
+
+# ---- cluster-aware comparison (scripts/stats_cluster_aware.py): macros and tables
+SJ = R("stats_cluster_aware.json")
+if os.path.exists(SJ):
+    cs = json.load(open(SJ))
+    CN = {"histar": "Histar", "graphst": "Graphst", "banksy_l0.8": "BanksyHi", "banksy_l0.2": "BanksyLo", "spagcn": "Spagcn",
+          "stagate": "Stagate", "sedr": "Sedr", "spaceflow": "Spaceflow", "nichepca": "Nichepca", "ccst": "Ccst",
+          "spatial_mgcn": "Mgcn", "deepst": "Deepst", "bass": "Bass", "anisost": "Aniso", "pca_gmm": "Pca", "bayesspace": "Bayesspace"}
+    for key, v in cs["comparisons"].items():
+        proto, m = key.split("/", 1); pre = "std" if proto == "standard" else "rob"
+        mac(f"{pre}D{CN[m]}", f"{v['delta']:+.3f}"); mac(f"{pre}Lo{CN[m]}", f"{v['ci95'][0]:+.3f}"); mac(f"{pre}Hi{CN[m]}", f"{v['ci95'][1]:+.3f}")
+    for proto, pre in (("standard", "Std"), ("robust", "Rob")):
+        vs = [v for v in cs["comparisons"].values() if v["protocol"] == proto]
+        for cat, nm_ in (("baseline_better", "Better"), ("unresolved", "Unres"), ("equivalent", "Equiv"), ("baseline_worse", "Worse")):
+            mac(f"n{pre}{nm_}", str(sum(v["category"] == cat for v in vs)))
+        mac(f"n{pre}Tot", str(len(vs)))
+        mac(f"n{pre}BetterTest", str(sum(v["test_only"]["ci95"][0] > 0 for v in vs)))
+    mac("statBoot", str(cs["n_boot"])); mac("statMargin", f"{cs['margin']:.2f}"); mac("statClusters", str(len(cs["clusters"])))
+    rk = cs["ranking"]
+    mac("pBestLin", f"{rk['Linear diffusion']['p_best']:.2f}"); mac("pBestBass", f"{rk['BASS']['p_best']:.2f}")
+    mac("rankLoLin", str(rk["Linear diffusion"]["rank95"][0])); mac("rankHiLin", str(rk["Linear diffusion"]["rank95"][1]))
+    mac("rankMethods", str(cs["ranking_methods"]))
+    VERD = {"baseline_better": "baseline higher", "unresolved": "unresolved", "equivalent": "equivalent", "baseline_worse": "baseline lower"}
+    for proto, fn in (("standard", "table_stats.tex"), ("robust", "table_stats_robust.tex")):
+        L_ = ["\\begin{tabular}{lrrrrl}", "\\toprule", "Method & $\\Delta$ ARI (95\\% CI) & DLPFC & STARmap & MERFISH & Verdict \\\\", "\\midrule"]
+        vs = sorted([v for v in cs["comparisons"].values() if v["protocol"] == proto], key=lambda v: -v["delta"])
+        for v in vs:
+            pdv = v["per_dataset"]; f3 = lambda x: "--" if x is None else f"{x:+.2f}"
+            L_.append(f"{v['method']} & {v['delta']:+.3f} ({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f}) & {f3(pdv.get('dlpfc'))} & {f3(pdv.get('starmap'))} & {f3(pdv.get('merfish'))} & {VERD[v['category']]} \\\\")
+        L_ += ["\\bottomrule", "\\end{tabular}"]
+        open(R(fn), "w").write("\n".join(L_).replace("\u03bb", "$\\lambda$").replace("λ", "$\\lambda$") + "\n")
 # counts
 mac("nSections", str(P.reset_index()[["dataset", "slice"]].drop_duplicates().shape[0]))
 mac("nMethodsPub", "13")

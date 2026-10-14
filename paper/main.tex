@@ -34,8 +34,9 @@ index (ARI), mostly on one tissue and from a single run. We benchmarked the accu
 reproducibility of \nMethodsPub{} published methods and three training-free baselines on \nSections{} annotated
 sections from three technologies (10x Visium, STARmap and MERFISH). The highest mean ARI was reached by
 \bestDlpfc{} on DLPFC, \bestStarmap{} on STARmap and \bestMerfish{} on MERFISH; a training-free
-diffusion baseline was significantly better than \nPooledSig{} of \nPooled{} comparisons and not significantly
-different from the best methods. On fixed embeddings, refitting the same mixture model from different random starts
+diffusion baseline had a higher mean ARI than \nStdBetter{} of \nStdTot{} methods (95\% hierarchical-bootstrap intervals over
+donors and datasets excluding zero) and could not be separated from BASS and BANKSY $\lambda=0.8$; no method was equivalent to it
+within an ARI margin of \statMargin. On fixed embeddings, refitting the same mixture model from different random starts
 changed ARI by \lotMean{} on average (up to \lotMax), and merely shuffling the order of the spots changed the ARI of
 R mclust by up to \mcPermMax. Choosing the best of 20 starts by likelihood improved \nGainPos{} of \nGainTot{} methods
 and worsened \nGainNeg. With its official code, HiSTaR reached a median ARI of 0.51 on DLPFC instead of the reported 0.65,
@@ -152,28 +153,33 @@ deviation, 10 times (\mcNMethods{} methods in the extended set, plus HiSTaR, Gra
 
 \subsection{Evaluation and statistics}
 ARI \citep{hubert1985ari} against the manual annotation; NMI gave the same conclusions (code
-repository). For every (method, section) we average over seeds. Methods were compared with
-two-sided Wilcoxon signed-rank tests over sections, with Holm correction \citep{holm1979} over the family of \nPooled{}
-comparisons of linear diffusion with each method and clustering protocol. Run time and peak memory were measured
+repository). For every (method, section) we average over seeds. Sections are not independent (12 DLPFC sections come from three donors; the STARmap and MERFISH sections come from one
+experiment each), so the unit of analysis is the cluster: \statClusters{} clusters (three DLPFC donors, STARmap, MERFISH). For each method
+we estimate the difference in mean ARI from linear diffusion, the reference, which was chosen after the means were seen, so this
+comparison is exploratory. Intervals come from a hierarchical bootstrap (\statBoot{} resamples of clusters, then of sections within a
+cluster; the estimate is the equal-weight mean of cluster means) with 95\% percentile intervals. A method is called equivalent to the
+reference if the 90\% interval lies within $\pm\statMargin$ ARI, a margin fixed before the analysis. Ranks and the probability of
+ranking first come from the same bootstrap. The analysis is repeated without the development sections (DLPFC donor 1 and the first
+section of STARmap and MERFISH). Run time and peak memory were measured
 for a subset of methods in a standardised runner (process-tree sampling, one CPU thread per job).
 
 \section{Results}
 
 \subsection{Accuracy across methods and technologies}
-Table~\ref{tab:main} and Fig.~\ref{fig:matched} compare all methods under both protocols.
+Fig.~\ref{fig:accuracy}, Table~\ref{tab:main} and Fig.~\ref{fig:matched} compare all methods under both protocols; Fig.~\ref{fig:maps} shows example partitions.
 Across all methods and both protocols, the highest mean ARI was reached by \bestDlpfc{} on DLPFC (\bestDlpfcVal),
 \bestStarmap{} on STARmap (\bestStarmapVal) and \bestMerfish{} on MERFISH (\bestMerfishVal). Linear graph diffusion had
 a mean ARI of \meanLinDlpfc, \meanLinStarmap{} and \meanLinMerfish{} on the three datasets (average over datasets \overallLin, against \overallBass{} for BASS and \overallBanksyHi{} for BANKSY $\lambda=0.8$).
-Over the \nSections{} sections it had a higher mean ARI than most competitors: the difference was significant after Holm
-correction in \nPooledSig{} of the \nPooled{} comparisons, including HiSTaR with standard
-clustering (+\dLinHistar, \winsLinHistar/20 sections, Holm-adjusted \pLinHistar), GraphST with its own mclust clustering (+\dLinGraphst, \winsLinGraphst/20, adjusted \pLinGraphst),
-SpaGCN (+\dLinSpagcn, \winsLinSpagcn/20, \pLinSpagcn), NichePCA (+\dLinNichepca, adjusted \pLinNichepca), SpaceFlow (+\dLinSpaceflow, \pLinSpaceflow),
-CCST (+\dLinCcst, \pLinCcst), DeepST (+\dLinDeepst, \pLinDeepst) and Spatial-MGCN (+\dLinMgcn, \pLinMgcn).
-The differences to BANKSY $\lambda=0.8$ (+\dLinBanksyHi, adjusted \pLinBanksyHi), AnisoST (+\dLinAniso, \pLinAniso), SEDR (+\dLinSedr, \pLinSedr), BASS (+\dLinBass, \pLinBass), STAGATE
-and HiSTaR with robust clustering (+\dLinStagateRob{} and +\dLinHistarRob, adjusted \pLinStagateRob{} and \pLinHistarRob) were not significant: these methods are
-statistically indistinguishable from the baseline with \nSections{} sections, which is not evidence that they are equivalent. The ranking of the deep methods relative
-to the baselines changed with the clustering protocol (Fig.~\ref{fig:matched}). The deep methods
-were also the least stable: HiSTaR's seed-to-seed standard deviation of ARI was 0.047 on DLPFC and
+Because sections are nested in \statClusters{} donors and datasets, we compared methods with a hierarchical bootstrap
+(Table~\ref{tab:stats}). With each method's standard clustering, linear diffusion had a higher mean ARI than \nStdBetter{} of \nStdTot{} methods
+(95\% interval above zero), and this held for \nStdBetterTest{} of them with the development sections excluded. Two comparisons were
+unresolved: BASS ($\Delta$ \stdDBass, 95\% interval \stdLoBass{} to \stdHiBass) and BANKSY $\lambda=0.8$ (\stdDBanksyHi, \stdLoBanksyHi{} to \stdHiBanksyHi).
+Neither was equivalent to the baseline within an ARI margin of \statMargin, and the per-dataset differences changed sign: BASS was ahead on MERFISH
+and BANKSY $\lambda=0.8$ on STARmap. With 20-start clustering, \nRobBetter{} of \nRobTot{} comparisons favoured the baseline and \nRobUnres{} were
+unresolved (Supplementary Table~\ref{tab:statsrob}). In the bootstrap, linear diffusion ranked first in \pBestLin{} of the resamples (95\% rank interval
+\rankLoLin--\rankHiLin{} among \rankMethods{} methods) and BASS in \pBestBass. These intervals rest on \statClusters{} clusters and are wide, and the reference was
+chosen after seeing the means, so the comparison is exploratory. The ranking of the deep methods relative
+to the baselines changed with the clustering protocol (Fig.~\ref{fig:matched}). Seed-to-seed variability also differed: HiSTaR's standard deviation of ARI was 0.047 on DLPFC and
 0.18 on STARmap, against 0.003--0.04 for the training-free baselines. Run time and memory differed by
 orders of magnitude between methods (Table~\ref{tab:res}); in a separate feasibility test, one DLPFC section took
 tens of minutes on one CPU thread for most of the neural methods and about 50 minutes for BayesSpace.
@@ -188,12 +194,44 @@ fixed on DLPFC donor 1.}
 \input{../results/table_main.tex}
 \end{table*}
 
+\begin{table*}[t]
+\centering
+\caption{Difference in mean ARI between linear diffusion (reference) and each method, with each method's standard clustering. Positive values
+mean the reference scored higher. Intervals: 95\% hierarchical bootstrap over \statClusters{} clusters (donors and datasets). Per-dataset columns are mean differences.
+Verdict: baseline higher = interval above zero; unresolved = interval includes zero and is not within $\pm\statMargin$. BayesSpace was run on DLPFC only (12 sections).}
+\label{tab:stats}
+\input{../results/table_stats.tex}
+\end{table*}
+
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{v2_fig3_matched.png}
-\caption{Mean ARI per dataset with standard clustering (grey) and the 20-start, best-likelihood GMM
-(blue) applied to the same embeddings.}
+\includegraphics[width=\linewidth]{nar_fig2_accuracy.pdf}
+\caption{Accuracy of \nMethodsPub{} published methods and three training-free baselines (BayesSpace, run on DLPFC only, is omitted).
+\textbf{a}, Mean ARI per dataset with each method's standard clustering (training-free baselines: their 20-start clustering). Rows are ordered by the mean over the
+three datasets. Dots mark the method family. \textbf{b}, Difference in mean ARI between linear diffusion and each method, with 95\% intervals
+from a hierarchical bootstrap over \statClusters{} clusters (three DLPFC donors, STARmap, MERFISH). Filled symbols: interval above zero;
+open symbols: unresolved. The grey band is the equivalence margin of $\pm\statMargin$ ARI. \textbf{c}, Rank of each method in the bootstrap
+(dot: median; line: 95\% interval); numbers give the probability of ranking first. Linear diffusion was chosen as the reference after seeing the means, so
+this comparison is exploratory.}
+\label{fig:accuracy}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{nar_fig4_protocol.pdf}
+\caption{Effect of the clustering protocol on mean ARI. Open circles: each method's standard clustering. Filled circles: the 20-start,
+best-likelihood Gaussian mixture applied to the same embedding (blue: higher, orange: lower). Methods that cluster internally (SpaGCN, BASS,
+BayesSpace) have no embedding and are not shown.}
 \label{fig:matched}
+\end{figure*}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{nar_fig5_maps.pdf}
+\caption{Domains on DLPFC section 151673 (seed 0). The panels show the manual annotation and the partition of nine methods; predicted clusters
+were matched to the annotated layers with the Hungarian algorithm for display only, and the ARI against the annotation is given in each title.
+Spots without annotation are light grey.}
+\label{fig:maps}
 \end{figure*}
 
 \begin{table}[t]
@@ -213,10 +251,10 @@ smoothing that is needed to reveal regions. We report this as a negative result 
 edge-preserving variant; the simpler linear diffusion was the more robust baseline.
 
 \subsection{Robustness to the clustering initialisation}
-Figure~\ref{fig:lottery} shows the ARI of 20 single-start fits of the same mixture model on each
+Figure~\ref{fig:robust}a shows the ARI of 20 single-start fits of the same mixture model on each
 fixed embedding. Across the \lotN{} embeddings of \lotNMethods{} methods, the ARI range within an
 embedding was \lotMean{} on average and reached \lotMax{} (\lotWorstMethod, \lotWorstSection). The effect depended
-on the method: the mean range was \lotLo{} for \lotLoName{} and \lotHi{} for \lotHiName{} (Fig.~\ref{fig:lotmethods}); for HiSTaR and AnisoST it was
+on the method: the mean range was \lotLo{} for \lotLoName{} and \lotHi{} for \lotHiName{} (Fig.~\ref{fig:robust}a); for HiSTaR and AnisoST it was
 \lotMeanHistar{} and \lotMeanAniso{}, whereas GraphST's 20-dimensional PCA embeddings were more stable
 (\lotMeanGraphst). The best of the 20 fits by ARI exceeded the
 average single fit by \lotOracle: choosing a clustering run by its agreement with the labels, explicitly
@@ -225,47 +263,35 @@ published methods.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{v2_fig1_lottery.png}
-\caption{The clustering lottery (HiSTaR, GraphST and AnisoST; the other methods are in
-Fig.~\ref{fig:lotmethods} and the repository). For each section, one fixed embedding was clustered 20 times with a
-single-start tied-covariance GMM (grey dots; bar = range). Blue: the fit with the highest
-log-likelihood (label-free). Open circle: R mclust with default settings on the same embedding.}
-\label{fig:lottery}
+\includegraphics[width=\linewidth]{nar_fig3_robustness.pdf}
+\caption{Robustness of the clustering step on fixed embeddings (\lotNMethods{} methods with embeddings; one dot per section; colour: dataset).
+\textbf{a}, ARI range over 20 single-start fits of the same Gaussian mixture model on one embedding. \textbf{b}, ARI range of R mclust
+(default settings) over 10 random permutations of the row order of the same embedding. Black bars: interquartile range; open circle: median.
+Methods are ordered by the median range in \textbf{a}. \textbf{c}, Median Spearman correlation between the log-likelihood and the ARI of the 20 fits
+(positive: better-fitting mixtures agree better with the annotation).}
+\label{fig:robust}
 \end{figure*}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{v2_fig4_lottery_methods.png}
-\caption{ARI range over 20 single-start GMM fits of one fixed embedding, by method: mean over the
-sections (bars) and the worst section (dots).}
-\label{fig:lotmethods}
-\end{figure}
+
 
 \subsection{Robustness to spot order and noise in R mclust}
 mclust initialises EM by model-based hierarchical agglomeration, so one call on a fixed embedding
 always returns the same partition. That partition, however, depended on details that carry no
-information (Fig.~\ref{fig:mclust}). Over \mcN{} embeddings, randomly permuting the order of the spots changed ARI by
+information (Fig.~\ref{fig:robust}b). Over \mcN{} embeddings, randomly permuting the order of the spots changed ARI by
 \mcPermMean{} on average within an embedding (up to \mcPermMax); on DLPFC the mean was \mcPermMeanDlpfc{} and on MERFISH \mcPermMeanMerfish. In \mcPermFrac\% of the permutations ARI moved by more than 0.05, and
 for \mcPermGt\% of the embeddings the range exceeded 0.1. Adding noise at 1\% of each
 feature's standard deviation had similar effects (mean range \mcJitMean, up to \mcJitMax; \mcJitMeanStarmap{} on STARmap). Over these embeddings, mclust's default fit had
 a mean ARI of \mcDefault{} against \mcBest{} for the best-likelihood fit of 20 random starts, and its
 log-likelihood was at least as high in only \mcLLfrac\% of cases.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.85\linewidth]{v2_fig2_mclust.png}
-\caption{Change in ARI of R mclust (EEE, default initialisation) when the same embedding is
-perturbed by permuting the spot order (orange) or adding noise at 1\% of each feature's standard
-deviation (blue); 10 perturbations per section and embedding.}
-\label{fig:mclust}
-\end{figure*}
+
 
 \subsection{Choosing fits by likelihood is not a remedy}
 A natural fix is to run many starts and keep the most likely fit. It helped some methods and
 hurt others. Replacing each method's standard clustering by this matched protocol raised mean ARI for \nGainPos{} of
 \nGainTot{} methods and lowered it for \nGainNeg. For example, it raised HiSTaR's mean ARI by \gainHistar{} (\gainWinsHistar/\gainNHistar{} sections,
 \gainPHistar) and GraphST's by \gainGraphst{} (\gainWinsGraphst/\gainNGraphst, \gainPGraphst), but changed SEDR's by \gainSedr{}
-and Spatial-MGCN's by \gainMgcn. The reason is visible in Fig.~\ref{fig:lottery}: likelihood and ARI were positively
+and Spatial-MGCN's by \gainMgcn. The reason is visible in Fig.~\ref{fig:robust}: likelihood and ARI were positively
 related on DLPFC (median Spearman $\rho$ \rhoDlpfcMed) but not on MERFISH (median $\rho$ \rhoMerfishMed; negative for
 \rhoNegMerfish{} of \lotNMethods{} methods), where the best-fitting mixture can separate cell types rather than anatomical
 regions. Better optimisation of the mixture model is therefore not the same as better domains.
@@ -339,6 +365,15 @@ provided with the code.
 \bibliography{refs}
 
 \clearpage
+\section{Supplementary tables}
+\begin{table}[h]
+\centering
+\caption{As Table~\ref{tab:stats}, with the 20-start, best-likelihood clustering applied to each method's embedding.}
+\label{tab:statsrob}
+\small
+\input{../results/table_stats_robust.tex}
+\end{table}
+
 \section{Supplementary figures}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \setcounter{figure}{0}

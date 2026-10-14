@@ -1296,6 +1296,16 @@
     "max_mem_gb": 1.86,
     "kwh_total": 0.003308611111111111
    },
+   "bass": {
+    "median_s": 703.7,
+    "max_mem_gb": 6.47,
+    "kwh_total": 0.08813333333333333
+   },
+   "graphst": {
+    "median_s": 1253.2,
+    "max_mem_gb": 2.45,
+    "kwh_total": 0.18544349999999998
+   },
    "histar": {
     "median_s": 118.6,
     "max_mem_gb": 1.64,
@@ -1320,6 +1330,26 @@
     "median_s": 104.1,
     "max_mem_gb": 2.38,
     "kwh_total": 0.01578136111111111
+   },
+   "spaceflow": {
+    "median_s": 908.0,
+    "max_mem_gb": 2.26,
+    "kwh_total": 0.15812780555555556
+   },
+   "spagcn": {
+    "median_s": 55.9,
+    "max_mem_gb": 1.98,
+    "kwh_total": 0.009206694444444444
+   },
+   "spatial_mgcn": {
+    "median_s": 1746.3,
+    "max_mem_gb": 3.82,
+    "kwh_total": 0.08155875
+   },
+   "stagate": {
+    "median_s": 1015.6,
+    "max_mem_gb": 2.58,
+    "kwh_total": 0.14578102777777777
    }
   },
   "pilot_median_s": {

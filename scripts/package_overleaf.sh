@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 D=dist/overleaf_pkg; rm -rf "$D"; mkdir -p "$D/figures"
 sed -e 's#\\graphicspath{{../docs/figures/}}#\\graphicspath{{figures/}}#' \
     -e 's#\\input{../results/#\\input{#' paper/main.tex > "$D/main.tex"
-cp paper/refs.bib results/table_main.tex results/table_resources.tex results/paper_macros.tex "$D/"
+cp paper/refs.bib results/table_main.tex results/table_resources.tex results/table_stats.tex results/table_stats_robust.tex results/paper_macros.tex "$D/"
 for f in $(grep -o '{[A-Za-z0-9_]*\.\(png\|pdf\)}' paper/main.tex | tr -d '{}' | sort -u); do cp "docs/figures/$f" "$D/figures/"; done
 CLS=$(kpsewhich oup-authoring-template.cls); cp "$CLS" "$D/"
 rm -f dist/overleaf_manuscript.zip; (cd "$D" && zip -qr ../overleaf_manuscript.zip .)
