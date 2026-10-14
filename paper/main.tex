@@ -78,14 +78,15 @@ and does released code select models using the labels? The study design is summa
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{nar_fig1_pipeline.pdf}
-\caption{Study design. (1) Three technologies with expert annotations (thumbnails: DLPFC section 151673, STARmap section BZ5 and
-MERFISH Bregma $-0.14$, coloured by the annotation, which is used only for scoring). (2) Shared preprocessing and the spatial 6-nearest-neighbour graph;
-the true number of domains is given to every method. (3) \nMethodsPub{} published methods and three training-free baselines, grouped into families
-(colours used throughout). (4) Each embedding is clustered with the method's own algorithm and with a 20-start Gaussian mixture, re-clustered from
-20 single random starts, and clustered with R mclust after permuting the spot order or adding noise. (5) Agreement, per-domain, spatial and cost
-metrics, compared with a hierarchical bootstrap over donors and datasets. The three questions and where they are answered are shown below.
-Icons: Bioicons (CC0) and Servier Medical Art (CC BY 3.0).}
+\includegraphics[width=\linewidth]{nar_fig1_pipeline_v2.pdf}
+\caption{Study design. (1) Human DLPFC on a 10x Visium capture area (section 151673) and mouse sections profiled by STARmap (mPFC, section BZ5)
+and MERFISH (hypothalamus, Bregma $-0.14$); colours are the expert annotation, used only for scoring. Circles zoom into individual cells
+(Voronoi cells from the measured positions, with RNA molecules drawn schematically). (2) Each spot or cell carries a gene-expression profile and
+is linked to its six nearest neighbours; the true number of domains is given to every method. (3) \nMethodsPub{} published methods and three
+training-free baselines in three families (colours used throughout). (4) Each embedding is clustered from 20 random starts, with R mclust after
+shuffling the spot order or adding noise, and with a 20-start best-likelihood fit compared with the method's own clustering. (5) Predicted domains
+are compared with the annotation (here linear diffusion on 151673) using agreement, per-domain, spatial and cost metrics, summarised with a
+bootstrap over donors and datasets. Icons: Bioicons (CC0) and Servier Medical Art (CC BY 3.0).}
 \label{fig:overview}
 \end{figure*}
 

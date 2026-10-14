@@ -9,3 +9,4 @@
 | brain-1.svg | Servier Medical Art | CC BY 3.0 (credit required: "Servier Medical Art, CC BY 3.0") |
 | glassslide-top.svg | Servier Medical Art | CC BY 3.0 (credit required) |
 | clock.svg | Servier Medical Art | CC BY 3.0 (credit required) |
+| Pyramidal_Neuron.svg | Fabian Mikulasch | CC0 |
