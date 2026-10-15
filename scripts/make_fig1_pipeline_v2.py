@@ -23,7 +23,7 @@ DOM = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#6250d6", "#52514
 RNA = ["#e34948", "#eda100", "#1baf7a", "#2a78d6", "#6250d6"]
 plt.rcParams.update({"font.family": ["Liberation Sans", "DejaVu Sans"], "pdf.fonttype": 42, "savefig.dpi": 600})
 W, H = 175.0, 104.0
-Y0 = 6.4
+Y0 = 7.3
 fig = plt.figure(figsize=(W / 25.4, (H - Y0) / 25.4))
 ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, W); ax.set_ylim(Y0, H); ax.axis("off")
 rng = np.random.default_rng(7)
@@ -49,9 +49,8 @@ def arrow(x0, y0, x1, y1, color=MUTE, lw=1.0, ms=6, rad=0.0, z=2, style="-|>"):
 
 
 def header(x, n, title):
-    ax.add_patch(Circle((x + 2.3, 99.6), 2.2, fc=INK, ec="none", zorder=4))
-    T(x + 2.3, 99.5, n, 6.4, "white", "bold", ha="center", zorder=5)
-    T(x + 5.4, 99.6, title, 7.4, INK, "bold", zorder=5)
+    T(x + 0.4, 99.6, n, 9.5, INK, "bold", zorder=5)
+    T(x + 4.4, 99.5, title, 7.2, INK, zorder=5)
 
 
 def cache(ds, s):
@@ -98,7 +97,7 @@ def zoom_cells(C, code, centre_idx, x, y, r, n_cells=26, dots=7):
 
 # ------------------------------------------------------------------ headers and flow
 X = [1.0, 45.0, 75.0, 115.0, 145.0]
-for x, n, t in zip(X, "12345", ["Tissue and technology", "Spots and graph", "Methods", "Clustering", "Evaluation"]):
+for x, n, t in zip(X, "abcde", ["Tissue and technology", "Spots and graph", "Methods", "Clustering", "Evaluation"]):
     header(x, n, t)
 for x0, x1 in ((42.5, 45.5), (72.3, 75.2), (112.2, 115.2), (142.5, 145.4)):
     arrow(x0, 58.0, x1, 58.0, color=INK2, lw=1.1, ms=7)
@@ -116,10 +115,10 @@ for i in range(28):
 C, code, names = cache("dlpfc", "151673")
 tissue(C, code, cap_x, cap_y, cap, 0.42, z=3)
 T(1.5, 81.0, "10x Visium", 6.6, INK, "bold"); T(1.5, 77.8, "human DLPFC", 6.0, INK2); T(1.5, 74.8, "12 sections", 5.6, MUTE); T(1.5, 72.2, "3 donors", 5.6, MUTE)
-T(cap_x + cap / 2, cap_y - 2.6, "barcoded spots (55 µm)", 5.2, MUTE, ha="center")
+T(cap_x + cap / 2, cap_y - 2.6, "55 µm barcoded spots", 5.2, MUTE, ha="center")
 # STARmap: mouse -> section -> zoom of cells
 icon("Mouse.svg", 1.0, 53.8, 4.4, w=8.0)
-T(9.6, 55.8, "STARmap", 6.6, INK, "bold"); T(22.4, 55.8, "mouse mPFC · 3 sections", 5.6, INK2)
+T(9.6, 55.8, "STARmap", 6.6, INK, "bold"); T(22.4, 55.8, "mouse mPFC with 3 sections", 5.6, INK2)
 Cs, cs, _ = cache("starmap", "20180417_BZ5_control")
 Ps = tissue(Cs, cs, 2.5, 37.5, 22.0, 1.0)
 ann = np.where(cs >= 0)[0]; ci = ann[np.argmin(np.linalg.norm(Cs[ann] - np.median(Cs[ann], 0), axis=1))]
@@ -128,7 +127,7 @@ ax.plot([Ps[ci, 0] + 1.0, 35.2 - 6.4], [Ps[ci, 1], 45.5], color=MUTE, lw=0.5, zo
 ax.add_patch(Circle(Ps[ci], 1.0, fc="none", ec=INK2, lw=0.6, zorder=6))
 # MERFISH
 icon("Mouse.svg", 1.0, 30.0, 4.4, w=8.0)
-T(9.6, 32.0, "MERFISH", 6.6, INK, "bold"); T(22.4, 32.0, "hypothalamus · 5 sections", 5.6, INK2)
+T(9.6, 32.0, "MERFISH", 6.6, INK, "bold"); T(22.4, 32.0, "hypothalamus with 5 sections", 5.6, INK2)
 Cm, cm, _ = cache("merfish", "-0.14")
 Pm = tissue(Cm, cm, 3.0, 11.5, 18.5, 0.3)
 annm = np.where(cm >= 0)[0]
@@ -140,8 +139,8 @@ cim = max(cand[::20], key=ann_frac)
 zoom_cells(Cm, cm, cim, 35.2, 21.0, 6.4, n_cells=22, dots=6)
 ax.plot([Pm[cim, 0] + 1.0, 35.2 - 6.4], [Pm[cim, 1], 21.0], color=MUTE, lw=0.5, zorder=3)
 ax.add_patch(Circle(Pm[cim], 1.0, fc="none", ec=INK2, lw=0.6, zorder=6))
-T(35.2, 12.4, "cells · RNA molecules", 5.2, MUTE, ha="center")
-T(21.5, 9.6, "colours: expert annotation (used only for scoring)", 5.4, MUTE, ha="center", style="italic")
+T(35.2, 12.4, "Cells and RNA molecules", 5.2, MUTE, ha="center")
+T(1.0, 9.0, "Colours show the expert annotation used only for scoring", 5.2, MUTE, style="italic")
 
 # ------------------------------------------------------------------ 2 spots and graph
 gx, gy, gr = 58.0, 75.0, 10.5
@@ -160,12 +159,12 @@ for b in range(6):
     hgt = rng.uniform(0.6, 3.2)
     ax.add_patch(Rectangle((px + 3.0 + b * 0.75, py + 2.4), 0.55, hgt, fc=RNA[b % 5], ec="none", zorder=6))
 ax.plot([px, px + 2.8], [py, py + 2.4], color=INK2, lw=0.4, zorder=5)
-T(gx, gy - gr - 2.6, "spot × gene profiles", 5.8, INK, ha="center")
-T(gx, gy - gr - 5.4, "6 nearest neighbours", 5.8, INK, ha="center")
-T(gx, 47.0, "normalise · 2,000 HVGs", 5.4, MUTE, ha="center"); T(gx, 44.4, "PCA (200 / 50 PCs)", 5.4, MUTE, ha="center")
-T(gx, 39.6, "true number of", 5.4, MUTE, ha="center", style="italic"); T(gx, 37.0, "domains given", 5.4, MUTE, ha="center", style="italic")
+T(gx, gy - gr - 2.6, "Expression profiles", 5.8, INK, ha="center")
+T(gx, gy - gr - 5.4, "6-nearest-neighbour graph", 5.8, INK, ha="center")
+T(gx, 47.0, "Normalisation and 2000 HVGs", 5.4, MUTE, ha="center"); T(gx, 44.4, "PCA with 200 or 50 PCs", 5.4, MUTE, ha="center")
+T(gx, 39.6, "True number of", 5.4, MUTE, ha="center", style="italic"); T(gx, 37.0, "domains given", 5.4, MUTE, ha="center", style="italic")
 icon("Pyramidal_Neuron.svg", gx - 4.0, 18.0, 13.0, w=8.0)
-T(gx, 15.2, "layers L1–L6, white matter", 5.4, MUTE, ha="center")
+T(gx, 15.6, "Layers L1 to L6", 5.2, MUTE, ha="center"); T(gx, 13.2, "and white matter", 5.2, MUTE, ha="center")
 
 # ------------------------------------------------------------------ 3 methods (no boxes)
 def fam_title(y, col, t, n):
@@ -173,8 +172,8 @@ def fam_title(y, col, t, n):
     T(79.2, y, t, 6.4, INK, "bold"); T(111.6, y, n, 6.6, col, "bold", ha="right")
 fam_title(90.5, ORANGE, "Deep encoders", "9")
 icon("neural-network-1.svg", 77.0, 74.5, 12.0, w=12.0)
-for j, nm in enumerate(["HiSTaR · GraphST", "STAGATE · SEDR", "SpaceFlow · CCST", "Spatial-MGCN · DeepST", "SpaGCN"]):
-    T(91.0, 86.6 - j * 2.9, nm, 5.6, INK2)
+for j, nm in enumerate(["HiSTaR", "GraphST", "STAGATE", "SEDR", "SpaceFlow", "CCST", "Spatial-MGCN", "DeepST", "SpaGCN"]):
+    T(90.0 if j < 5 else 100.6, 86.6 - (j if j < 5 else j - 5) * 2.9, nm, 5.4, INK2)
 fam_title(66.0, AQUA, "Statistical / Bayesian", "4")
 xs = np.linspace(-3, 3, 60)
 for mu, sd, a in ((-0.9, 0.7, 0.9), (1.0, 0.9, 0.7)):
@@ -182,19 +181,19 @@ for mu, sd, a in ((-0.9, 0.7, 0.9), (1.0, 0.9, 0.7)):
     ax.fill_between(82.0 + xs * 1.6, 52.0, 52.0 + yv * 9 * a, color=AQUA, alpha=0.35, lw=0, zorder=2)
     ax.plot(82.0 + xs * 1.6, 52.0 + yv * 9 * a, color=AQUA, lw=0.9, zorder=3)
 ax.plot([77.0, 87.5], [52.0, 52.0], color=INK2, lw=0.6, zorder=3)
-for j, nm in enumerate(["BANKSY · NichePCA", "BASS · BayesSpace"]):
-    T(91.0, 61.0 - j * 3.0, nm, 5.6, INK2)
-fam_title(41.5, BLUE, "Training-free", "3")
+for j, nm in enumerate(["BANKSY", "NichePCA", "BASS", "BayesSpace"]):
+    T(90.0 if j < 2 else 100.6, 61.0 - (j % 2) * 3.0, nm, 5.4, INK2)
+fam_title(41.5, BLUE, "Training-free baselines", "3")
 # heat diffusion over a real tissue patch
 sel2 = np.argsort(np.linalg.norm(C - cen, axis=1))[:160]
 Qd = C[sel2] - cen; Qd = Qd / np.abs(Qd).max() * 6.0 + [83.0, 29.0]
 seed = Qd[np.argmin(Qd[:, 0] + Qd[:, 1])]
 val = np.exp(-np.linalg.norm(Qd - seed, axis=1) / 3.5)
 ax.scatter(Qd[:, 0], Qd[:, 1], s=3.2, c=[plt.cm.Blues(0.15 + 0.8 * v) for v in val], lw=0, zorder=3)
-for j, nm in enumerate(["linear diffusion", "AnisoST · PCA"]):
-    T(91.0, 36.0 - j * 3.0, nm, 5.6, INK2)
-T(93.5, 15.2, "official code, published settings", 5.4, MUTE, ha="center", style="italic")
-T(93.5, 12.6, "output: embedding or domains", 5.4, MUTE, ha="center", style="italic")
+for j, nm in enumerate(["Linear diffusion", "AnisoST", "PCA"]):
+    T(91.0, 37.4 - j * 2.9, nm, 5.6, INK2)
+T(93.5, 15.2, "Official code with published settings", 5.4, MUTE, ha="center", style="italic")
+T(93.5, 12.6, "Output is an embedding or domain labels", 5.4, MUTE, ha="center", style="italic")
 
 # ------------------------------------------------------------------ 4 clustering
 z = np.load(os.path.join(ROOT, "results", "runs", "dlpfc__151673__linear_diffusion__s0.npz"))
@@ -207,8 +206,8 @@ ax.scatter(Pe[:, 0], Pe[:, 1], s=0.8, c=[DOM[l] for l in l2], lw=0, alpha=0.8, r
 for k_ in range(5):
     w_, v_ = np.linalg.eigh(gm.covariances_[k_]); ang = np.degrees(np.arctan2(v_[1, 1], v_[0, 1]))
     ax.add_patch(Ellipse(gm.means_[k_], 3.2 * np.sqrt(w_[1]), 3.2 * np.sqrt(w_[0]), angle=ang, fc="none", ec=INK, lw=0.55, zorder=4))
-T(129.0, 69.2, "embedding → Gaussian mixture", 5.6, INK2, ha="center")
-rows = [("dice", "20 random starts", "same embedding"), ("perm", "spot order shuffled", "R mclust, + 1% noise"), ("best", "20 starts, best fit", "vs method's own")]
+T(129.0, 69.2, "Gaussian mixture on the embedding", 5.6, INK2, ha="center")
+rows = [("dice", "Random starts", "Same embedding"), ("perm", "Shuffled spot order", "R mclust plus noise"), ("best", "Best of 20 starts", "Versus own method")]
 for i, (g, t1, t2) in enumerate(rows):
     y0 = 60.0 - i * 9.6; gx_ = 119.0
     if g == "dice":
@@ -234,7 +233,7 @@ for r in range(20):
     g_ = GaussianMixture(Kh, covariance_type="tied", n_init=1, reg_covar=1e-5, random_state=r).fit(Zh)
     p_ = g_.predict(Zh); fits.append((adjusted_rand_score(ch[okh], p_[okh]), p_))
 aris = np.array([f[0] for f in fits])
-T(129.0, 34.8, "one embedding, 20 random starts", 5.8, INK, ha="center")
+T(129.0, 34.8, "ARI of 20 random starts", 5.8, INK, ha="center")
 sx0, sx1, sy = 117.0, 141.0, 31.2
 lo, hi = 0.2, 0.7
 ax.plot([sx0, sx1], [sy, sy], color=LINE, lw=0.6, zorder=2)
@@ -254,7 +253,7 @@ iw, ib = int(np.argmin(aris)), int(np.argmax(aris))
 tissue(Ch, matched(fits[iw][1]), 116.6, 13.6, 12.0, 0.32)
 tissue(Ch, matched(fits[ib][1]), 129.8, 13.6, 12.0, 0.32)
 T(122.6, 11.6, f"ARI {aris[iw]:.2f}", 5.6, INK2, ha="center"); T(135.8, 11.6, f"ARI {aris[ib]:.2f}", 5.6, INK2, ha="center")
-T(129.0, 8.8, "HiSTaR, DLPFC 151669", 5.0, MUTE, ha="center")
+T(129.0, 9.0, "HiSTaR on DLPFC section 151669", 5.0, MUTE, ha="center")
 
 # ------------------------------------------------------------------ 5 evaluation
 Ct, ct, nm_t = cache("dlpfc", "151673")
@@ -266,12 +265,12 @@ r_, c2 = linear_sum_assignment(-Mx); mp = {pu[i]: c2[j] for j, i in enumerate(r_
 pm = np.array([mp.get(v, -1) for v in pred])
 tissue(Ct, ct, 146.0, 76.0, 12.5, 0.3)
 tissue(Ct, np.where(keep, pm, -1), 160.5, 76.0, 12.5, 0.3)
-T(152.2, 74.4, "annotation", 5.4, MUTE, ha="center"); T(166.7, 74.4, "prediction", 5.4, MUTE, ha="center")
+T(152.2, 74.4, "Annotation", 5.4, MUTE, ha="center"); T(166.7, 74.4, "Prediction", 5.4, MUTE, ha="center")
 T(159.0, 82.2, "vs", 6.0, INK2, ha="center")
-for j, (t1, t2) in enumerate((("ARI · NMI · AMI", "agreement"), ("macro-F1 · CHAOS · PAS", "domains, spatial coherence"), ("run time · memory", "cost"))):
+for j, (t1, t2) in enumerate((("Agreement", "ARI NMI and AMI"), ("Domain and spatial quality", "macro F1 CHAOS and PAS"), ("Cost", "run time and memory"))):
     T(146.5, 67.5 - j * 6.0, t1, 5.8, INK); T(146.5, 64.9 - j * 6.0, t2, 5.2, MUTE)
 tx, ty = 159.5, 46.0
-T(tx, 48.8, "bootstrap over donors", 5.6, INK, ha="center"); T(tx, 46.3, "and datasets", 5.6, INK, ha="center")
+T(tx, 48.8, "Bootstrap over donors", 5.6, INK, ha="center"); T(tx, 46.3, "and datasets", 5.6, INK, ha="center")
 ax.add_patch(Circle((tx, ty - 3.2), 0.9, fc=INK2, zorder=3))
 for i, xx in enumerate([tx - 8.0, tx - 4.0, tx, tx + 4.0, tx + 8.0]):
     ax.plot([tx, xx], [ty - 3.2, ty - 7.6], color=MUTE, lw=0.5, zorder=2)
@@ -284,7 +283,7 @@ for i, (c0, c1, m) in enumerate(((0.4, 3.0, 1.6), (2.0, 6.4, 4.0), (5.0, 9.6, 7.
     yy = ry + 3.0 - i * 3.0
     ax.plot([148.5 + c0 * 2.2, 148.5 + c1 * 2.2], [yy, yy], color=[BLUE, AQUA, ORANGE][i], lw=1.2, solid_capstyle="round", zorder=3)
     ax.add_patch(Circle((148.5 + m * 2.2, yy), 0.6, fc=[BLUE, AQUA, ORANGE][i], zorder=4))
-T(tx, 17.6, "differences · ranks", 5.4, MUTE, ha="center"); T(tx, 15.0, "equivalence margin", 5.4, MUTE, ha="center")
+T(tx, 17.6, "Differences and ranks", 5.4, MUTE, ha="center"); T(tx, 15.0, "with an equivalence margin", 5.4, MUTE, ha="center")
 
 for ext in ("pdf", "png"):
     fig.savefig(os.path.join(FIG, f"nar_fig1_pipeline_v2.{ext}"))
