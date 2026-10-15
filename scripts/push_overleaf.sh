@@ -1,7 +1,7 @@
 #!/bin/sh
 # Push the current paper to the Overleaf project over Git (credentials: the environment's saved Basic-auth secret
 # for git.overleaf.com; nothing is stored here). Keeps the project's own template class (.cls/.bst), sets the NAR
-# journal header and author block, and overwrites main.tex, refs.bib, paper_macros.tex, table_*.tex and figures/.
+# journal header and author block, and overwrites main.tex, refs.bib, paper_macros.tex, supplementary.tex, supp_labels.tex, supp/ and figures/.
 #   scripts/push_overleaf.sh [PROJECT_ID] ["commit message"]
 set -e
 cd "$(dirname "$0")/.."
@@ -21,7 +21,8 @@ s = s.replace("\\address[1]{\\orgdiv{\\todo{Department}}, \\orgname{\\todo{Unive
 s = s.replace("\\corresp[$\\ast$]{Corresponding author. \\href{mailto:email@example.org}{\\todo{email}}}", "\\corresp[$\\ast$]{Corresponding author. \\href{mailto:bikashkumar@vt.edu}{bikashkumar@vt.edu}}")
 open(sys.argv[1], "w").write(s)
 PY
-cp dist/overleaf_pkg/refs.bib dist/overleaf_pkg/paper_macros.tex dist/overleaf_pkg/table_*.tex "$W/p/"
+cp dist/overleaf_pkg/refs.bib dist/overleaf_pkg/paper_macros.tex dist/overleaf_pkg/supp_labels.tex dist/overleaf_pkg/supplementary.tex "$W/p/"
+rm -f "$W/p"/table_*.tex; rm -rf "$W/p/supp"; cp -r dist/overleaf_pkg/supp "$W/p/supp"
 mkdir -p "$W/p/figures"; cp dist/overleaf_pkg/figures/* "$W/p/figures/"
 cd "$W/p"
 git add -A
