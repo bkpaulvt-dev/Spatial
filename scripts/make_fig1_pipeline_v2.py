@@ -23,8 +23,9 @@ DOM = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#6250d6", "#52514
 RNA = ["#e34948", "#eda100", "#1baf7a", "#2a78d6", "#6250d6"]
 plt.rcParams.update({"font.family": ["Liberation Sans", "DejaVu Sans"], "pdf.fonttype": 42, "savefig.dpi": 600})
 W, H = 175.0, 104.0
-fig = plt.figure(figsize=(W / 25.4, H / 25.4))
-ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, W); ax.set_ylim(0, H); ax.axis("off")
+Y0 = 6.4
+fig = plt.figure(figsize=(W / 25.4, (H - Y0) / 25.4))
+ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, W); ax.set_ylim(Y0, H); ax.axis("off")
 rng = np.random.default_rng(7)
 
 
@@ -209,7 +210,7 @@ for k_ in range(5):
 T(129.0, 69.2, "embedding → Gaussian mixture", 5.6, INK2, ha="center")
 rows = [("dice", "20 random starts", "same embedding"), ("perm", "spot order shuffled", "R mclust, + 1% noise"), ("best", "20 starts, best fit", "vs method's own")]
 for i, (g, t1, t2) in enumerate(rows):
-    y0 = 58.5 - i * 11.0; gx_ = 119.0
+    y0 = 60.0 - i * 9.6; gx_ = 119.0
     if g == "dice":
         for o, a_ in ((0, 10), (2.4, -12)):
             ax.add_patch(FancyBboxPatch((gx_ - 2.0 + o, y0 - 2.0 + o * 0.3), 3.6, 3.6, boxstyle="round,pad=0,rounding_size=0.6", fc="white", ec=INK, lw=0.6, zorder=3 + o))
@@ -223,6 +224,38 @@ for i, (g, t1, t2) in enumerate(rows):
         T(gx_ + 3.0, y0 + 2.0, "★", 5.4, BLUE, ha="center")
     T(124.0, y0 + 1.5, t1, 5.9, INK); T(124.0, y0 - 1.6, t2, 5.3, MUTE)
 
+
+# ------------------------------------------------------------------ 4b one embedding, 20 random starts (real data)
+from sklearn.metrics import adjusted_rand_score
+Zh = np.load(os.path.join(ROOT, "results", "emb", "dlpfc_151669_histar.npy")).astype(float)
+Ch, ch, nmh = cache("dlpfc", "151669"); okh = ch >= 0; Kh = len(nmh)
+fits = []
+for r in range(20):
+    g_ = GaussianMixture(Kh, covariance_type="tied", n_init=1, reg_covar=1e-5, random_state=r).fit(Zh)
+    p_ = g_.predict(Zh); fits.append((adjusted_rand_score(ch[okh], p_[okh]), p_))
+aris = np.array([f[0] for f in fits])
+T(129.0, 34.8, "one embedding, 20 random starts", 5.8, INK, ha="center")
+sx0, sx1, sy = 117.0, 141.0, 31.2
+lo, hi = 0.2, 0.7
+ax.plot([sx0, sx1], [sy, sy], color=LINE, lw=0.6, zorder=2)
+for v in (0.2, 0.45, 0.7):
+    xx = sx0 + (v - lo) / (hi - lo) * (sx1 - sx0); ax.plot([xx, xx], [sy - 0.5, sy + 0.5], color=MUTE, lw=0.5, zorder=2)
+    T(xx, sy - 1.9, f"{v:.2f}", 4.9, MUTE, ha="center")
+T(sx1 + 0.6, sy, "ARI", 5.0, MUTE)
+for v in aris:
+    ax.add_patch(Circle((sx0 + (min(max(v, lo), hi) - lo) / (hi - lo) * (sx1 - sx0), sy + rng.uniform(-0.25, 0.25)), 0.42, fc=ORANGE, ec="white", lw=0.2, alpha=0.85, zorder=3))
+def matched(pred):
+    pu = np.unique(pred[okh]); Mx = np.zeros((len(pu), Kh))
+    for i, c_ in enumerate(pu):
+        for k_ in range(Kh): Mx[i, k_] = np.sum((pred == c_) & (ch == k_))
+    r_, c2 = linear_sum_assignment(-Mx); mp = {pu[i]: c2[j] for j, i in enumerate(r_)}
+    return np.where(okh, np.array([mp.get(v, -1) for v in pred]), -1)
+iw, ib = int(np.argmin(aris)), int(np.argmax(aris))
+tissue(Ch, matched(fits[iw][1]), 116.6, 13.6, 12.0, 0.32)
+tissue(Ch, matched(fits[ib][1]), 129.8, 13.6, 12.0, 0.32)
+T(122.6, 11.6, f"ARI {aris[iw]:.2f}", 5.6, INK2, ha="center"); T(135.8, 11.6, f"ARI {aris[ib]:.2f}", 5.6, INK2, ha="center")
+T(129.0, 8.8, "HiSTaR, DLPFC 151669", 5.0, MUTE, ha="center")
+
 # ------------------------------------------------------------------ 5 evaluation
 Ct, ct, nm_t = cache("dlpfc", "151673")
 pred = np.load(os.path.join(ROOT, "results", "runs", "dlpfc__151673__linear_diffusion__s0.npz"))["labels"]
@@ -231,8 +264,8 @@ for i, c_ in enumerate(pu):
     for k_ in range(K): Mx[i, k_] = np.sum((pred == c_) & (ct == k_))
 r_, c2 = linear_sum_assignment(-Mx); mp = {pu[i]: c2[j] for j, i in enumerate(r_)}
 pm = np.array([mp.get(v, -1) for v in pred])
-tissue(Ct, ct, 146.0, 76.0, 12.5, 0.16)
-tissue(Ct, np.where(keep, pm, -1), 160.5, 76.0, 12.5, 0.16)
+tissue(Ct, ct, 146.0, 76.0, 12.5, 0.3)
+tissue(Ct, np.where(keep, pm, -1), 160.5, 76.0, 12.5, 0.3)
 T(152.2, 74.4, "annotation", 5.4, MUTE, ha="center"); T(166.7, 74.4, "prediction", 5.4, MUTE, ha="center")
 T(159.0, 82.2, "vs", 6.0, INK2, ha="center")
 for j, (t1, t2) in enumerate((("ARI · NMI · AMI", "agreement"), ("macro-F1 · CHAOS · PAS", "domains, spatial coherence"), ("run time · memory", "cost"))):
@@ -252,17 +285,6 @@ for i, (c0, c1, m) in enumerate(((0.4, 3.0, 1.6), (2.0, 6.4, 4.0), (5.0, 9.6, 7.
     ax.plot([148.5 + c0 * 2.2, 148.5 + c1 * 2.2], [yy, yy], color=[BLUE, AQUA, ORANGE][i], lw=1.2, solid_capstyle="round", zorder=3)
     ax.add_patch(Circle((148.5 + m * 2.2, yy), 0.6, fc=[BLUE, AQUA, ORANGE][i], zorder=4))
 T(tx, 17.6, "differences · ranks", 5.4, MUTE, ha="center"); T(tx, 15.0, "equivalence margin", 5.4, MUTE, ha="center")
-
-# ------------------------------------------------------------------ bottom: three questions (no boxes)
-ax.plot([1.0, 174.0], [7.3, 7.3], color=LINE, lw=0.6, zorder=1)
-qs = [(BLUE, "Accuracy", "agreement with the annotation"), (ORANGE, "Robustness", "effect of the clustering step"),
-      (AQUA, "Reproducibility", "published results and released code")]
-for i, (col, t1, t2) in enumerate(qs):
-    x0 = 1.0 + i * 58.0
-    ax.add_patch(Circle((x0 + 1.4, 3.4), 1.3, fc=col, ec="none", zorder=3))
-    tt = T(x0 + 3.6, 3.4, t1, 6.6, INK, "bold")
-    fig.canvas.draw(); bb = tt.get_window_extent().transformed(ax.transData.inverted())
-    T(bb.x1 + 1.6, 3.4, t2, 5.8, INK2)
 
 for ext in ("pdf", "png"):
     fig.savefig(os.path.join(FIG, f"nar_fig1_pipeline_v2.{ext}"))
