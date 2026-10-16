@@ -208,7 +208,7 @@ fig.legend(handles=h, ncol=2, frameon=False, loc="upper center", bbox_to_anchor=
 fig.savefig(f"{FIG}/v2_fig3_matched.png"); plt.close(fig)
 
 # ---- lottery range per method (all methods with embeddings)
-MN2 = {"histar": "HiSTaR", "graphst": "GraphST", "anisost": "AnisoST", **{m: l for l, m in NEW}}
+MN2 = {"histar": "HiSTaR", "graphst": "GraphST", "anisost": "AnisoST", "linear_diffusion": "linear diffusion", "pca_gmm": "PCA", "banksy_l0.2": "BANKSY $\\lambda=0.2$", "banksy_l0.8": "BANKSY $\\lambda=0.8$", **{m: l for l, m in NEW}}
 lm = LT.groupby("method")["range"].agg(["mean", "max"]).sort_values("mean")
 fig, ax = plt.subplots(figsize=(3.6, 0.28 * len(lm) + 0.8))
 yy = np.arange(len(lm))

@@ -1,9 +1,9 @@
 method,"ARI, paper pipeline (sections / seeds)",standardised runner + metric panel + resources (sections / seeds),lottery (20 starts),R mclust perturbation,invariance tests (sections)
-linear_diffusion,20/20 / 3,20/20 / 3,0/20,0/20,2/20
+linear_diffusion,20/20 / 3,20/20 / 3,20/20,20/20,2/20
 anisost,20/20 / 3,20/20 / 3,20/20,20/20,2/20
-pca_gmm,20/20 / 3,20/20 / 3,0/20,0/20,2/20
-banksy_l0.2,20/20 / 3,20/20 / 3,0/20,0/20,0/20
-banksy_l0.8,20/20 / 3,20/20 / 3,0/20,0/20,0/20
+pca_gmm,20/20 / 3,20/20 / 3,20/20,20/20,2/20
+banksy_l0.2,20/20 / 3,20/20 / 3,20/20,20/20,0/20
+banksy_l0.8,20/20 / 3,20/20 / 3,20/20,20/20,0/20
 histar,20/20 / 3,20/20 / 3,20/20,20/20,0/20
 graphst,20/20 / 3,20/20 / 3,20/20,20/20,0/20
 spagcn,20/20 / 3,20/20 / 3,n/a (no embedding),n/a (no embedding),0/20
