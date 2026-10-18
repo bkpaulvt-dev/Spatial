@@ -6,3 +6,6 @@ results/cache/
 results/cipher_tuning/*.log
 results/phase1/*.log
 .venv/
+results/phase1_full/*.log
+.venv-gears/
+.venv-cpa/

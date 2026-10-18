@@ -21,6 +21,14 @@ def bh(p):
 def main(outdir="results/phase1", ours="cipher_selected"):
     r = pd.concat([pd.read_json(f, lines=True) for f in sorted(glob.glob(f"{outdir}/fold*.jsonl"))])
     mets = HIGHER + LOWER
+    seed_spread = None
+    if "seed" in r and r["seed"].notna().any():
+        # learned methods have one row per seed: spread of the per-seed median, then average seeds
+        s = r[r["seed"].notna()]
+        seed_spread = s.groupby(["method", "seed"])[mets].median().groupby("method").std()
+        sel_counts = s[s.method == ours].groupby(["fold", "seed"])["selected"].first().value_counts()
+        r = r.groupby(["method", "fold", "cond"], as_index=False)[mets].mean()
+        r["selected"] = None
     rng = np.random.default_rng(0)
     rows = []
     for m, g in r.groupby("method"):
@@ -41,18 +49,26 @@ def main(outdir="results/phase1", ours="cipher_selected"):
             continue
         for k in mets:
             x, y = piv[k][ours], piv[k][b]
+            both = x.notna() & y.notna()          # e.g. GEARS cannot score pairs outside its graph
+            x, y = x[both], y[both]
             d = (x - y) if k in HIGHER else (y - x)       # positive = ours better
             if np.allclose(d, 0):
                 continue
             p = wilcoxon(d, alternative="greater").pvalue
-            tests.append({"baseline": b, "metric": k, "median_gain": float(np.median(d)),
+            tests.append({"baseline": b, "metric": k, "n": int(both.sum()), "median_gain": float(np.median(d)),
                           "win_rate": float(np.mean(d > 0)), "p": p})
     t = pd.DataFrame(tests)
     t["q_BH"] = bh(t["p"])
     print(f"\nPaired one-sided Wilcoxon, {ours} better than baseline (positive gain = better)\n")
     print(t.round(4).to_string(index=False))
-    sel = r[r.method == ours].groupby("fold")["selected"].first()
-    print("\nconfig selected on validation per fold:", sel.to_dict())
+    if seed_spread is not None:
+        print("\nSD across seeds of the per-seed median\n")
+        print(seed_spread.round(4).to_string())
+        seed_spread.to_csv(f"{outdir}/seed_sd.csv")
+        print("\nconfig selected on validation, (fold, seed) counts:", sel_counts.to_dict())
+    else:
+        sel = r[r.method == ours].groupby("fold")["selected"].first()
+        print("\nconfig selected on validation per fold:", sel.to_dict())
     summ.to_csv(f"{outdir}/summary.csv")
     t.to_csv(f"{outdir}/tests.csv", index=False)
 
