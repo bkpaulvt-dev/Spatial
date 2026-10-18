@@ -2,8 +2,11 @@
 
 Same cells, folds (results/phase1/splits.json), train-only HVGs, truth profiles and metrics as
 scripts/phase1_norman.py. CPA trains on raw counts (NB loss) from controls, all singles and the
-fold's training doubles; its built-in early stopping watches the fold's validation doubles.
-Hyperparameters follow the CPA Norman tutorial.
+fold's training doubles. As in the CPA Norman tutorial, CPA's own validation set (for early
+stopping and best-epoch restore) is a random 10% of cells from the training conditions; the
+fold's validation doubles are left out entirely, as for CIPHER. (Validating CPA on the unseen
+validation doubles made its metric peak at epoch 5, before its autoencoder pretraining ends.)
+Hyperparameters follow the tutorial; training runs at least 70 epochs (pretraining + warm-ups).
 
 Prediction is counterfactual: control cells are encoded and given the test pair, so CPA never
 sees the held-out cells. Like our truth profiles, the prediction is log1p of the mean over
@@ -36,7 +39,7 @@ TRAINER_PARAMS = {
 }
 
 
-def cpa_adata(d, split_of):
+def cpa_adata(d, split_of, seed):
     import anndata as ad
     import pandas as pd
     cond = ["ctrl" if c == "control" else c for c in d.conds]
@@ -46,6 +49,9 @@ def cpa_adata(d, split_of):
                         "split": [split_of.get(c, "train") for c in d.conds]},
                        index=[f"c{i}" for i in range(len(cond))])
     var = pd.DataFrame(index=list(d.genes))
+    tr = np.where(obs["split"].values == "train")[0]
+    rng = np.random.default_rng(seed)
+    obs.iloc[rng.choice(tr, len(tr) // 10, replace=False), obs.columns.get_loc("split")] = "valid"
     # dense counts: scvi data loading from sparse rows is the bottleneck on a busy CPU
     return ad.AnnData(d.X.toarray(), obs=obs, var=var)
 
@@ -76,14 +82,14 @@ def main():
         ctrl = prof["control"]
         singles = [c for c in prof if c != "control" and "+" not in c]
         _, mp = baselines(prof, train_d, singles + train_d, test, ctrl)
-        split_of = {**{c: "valid" for c in val}, **{c: "ood" for c in test}}
+        split_of = {**{c: "unused" for c in val}, **{c: "ood" for c in test}}
         ctrl_all = np.where(d.conds == "control")[0]
         rows = []
         for seed in args.seeds:
             t = time.time()
             scvi.settings.seed = seed
             cpa.CPA.pert_encoder = None          # fresh perturbation encoding per run
-            a = cpa_adata(d, split_of)
+            a = cpa_adata(d, split_of, seed)
             cpa.CPA.setup_anndata(a, perturbation_key="condition", control_group="ctrl",
                                   dosage_key="dose", categorical_covariate_keys=["cell_type"],
                                   is_count_data=True, max_comb_len=2)
@@ -91,6 +97,7 @@ def main():
                         test_split="ood", seed=seed, **MODEL_PARAMS)
             m.train(max_epochs=args.max_epochs, use_gpu=True, batch_size=2048,
                     plan_kwargs=TRAINER_PARAMS, early_stopping_patience=5, check_val_every_n_epoch=5,
+                    min_epochs=TRAINER_PARAMS["n_epochs_pretrain_ae"] + 20,
                     save_path=os.path.join(args.workdir, f"fold{k}_seed{seed}"))
             rng = np.random.default_rng(seed)
             cidx = rng.choice(ctrl_all, min(args.n_ctrl_pred, len(ctrl_all)), replace=False)
