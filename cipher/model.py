@@ -172,11 +172,12 @@ class CIPHER:
     """Fit / predict wrapper."""
 
     def __init__(self, data, seed=0, d_z=32, d_h=64, activation="tanh", escape=True,
-                 adversary=True, epochs=30, batch_size=256, lr=1e-3, l1=1e-4, device="cpu",
+                 adversary=True, adv_weight=1.0, epochs=30, batch_size=256, lr=1e-3, l1=1e-4, device="cpu",
                  threads=None, verbose=True, train_idx=None):
         self.d, self.seed = data, seed
         self.epochs, self.bs, self.lr, self.l1 = epochs, batch_size, lr, l1
         self.adversary, self.verbose, self.device = adversary, verbose, device
+        self.adv_weight = adv_weight
         self.train_idx = np.arange(data.X.shape[0]) if train_idx is None else np.asarray(train_idx)
         if threads:
             torch.set_num_threads(threads)
@@ -211,7 +212,7 @@ class CIPHER:
                 bi = np.sort(perm[it * self.bs:(it + 1) * self.bs])
                 X, lib, b, P = self._tensors(bi)
                 kl_w = min(1.0, step / (0.3 * total))
-                loss, out = net(X, lib, b, P, kl_w=kl_w, adv_lam=1.0 if self.adversary else 0.0)
+                loss, out = net(X, lib, b, P, kl_w=kl_w, adv_lam=self.adv_weight if self.adversary else 0.0)
                 loss = loss + self.l1 * net.penalty()
                 opt.zero_grad()
                 loss.backward()

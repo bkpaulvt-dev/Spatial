@@ -59,7 +59,12 @@ def main():
     ap.add_argument("--variants", nargs="*", default=list(VARIANTS))
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--config", nargs="*", default=[], help="name=JSON extra variants")
     args = ap.parse_args()
+    for c in args.config:
+        k, v = c.split("=", 1)
+        VARIANTS[k] = json.loads(v)
+        args.variants.append(k)
     d = pickle.load(open(args.data, "rb"))
     prof = {c: np.log1p(v) for c, v in profiles(d).items()}
     lin = {c: np.expm1(v) for c, v in prof.items()}
