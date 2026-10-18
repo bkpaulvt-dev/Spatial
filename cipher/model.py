@@ -48,9 +48,11 @@ class _GradReverse(torch.autograd.Function):
 
 class CIPHERNet(nn.Module):
     def __init__(self, n_genes, n_units, n_batch, cis_index, d_z=32, d_h=64, hidden=256,
-                 activation="tanh", gamma=0.9, n_iter=20, escape=True, init_eff=0.9, basal=True):
+                 activation="tanh", gamma=0.9, n_iter=20, escape=True, init_eff=0.9, basal=True, direct=False):
         super().__init__()
         self.basal = basal
+        # optional per-unit direct log-scale gene effects: the multiplicative null
+        self.D = nn.Parameter(torch.zeros(n_units, n_genes)) if direct else None
         self.G, self.K, self.d_h = n_genes, n_units, d_h
         self.activation, self.gamma, self.n_iter, self.escape = activation, gamma, n_iter, escape
         self.enc = nn.Sequential(nn.Linear(n_genes, hidden), nn.LayerNorm(hidden), nn.GELU(),
@@ -129,6 +131,8 @@ class CIPHERNet(nn.Module):
         add = torch.zeros(S, B, self.G, device=z.device)
         idx = ci.clamp(min=0)[None].expand(S, -1, -1)
         add.scatter_add_(2, idx, on * has[None] * self.cis[P.clamp(min=0)][None])
+        if self.D is not None:
+            lg = lg + torch.einsum("sbm,bmg->sbg", on, self.D[P.clamp(min=0)] * valid[..., None])
         return lg + add, h
 
     def forward(self, x, lib, b, P, kl_w=1.0, adv_lam=1.0):
@@ -168,14 +172,15 @@ class CIPHERNet(nn.Module):
         return loss, out
 
     def penalty(self):
-        return self.V.abs().sum() + self.W_raw.abs().sum()
+        p = self.V.abs().sum() + self.W_raw.abs().sum()
+        return p + (self.D.abs().sum() if self.D is not None else 0.0)
 
 
 class CIPHER:
     """Fit / predict wrapper."""
 
     def __init__(self, data, seed=0, d_z=32, d_h=64, activation="tanh", escape=True,
-                 adversary=True, adv_weight=1.0, basal=True, n_iter=20, epochs=30, batch_size=256, lr=1e-3, l1=1e-4, device="cpu",
+                 adversary=True, adv_weight=1.0, basal=True, direct=False, n_iter=20, epochs=30, batch_size=256, lr=1e-3, l1=1e-4, device="cpu",
                  threads=None, verbose=True, train_idx=None):
         self.d, self.seed = data, seed
         self.epochs, self.bs, self.lr, self.l1 = epochs, batch_size, lr, l1
@@ -190,7 +195,7 @@ class CIPHER:
         cis = [gidx.get(data.target_of.get(u, u), -1) for u in data.targets]
         nb = int(data.batch.max()) + 1
         self.net = CIPHERNet(len(data.genes), len(data.targets), nb, cis, d_z=d_z, d_h=d_h,
-                             activation=activation, escape=escape, basal=basal, n_iter=n_iter).to(device)
+                             activation=activation, escape=escape, basal=basal, direct=direct, n_iter=n_iter).to(device)
 
     def _tensors(self, idx):
         X = torch.tensor(self.d.X[idx].toarray(), device=self.device)
