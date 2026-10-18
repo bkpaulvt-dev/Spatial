@@ -250,14 +250,15 @@ class CIPHER:
         net = self.net
         net.eval()
         z = self.embed(ctrl_idx)
-        b1h = F.one_hot(torch.tensor(self.d.batch[ctrl_idx]), net.n_batch).float()
+        dev = self.device
+        b1h = F.one_hot(torch.tensor(self.d.batch[ctrl_idx], device=dev), net.n_batch).float()
         ix = {u: i for i, u in enumerate(self.d.targets)}
-        P = torch.tensor([[ix[u] for u in units]] * len(ctrl_idx)) if units else \
-            -torch.ones(len(ctrl_idx), 1, dtype=torch.long)
+        P = torch.tensor([[ix[u] for u in units]] * len(ctrl_idx), device=dev) if units else \
+            -torch.ones(len(ctrl_idx), 1, dtype=torch.long, device=dev)
         M = net.masks(P.shape[1], z.device)
         W = net.W()
         lp = net.log_prior(P, M) if mixture else None
-        acc = torch.zeros(net.G)
+        acc = torch.zeros(net.G, device=dev)
         for s in range(0, len(ctrl_idx), 1024):
             sl = slice(s, s + 1024)
             lg, _ = net.logits(z[sl], b1h[sl], P[sl], M, W)
@@ -265,13 +266,13 @@ class CIPHER:
             if mixture:
                 w = torch.softmax(lp[:, sl], 0)                          # S x B
             else:
-                w = torch.zeros(M.shape[0], pr.shape[1])
+                w = torch.zeros(M.shape[0], pr.shape[1], device=dev)
                 w[-1] = 1.0
             acc += (w[..., None] * pr).sum((0, 1))
-        return (acc / len(ctrl_idx) * 1e4).numpy()
+        return (acc / len(ctrl_idx) * 1e4).cpu().numpy()
 
     def efficacy(self):
-        return dict(zip(self.d.targets, torch.sigmoid(self.net.eff_logit).detach().numpy()))
+        return dict(zip(self.d.targets, torch.sigmoid(self.net.eff_logit).detach().cpu().numpy()))
 
     @torch.no_grad()
     def escape_posterior(self, idx):
@@ -281,5 +282,5 @@ class CIPHER:
         for s in range(0, len(idx), 1024):
             X, lib, b, P = self._tensors(idx[s:s + 1024])
             _, out = self.net(X, lib, b, P, adv_lam=0.0)
-            res.append((out["resp"].T @ out["M"]).numpy())          # B x m
+            res.append((out["resp"].T @ out["M"]).cpu().numpy())          # B x m
         return np.concatenate(res)

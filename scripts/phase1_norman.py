@@ -6,9 +6,10 @@ Protocol (see docs/PAPER_PLAN.md, Phase 1)
   train on singles + controls + the other training doubles; CIPHER's configuration is chosen
   per fold on validation MSE (top-20 DE), fixed in advance as the selection rule.
 * Highly variable genes are selected from cells outside the test fold only.
-* Cells are subsampled (<=400 per condition, 4000 controls) to fit a 4-CPU machine.
+* By default cells are subsampled (<=400 per condition, 4000 controls) to fit a 4-CPU machine;
+  pass --max-cells 0 for the full data (GPU). --seeds runs every learned method once per seed.
 
-Output: results/phase1/fold{k}.jsonl, one row per (method, test condition).
+Output: <outdir>/fold{k}.jsonl, one row per (method, test condition, seed); baselines have seed null.
 """
 import argparse, json, os, sys, time
 import numpy as np
@@ -33,7 +34,7 @@ def load_raw(path, max_cells=400, n_ctrl=4000, seed=0):
     for c in np.unique(pert):
         idx = np.where(pert == c)[0]
         m = n_ctrl if c == "control" else max_cells
-        if len(idx) > m:
+        if max_cells and len(idx) > m:
             idx = rng.choice(idx, m, replace=False)
         cells.append(idx)
     cells = np.sort(np.concatenate(cells))
@@ -135,11 +136,16 @@ def main():
     ap.add_argument("--epochs", type=int, default=20)
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--configs", nargs="*", default=list(CONFIGS))
+    ap.add_argument("--seeds", type=int, nargs="+", default=None,
+                    help="seeds for learned methods (default: one run with seed = fold)")
+    ap.add_argument("--max-cells", type=int, default=400, help="cells per condition; 0 = all cells")
+    ap.add_argument("--splits", default=None, help="splits.json (default: <outdir>/splits.json)")
+    ap.add_argument("--device", default="cpu", help='e.g. "cpu", "cuda", "cuda:1"')
     args = ap.parse_args()
     os.makedirs(args.outdir, exist_ok=True)
-    b, conds = load_raw(args.h5ad)
+    b, conds = load_raw(args.h5ad, max_cells=args.max_cells, n_ctrl=4000 if args.max_cells else 0)
     doubles = sorted(c for c in np.unique(conds) if "+" in c)
-    sp_path = os.path.join(args.outdir, "splits.json")
+    sp_path = args.splits or os.path.join(args.outdir, "splits.json")
     if os.path.exists(sp_path):
         splits = json.load(open(sp_path))
     else:
@@ -162,34 +168,38 @@ def main():
         singles = [c for c in prof if c != "control" and "+" not in c]
         train_idx = np.where(~np.isin(d.conds, test + val))[0]
         ctrl_idx = np.where(d.conds == "control")[0]
-        preds, mp = baselines(prof, train_d, singles + train_d, test, ctrl)
-        val_score, info = {}, {}
-        for name in args.configs:
-            t = time.time()
-            print(f"[fold {k}] {name}", flush=True)
-            m = CIPHER(d, seed=k, epochs=args.epochs, threads=args.threads, train_idx=train_idx,
-                       verbose=False, **CONFIGS[name]).fit()
-            vs = []
-            for c in val:
-                a_, b_ = c.split("+")
-                p = np.log1p(m.predict_mean(c.split("+"), ctrl_idx))
-                vs.append(metrics(p, prof[c], ctrl, prof[a_], prof[b_], mp)["mse_de20"])
-            val_score[name] = float(np.mean(vs))
-            for c in test:
-                preds.setdefault(name, {})[c] = np.log1p(m.predict_mean(c.split("+"), ctrl_idx))
-            info[name] = time.time() - t
-            print(f"   val mse_de20 {val_score[name]:.4f}  ({info[name]:.0f}s)", flush=True)
-        best = min(val_score, key=val_score.get)
-        preds["cipher_selected"] = preds[best]
+        base, mp = baselines(prof, train_d, singles + train_d, test, ctrl)
+        rows = [(meth, None, pm, None, None) for meth, pm in base.items()]
+        for seed in (args.seeds if args.seeds is not None else [k]):
+            preds, val_score = {}, {}
+            for name in args.configs:
+                t = time.time()
+                print(f"[fold {k} seed {seed}] {name}", flush=True)
+                m = CIPHER(d, seed=seed, epochs=args.epochs, threads=args.threads, train_idx=train_idx,
+                           device=args.device, verbose=False, **CONFIGS[name]).fit()
+                vs = []
+                for c in val:
+                    a_, b_ = c.split("+")
+                    p = np.log1p(m.predict_mean(c.split("+"), ctrl_idx))
+                    vs.append(metrics(p, prof[c], ctrl, prof[a_], prof[b_], mp)["mse_de20"])
+                val_score[name] = float(np.mean(vs))
+                for c in test:
+                    preds.setdefault(name, {})[c] = np.log1p(m.predict_mean(c.split("+"), ctrl_idx))
+                print(f"   val mse_de20 {val_score[name]:.4f}  ({time.time() - t:.0f}s)", flush=True)
+            best = min(val_score, key=val_score.get)
+            preds["cipher_selected"] = preds[best]
+            rows += [(meth, seed, pm, best if meth == "cipher_selected" else None, val_score.get(meth))
+                     for meth, pm in preds.items()]
+            print(f"[fold {k} seed {seed}] selected {best}", flush=True)
         with open(os.path.join(args.outdir, f"fold{k}.jsonl"), "w") as f:
-            for meth, pm in preds.items():
+            for meth, seed, pm, sel, vsc in rows:
                 for c, p in pm.items():
                     a_, b_ = c.split("+")
                     r = metrics(p, prof[c], ctrl, prof[a_], prof[b_], mp)
-                    r.update(method=meth, fold=k, cond=c, selected=best if meth == "cipher_selected" else None,
-                             val_mse_de20=val_score.get(meth), n_genes=len(d.genes))
+                    r.update(method=meth, fold=k, seed=seed, cond=c, selected=sel,
+                             val_mse_de20=vsc, n_genes=len(d.genes), n_cells=int(d.X.shape[0]))
                     f.write(json.dumps(r) + "\n")
-        print(f"[fold {k}] done, selected {best}", flush=True)
+        print(f"[fold {k}] done", flush=True)
 
 
 if __name__ == "__main__":

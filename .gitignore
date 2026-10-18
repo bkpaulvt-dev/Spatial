@@ -5,3 +5,4 @@ results/cache/
 *.npz
 results/cipher_tuning/*.log
 results/phase1/*.log
+.venv/

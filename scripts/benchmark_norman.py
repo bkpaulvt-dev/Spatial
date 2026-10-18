@@ -59,6 +59,7 @@ def main():
     ap.add_argument("--variants", nargs="*", default=list(VARIANTS))
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--threads", type=int, default=4)
+    ap.add_argument("--device", default="cpu", help='e.g. "cpu", "cuda", "cuda:1"')
     ap.add_argument("--config", nargs="*", default=[], help="name=JSON extra variants")
     args = ap.parse_args()
     for c in args.config:
@@ -96,7 +97,7 @@ def main():
         for v in args.variants:
             t = time.time()
             print(f"[split {split}] fitting {v}", flush=True)
-            m = CIPHER(d, seed=split, epochs=args.epochs, threads=args.threads, train_idx=train_idx,
+            m = CIPHER(d, seed=split, epochs=args.epochs, threads=args.threads, device=args.device, train_idx=train_idx,
                        **VARIANTS[v]).fit()
             for c in sorted(test):
                 preds.setdefault(v, {})[c] = np.log1p(m.predict_mean(c.split("+"), ctrl_idx))

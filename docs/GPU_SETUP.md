@@ -30,9 +30,11 @@ CAT-ATAC multiome data: GEO GSE288996.
   `{"basal": false, "adversary": false, "direct": true}` (see `results/cipher_tuning/`).
 * Dev-split result: overall accuracy ties the additive baseline (Pearson top-20 DE 0.892 vs 0.894),
   interaction prediction better (residual Pearson 0.68 vs 0.45 for scaled additive).
-* Test splits 0-2 have not been touched yet.
-* The code runs on CPU by default; pass `device="cuda"` to `CIPHER(...)` (add a `--device` flag to
-  the scripts) to use the GPU.
+* Test splits 0-2 were run once (2026-10-17, TITAN RTX, 30 epochs): `results/norman_test.jsonl`.
+  Median over 195 test doubles: Pearson top-20 DE 0.878 vs 0.905 for additive / scaled additive
+  (a small loss); residual Pearson 0.71 vs 0.51 for scaled additive (a win). Do not re-tune on these.
+* The code runs on CPU by default; pass `device="cuda"` to `CIPHER(...)` or `--device cuda` to
+  `scripts/benchmark_norman.py` / `scripts/sim_escape.py` to use the GPU.
 
 ## 4. Planned analyses (Cell Press methods paper)
 
