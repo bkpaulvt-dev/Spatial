@@ -34,16 +34,15 @@ reproducibility of spatial domain identification methods}
 
 \abstract{Spatial domain identification methods are usually compared by small differences in adjusted Rand index (ARI),
 mostly on one tissue and from a single run. We benchmarked \nMethodsPub{} published methods and three training-free baselines
-on \nSections{} annotated sections from 10x Visium, STARmap and MERFISH, and separated each learned embedding from its
-clustering step. When every embedding was clustered in the same way, a training-free neighbourhood-smoothing baseline had a
-higher mean ARI than \nRobBetter{} of \nRobTot{} comparators and could not be separated from the other \nRobUnres{}, which
-included BASS and BANKSY; no comparator was equivalent to it. The clustering step itself was a large source of variation:
-on fixed embeddings, refitting the same Gaussian mixture from different random starts changed ARI by \lotMean{} on average
-(up to \lotMax), and the default fit of R mclust, used by several methods, depended on the random seed through its
-subsampled initialisation (up to \mcsSeedMax). Keeping the most likely of 20 fits helped on human cortex but not on
-single-cell MERFISH data, where likelihood and ARI were unrelated. HiSTaR did not reproduce its published accuracy
-with its official code, and the released code of one method selects its reported epoch using the labels. We recommend
-reporting the clustering protocol and its variance, never selecting runs with labels, and including training-free baselines.}
+on \nSections{} annotated sections from 10x Visium, STARmap and MERFISH, separating each learned embedding from its clustering
+step. With the same clustering for every embedding, a training-free neighbourhood-smoothing baseline had a higher mean ARI than
+\nRobBetter{} of \nRobTot{} comparators and could not be separated from the other \nRobUnres{}, including BASS and BANKSY.
+The clustering step was a large source of variation: on fixed embeddings, refitting the same Gaussian mixture from different
+random starts changed ARI by \lotMean{} on average (up to \lotMax), and the default fit of R mclust depended on its random seed
+(up to \mcsSeedMax). Keeping the most likely of 20 fits helped on cortex but not on single-cell MERFISH data, where likelihood
+and ARI were unrelated. HiSTaR did not reproduce its published accuracy with its official code, and released code of one method
+selects its reported epoch using the labels. We recommend reporting the clustering protocol and its variance, never selecting
+runs with labels, and including training-free baselines.}
 
 \keywords{spatial transcriptomics, spatial domains, clustering, reproducibility, benchmarking}
 
