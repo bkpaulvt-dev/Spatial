@@ -57,8 +57,8 @@ def flow_arrow(x0, x1, y=H / 2):
 
 # ---------------------------------------------------------------- column 1: inputs
 T(36.0, 92.0, "Benchmark", 14, INK, "bold", ha="center")
-for i, (ds, s, lab, ms) in enumerate((("dlpfc", "151673", "Visium", 0.25), ("starmap", "20180417_BZ5_control", "STARmap", 0.5),
-                                       ("merfish", "-0.14", "MERFISH", 0.12))):
+for i, (ds, s, lab, ms) in enumerate((("dlpfc", "151673", "Visium", 1.1), ("starmap", "20180417_BZ5_control", "STARmap", 0.9),
+                                       ("merfish", "-0.14", "MERFISH", 0.45))):
     C, code, _ = cache(ds, s)
     tissue(C, code, 3.0 + i * 22.5, 50.0, 20.0, ms)
     T(13.0 + i * 22.5, 45.0, lab, 10.5, INK2, ha="center")
@@ -76,7 +76,7 @@ T(133.0, 95.0, "Training-free smoothing is among the best", 13, INK, "bold", ha=
 fx0, fx1 = 120.0, 176.0              # x extent of the forest
 xr = (-0.25, 0.08)                   # method minus linear diffusion (ARI)
 X = lambda v: fx0 + (v - xr[0]) / (xr[1] - xr[0]) * (fx1 - fx0)
-ytop, dy = 86.0, 6.6
+ytop, dy = 86.5, 6.4
 ax.add_patch(Rectangle((X(-0.03), ytop - 4 * dy - 3.2), X(0.03) - X(-0.03), 4 * dy + 6.4, fc="#ecebe7", ec="none", zorder=1))
 ax.plot([X(0), X(0)], [ytop - 4 * dy - 3.2, ytop + 3.2], color=INK2, lw=0.9, zorder=2)
 for i, (m, lab, col) in enumerate(rows):
@@ -93,7 +93,7 @@ T(X(-0.25), ytop - 4 * dy - 6.6, "← worse", 10, INK2, ha="left")
 T(X(0.08), ytop - 4 * dy - 6.6, "better →", 10, INK2, ha="right")
 
 # ---------------------------------------------------------------- column 2b: one embedding, two random starts
-T(133.0, 47.5, "Same embedding, different random start", 13, INK, "bold", ha="center")
+T(133.0, 44.5, "Same embedding, different random start", 13, INK, "bold", ha="center")
 fits = None
 for l in open(os.path.join(ROOT, "results", "clustering_lottery.jsonl")):
     r = json.loads(l)
@@ -114,7 +114,7 @@ def refit(f):
 
 
 for (f, x) in ((lo_fit, 101.0), (hi_fit, 143.0)):
-    tissue(Ch, refit(f), x, 9.5, 27.0, 0.18)
+    tissue(Ch, refit(f), x, 10.0, 26.0, 1.6)
     T(x + 13.5, 6.0, f"ARI {f['ARI']:.2f}", 13, INK, "bold", ha="center")
 # dice between the maps
 dx, dyc = 133.6, 24.0

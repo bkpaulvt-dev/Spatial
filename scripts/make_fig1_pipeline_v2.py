@@ -213,7 +213,7 @@ for k_ in range(5):
     w_, v_ = np.linalg.eigh(gm.covariances_[k_]); ang = np.degrees(np.arctan2(v_[1, 1], v_[0, 1]))
     ax.add_patch(Ellipse(gm.means_[k_], 3.2 * np.sqrt(w_[1]), 3.2 * np.sqrt(w_[0]), angle=ang, fc="none", ec=INK, lw=0.55, zorder=4))
 T(129.0, 70.4, "Gaussian mixture", 6.5, INK2, ha="center"); T(129.0, 67.6, "on the embedding", 6.5, INK2, ha="center")
-rows = [("dice", "Random starts", "Same embedding"), ("perm", "Shuffled spot order", "R mclust plus noise"), ("best", "Matched clustering", "Versus default clustering")]
+rows = [("dice", "Random starts", "Same embedding"), ("perm", "R random seeds", "R mclust default fit"), ("best", "Matched clustering", "Versus default clustering")]
 for i, (g, t1, t2) in enumerate(rows):
     y0 = (61.5, 50.6, 41.0)[i]; gx_ = 116.8
     if g == "dice":

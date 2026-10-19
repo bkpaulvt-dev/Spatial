@@ -216,7 +216,7 @@ BayesSpace use their internal clustering). $n=20$ sections (12 DLPFC, 3 STARmap,
 diffusion minus each method, with 95\% intervals from a hierarchical bootstrap over \statClusters{} groups (three DLPFC donors,
 STARmap, MERFISH). Filled symbols: interval above zero; open symbols: unresolved. Grey band: equivalence margin of
 $\pm\statMargin$ ARI. BayesSpace was run on DLPFC only. (\textbf{C}) Rank in the bootstrap (dot: median; line: 95\% interval);
-numbers give the probability of ranking first when at least 0.01. Linear diffusion was chosen as the reference after seeing the
+numbers give the probability of ranking first when at least 0.01; BayesSpace is not ranked because it was run on DLPFC only. Linear diffusion was chosen as the reference after seeing the
 means, so this comparison is exploratory.}
 \label{fig:accuracy}
 \end{figure*}
@@ -244,8 +244,9 @@ between successive methods. Every fit for three representative methods is shown 
 \includegraphics[width=\linewidth]{nar_fig3_robustness.pdf}
 \caption{Variance of the clustering step on fixed embeddings (\lotNMethods{} methods and baselines that output an embedding; one
 symbol per section, $n=20$ per method; shape and grey level: dataset). (\textbf{A}) ARI range over 20 single-start fits of the same
-Gaussian mixture. (\textbf{B}) ARI range of R mclust with its default initialisation over ten R random seeds; STARmap sections
-have fewer than 2000 cells, are initialised on all cells and show no variation. (\textbf{C}) Median Spearman correlation between
+Gaussian mixture. (\textbf{B}) ARI range of R mclust with its default initialisation over ten R random seeds; crosses: range over five
+repetitions with 1\% noise when initialised on all observations. STARmap sections have fewer than 2000 cells, are initialised
+on all cells and show no seed variation. (\textbf{C}) Median Spearman correlation between
 the log-likelihood and the ARI of the 20 fits in A (positive: better-fitting mixtures agree better with the annotation); columns
 rest on 12, 3 and 5 sections. Bars: interquartile range; open circle: median.}
 \label{fig:robust}
