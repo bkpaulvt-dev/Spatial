@@ -74,6 +74,7 @@ def main():
     ap.add_argument("--seeds", type=int, nargs="+", default=[0, 1, 2])
     ap.add_argument("--epochs", type=int, default=40)
     ap.add_argument("--out", default="results/sim_escape.jsonl")
+    ap.add_argument("--extra", default="{}", help="JSON overrides for the CIPHER config")
     ap.add_argument("--device", default="cpu", help='e.g. "cpu", "cuda", "cuda:1"')
     args = ap.parse_args()
     for seed in args.seeds:
@@ -92,7 +93,7 @@ def main():
             est["indicator"][k] = lmean(idx) - base
         effs = {}
         resid = {}
-        final = {"basal": False, "adversary": False, "direct": True}   # design chosen in Phase 1
+        final = {"basal": False, "adversary": False, "direct": True, **json.loads(args.extra)}   # Phase 1 design
         for name, kw in [("cipher_noescape", {**final, "escape": False}), ("cipher", final)]:
             m = CIPHER(d, seed=seed, epochs=args.epochs, verbose=False, device=args.device, **kw).fit()
             c0 = np.log(m.predict_mean([], ctrl_idx) + 1e-3)
