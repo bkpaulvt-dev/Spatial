@@ -13,13 +13,12 @@ rng = lambda *xs: f"{min(xs):.2f}--{max(xs):.2f}"
 claims = [
  ("HiSTaR median DLPFC", "median ARI over the twelve DLPFC sections of " + f(v1["bench_histar"]["median_slice"])),
  ("HiSTaR mean DLPFC", "(mean " + f(v1["bench_histar"]["mean"])),
- ("HiSTaR CI", f"CI {f(v1['bench_histar']['ci_lo'])}--{f(v1['bench_histar']['ci_hi'])}"),
+ ("HiSTaR CI", f"CI over sections {f(v1['bench_histar']['ci_lo'])}--{f(v1['bench_histar']['ci_hi'])}"),
  ("HiSTaR deterministic", "(" + f(v1["bench_histar_deterministic"]["mean"])),
  ("HiSTaR + R mclust DLPFC", "placeholder"),   # replaced below
  ("HiSTaR seed SD", f"{f(v2['seed_sd']['dlpfc']['histar'])} on DLPFC and {f(v2['seed_sd']['starmap']['histar'],2)} on STARmap"),
- ("AnisoST vs lin DLPFC", f"({f(v2['means']['dlpfc']['anisost'])} vs {f(v2['means']['dlpfc']['linear_diffusion'])})"),
- ("AnisoST vs lin MERFISH", f"({f(v2['means']['merfish']['anisost'])} vs {f(v2['means']['merfish']['linear_diffusion'])})"),
- ("boundary", f"by {f(v1['boundary_acc_boundary']['delta'])} ({v1['boundary_acc_boundary']['wins']}/12 sections, $p={f(v1['boundary_acc_boundary']['p'])}$"),
+ ("AnisoST vs lin MERFISH", f"(MERFISH: {f(v2['means']['merfish']['anisost'])} vs {f(v2['means']['merfish']['linear_diffusion'])})"),
+ ("boundary", f"(by {f(v1['boundary_acc_boundary']['delta'])}, {v1['boundary_acc_boundary']['wins']} of 12 sections, Wilcoxon signed-rank $p={f(v1['boundary_acc_boundary']['p'])}$"),
 ]
 # HiSTaR clustered with R mclust (seed-0 embeddings) is computed from the mclust results directly
 import glob, pandas as pd
@@ -38,8 +37,10 @@ print(f"\n{len(claims) - bad}/{len(claims)} claims match.")
 mac = open(os.path.join(ROOT, "results", "paper_macros.tex")).read()
 defined = set(re.findall(r"\\newcommand\{\\([A-Za-z]+)\}", mac))
 raw = open(os.path.join(ROOT, "paper", "main.tex")).read()
-used = {m for m in re.findall(r"\\([A-Za-z]+)", raw) if re.match(r"(mean|robust|overall|dLin|winsLin|pLin|gain|lot|rho[A-Z]|mc|mgcn|best|n[A-Z]|time|mem)", m)}
+used = {m for m in re.findall(r"\\([A-Za-z]+)", raw) if re.match(r"(mean[A-Z]|robust|overall|dLin|winsLin|pLin|gain|lot|rho[A-Z]|mc[A-Z]|mcs|mgcn|best|n[A-Z]|time|mem|rob[DLH]|std[DLH]|stat[A-Z]|pBest|rank[A-Z])", m)}
 undefined = sorted(m for m in used if m not in defined and m not in {"newcommand", "mathcal"})
 print(f"{len(used) - len(undefined)}/{len(used)} macros used in the text are defined; undefined: {undefined}")
 unused = sorted(defined - set(re.findall(r"\\([A-Za-z]+)", raw)))
 print(f"{len(unused)} generated macros are unused (fine).")
+import sys
+sys.exit(1 if (bad or undefined) else 0)

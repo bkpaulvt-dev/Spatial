@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this benchmark, its code or its results, please cite it as below."
+title: "Benchmarking the accuracy, robustness and reproducibility of spatial domain identification methods"
+type: software
+version: 1.0.0-preprint
+# doi: 10.5281/zenodo.XXXXXXX   # TODO: add the version DOI after the Zenodo deposit
+license: MIT
+repository-code: "https://github.com/bkpaulvt-dev/Spatial"
+authors:
+  - family-names: Paul
+    given-names: Bikash Kumar
+    affiliation: "Virginia Tech"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"   # TODO
+keywords:
+  - spatial transcriptomics
+  - spatial domain identification
+  - benchmark
+  - reproducibility
+  - clustering
+  - Gaussian mixture model
+  - mclust
+abstract: >-
+  Code, configuration and per-run results of a benchmark of 16 spatial domain identification
+  methods (13 published methods and three training-free baselines) on 20 tissue sections from
+  10x Visium (human DLPFC), STARmap (mouse mPFC) and MERFISH (mouse hypothalamus), including
+  experiments on the sensitivity of results to the clustering initialisation.
