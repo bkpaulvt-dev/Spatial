@@ -65,8 +65,8 @@ cortex (DLPFC) sections \citep{maynard2021dlpfc} and report median adjusted Rand
 improvements of a few hundredths over previous methods \citep{dong2022stagate,long2023graphst,yu2025histar}. Several
 (for example GraphST, STAGATE and SEDR) share the same last step: the learned embedding is clustered once with the
 EEE Gaussian mixture of the R package mclust \citep{scrucca2016mclust}. Benchmarks have found that rankings depend strongly
-on the dataset \citep{yuan2024benchmark,nar2025bench}, that deep methods vary with the random seed \citep{nar2025bench}, that
-replacing each method's clustering algorithm changes results \citep{hu2024gbbench}, and that preprocessing and clustering
+on the dataset \citep{yuan2024benchmark,nar2025bench}, that deep methods vary with the random seed \citep{hu2024gbbench}, that
+replacing each method's clustering algorithm changes results \citep{nar2025bench}, and that preprocessing and clustering
 choices often matter more than architectural novelty \citep{explanatory2026}. Simple training-free pipelines can also be
 competitive \citep{nichepca2025,do2026graphbg}. What these studies do not measure directly is how much of the variation
 comes from the clustering step itself when the embedding is held fixed.
@@ -289,8 +289,7 @@ method family. Rows are ordered by the matched mean. SpaGCN, BASS and BayesSpace
 With the official code and defaults, HiSTaR reached a median ARI over the twelve DLPFC sections of
 0.509 (mean 0.491, 95\% bootstrap CI over sections 0.454--0.525) with the 3-start GMM, and 0.449 (mean, seed 0)
 when its embedding was clustered with R mclust as in the official pipeline, compared with a reported
-median of 0.65 \todo{verify the reported values (0.65 median; 0.718 on 151673) against the HiSTaR
-article}. Fixing a bug that applies random masking at inference did not change accuracy (0.487; Supplementary Table~\SThistar).
+median of 0.65 over the twelve sections and 0.718 on section 151673 \citep{yu2025histar}. Fixing a bug that applies random masking at inference did not change accuracy (0.487; Supplementary Table~\SThistar).
 Possible causes include per-section tuning of the loss weights (described in the HiSTaR supplement), unpublished preprocessing
 and the choice of seed; the results above show that the clustering step alone can produce per-section differences of this size.
 \todo{Report the outcome of contacting the authors.}
