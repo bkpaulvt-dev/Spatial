@@ -2,7 +2,7 @@
 # Install R packages when CRAN/Bioconductor are unreachable: try apt (r-cran-* / r-bioc-*),
 # otherwise build from the official read-only CRAN mirror on GitHub (github.com/cran/<pkg>).
 # Missing dependencies are resolved recursively. Usage: install_r_pkg.sh pkg [pkg ...]
-SRC=${RSRC:-/home/user/Spatial/data/ext/rsrc}
+SRC=${RSRC:-"$(cd "$(dirname "$0")/.." && pwd)/data/ext/rsrc"}
 mkdir -p "$SRC"
 have() { Rscript -e "quit(status = !requireNamespace('$1', quietly = TRUE))" >/dev/null 2>&1; }
 inst() {

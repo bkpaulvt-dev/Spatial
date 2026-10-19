@@ -1,0 +1,28 @@
+# Conda environment for the benchmark (CPU only). Python and R versions are those that produced the results.
+# Exact Python pins: environment/requirements-lock.txt (installed by the pip section below).
+# Exact R package versions: environment/R-packages.txt and environment/R-sessionInfo.txt.
+#   conda env create -f environment/environment.yml && conda activate spatialbench
+# BASS (zhengli09/BASS@5c2690f), BayesSpace (v1.5.1, ba8b422) and SPARK (xzhoulab/SPARK@a8b4bf2) are
+# installed from source afterwards; see README "Installation".
+name: spatialbench
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - python=3.13.16
+  - pip
+  - r-base=4.3.3
+  - r-mclust=6.0.1
+  - r-matrix=1.6_5
+  - r-rcpp=1.0.12
+  - r-rcpparmadillo
+  - r-gigrvg=0.8
+  - r-remotes
+  - bioconductor-singlecellexperiment=1.24.0
+  - bioconductor-summarizedexperiment=1.32.0
+  - bioconductor-scater=1.30.1
+  - bioconductor-scran=1.30.2
+  - texlive-core          # only for `make paper` (the OUP authoring template is in TeX Live >= 2023)
+  - pip:
+      - -r requirements-lock.txt

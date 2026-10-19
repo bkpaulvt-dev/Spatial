@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
-data/
+data/*
+!data/CHECKSUMS.sha256
 results/cache/
 *.npz
 paper/*.aux
@@ -19,3 +20,8 @@ tests/__pycache__/
 results/runs/
 # live result file of the unified runner while it runs (hourly copy: results/benchmark_runs_snapshot.jsonl)
 
+
+# LaTeX / download leftovers
+paper/*.fdb_latexmk
+paper/*.fls
+*.part

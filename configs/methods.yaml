@@ -8,7 +8,7 @@ methods:
   histar:
     publication: "Yu et al., J Transl Med 2025;23:1416"
     kind: deep graph VAE
-    code: {source: "PyTorch port of the official code (hicast/histar.py)", commit: "TO RECORD (official repository commit)"}
+    code: {source: "PyTorch port of the official code (hicast/histar.py)", commit: 0039a3b}   # Anglejuebi/HiSTaR 0039a3bdbcd7042ab4def65b41d4666a9dbbf437: upstream HEAD, last changed 2025-08-03, before the port (2026-10-06); inferred, no vendored copy kept
     settings_source: paper
     settings: {lambda_sim: 0.3, epochs: "200 + 200", knn: 6, embedding: "[F0,F1,F2] concat"}
     clustering: {official: "R mclust EEE", ours_standard: "3-start tied-covariance GMM", ours_robust: "20-start GMM, best likelihood"}
