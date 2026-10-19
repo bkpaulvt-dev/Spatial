@@ -1,0 +1,135 @@
+# Exact Python environment that produced the results (pip freeze, Python 3.13.16, Linux x86_64, 2026-10-18).
+# Packages of the container's tooling that the benchmark never imports (agent SDK, apt/dbus bindings,
+# office/PDF converters, web-server stacks) were removed from the raw freeze; everything else is unchanged.
+# The two packages installed from local clones are pinned to the upstream commit of that clone.
+# torch is the PyPI wheel (it pulls the nvidia-* CUDA wheels below) but every run was CPU-only;
+# on a CPU-only machine the CPU wheel of the same version gives the same results:
+#   pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cpu
+# torch_sparse / torch_scatter were compiled from source against this torch.
+# Methods used from a clone and not pip-installed (DeepST, Spatial-MGCN, CCST port, conST) are fetched
+# at the commits in configs/methods.yaml (see README "Methods").
+aiohappyeyeballs==2.7.1
+aiohttp==3.14.4
+aiosignal==1.4.0
+anndata==0.13.4
+array-api-compat==1.15.0
+attrs==26.1.0
+cairocffi==1.7.1
+CairoSVG==2.9.1
+certifi==2026.7.22
+cffi==2.1.1
+charset-normalizer==3.5.1
+click==8.5.0
+cloudpickle==3.1.2
+cmcrameri==1.10
+contourpy==1.4.0
+cssselect2==0.10.1
+cuda-bindings==13.4.3
+cuda-pathfinder==1.8.3
+cuda-toolkit==13.0.3.0
+cycler==0.12.1
+defusedxml==0.7.1
+donfig==0.8.1.post1
+fast-array-utils==1.5.1
+filelock==4.0.12
+fonttools==4.66.1
+formulaic==1.2.2
+frozenlist==1.8.0
+fsspec==2026.9.0
+google-crc32c==1.9.0
+GraphST==1.1.1
+gudhi==3.13.0
+h5py==3.16.0
+idna==3.20
+igraph==1.0.0
+iniconfig==2.3.1
+interface_meta==2.0.1
+Jinja2==3.1.6
+joblib==1.6.0
+kiwisolver==1.5.1
+legacy-api-wrap==1.5
+leidenalg==0.12.0
+llvmlite==0.50.0
+louvain==0.8.2
+lxml==6.1.3
+MarkupSafe==3.0.3
+matplotlib==3.11.2
+mpmath==1.3.0
+multidict==6.9.1
+narwhals==2.26.0
+natsort==8.4.0
+networkx==3.7
+nichepca==0.1.0
+numba==0.68.0
+numcodecs==0.17.0
+numpy==2.5.3
+nvidia-cublas==13.1.1.3
+nvidia-cuda-cupti==13.0.85
+nvidia-cuda-nvrtc==13.0.88
+nvidia-cuda-runtime==13.0.96
+nvidia-cudnn-cu13==9.24.0.43
+nvidia-cufft==12.0.0.61
+nvidia-cufile==1.15.1.6
+nvidia-curand==10.4.0.35
+nvidia-cusolver==12.0.4.66
+nvidia-cusparse==12.6.3.3
+nvidia-cusparselt-cu13==0.8.1
+nvidia-nccl-cu13==2.30.7
+nvidia-nvjitlink==13.4.92
+nvidia-nvshmem-cu13==3.4.5
+nvidia-nvtx==13.0.85
+packaging==26.3
+pandas==3.0.5
+patsy==1.0.3
+pillow==12.3.0
+pluggy==1.6.0
+POT==0.9.7.post1
+propcache==0.5.4
+psutil==7.2.2
+pybanksy==1.3.5
+pycparser==3.0
+pynndescent==0.6.0
+pyparsing==3.1.1
+pytest==9.1.1
+python-dateutil==2.9.0.post0
+python-louvain==0.16
+PyYAML==6.0.1
+requests==2.34.2
+rpy2==3.5.17
+scanpy==1.12.4
+scikit-learn==1.9.1
+scikit-misc==0.5.3
+scipy==1.18.1
+scverse-misc==0.1.6
+seaborn==0.13.2
+SEDR @ git+https://github.com/JinmiaoChenLab/SEDR@ef4836059a4ea49be3bf7c67008a44ffc16a2a0e
+session-info2==0.4.2
+setuptools==80.10.2
+setuptools-scm==10.3.4
+six==1.17.0
+SpaceFlow==1.0.4
+SpaGCN==1.2.7
+STAGATE_pyG @ git+https://github.com/QIFEIDKN/STAGATE_pyG@ae1158ca8cf1eb6bb8ee198298552d44c9ac21db
+statsmodels==0.15.0
+sympy==1.14.0
+tabulate==0.10.0
+texttable==1.7.0
+threadpoolctl==3.7.0
+tinycss2==1.5.1
+torch==2.14.1
+torch-geometric==2.8.0.post1
+torch_scatter==2.1.2
+torch_sparse==0.6.18
+torchvision==0.29.1
+tqdm==4.70.1
+triton==3.8.0
+typing_extensions==4.16.0
+umap-learn==0.5.12
+urllib3==2.8.0
+vcs-versioning==2.6.0
+webencodings==0.6.1
+wheel==0.42.0
+wrapt==2.5.0
+xxhash==4.0.1
+yarl==1.25.1
+zarr==3.4.0

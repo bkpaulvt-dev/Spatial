@@ -1,20 +1,22 @@
-% Manuscript for Bioinformatics Advances (OUP authoring template, texlive-publishers).
-% Every number is produced by scripts/paper_numbers.py (DLPFC-specific analyses) and
-% scripts/paper_v2.py (all datasets) -> results/paper_numbers*.json, results/table_main.tex.
+% Manuscript for Nucleic Acids Research (OUP authoring template).
+% Every number is produced by scripts (scripts/paper_v2.py, scripts/stats_cluster_aware.py) as macros in
+% results/paper_macros.tex; hand-typed numbers are checked by scripts/check_paper_numbers.py.
 \documentclass[unnumsec,webpdf,contemporary,large]{oup-authoring-template}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \graphicspath{{../docs/figures/}}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\figref}[1]{Figure~\ref{#1}}
 \input{../results/paper_macros.tex}
 \input{supp_labels.tex}
+\setcitestyle{numbers,square}
 
-\journaltitle{Bioinformatics Advances}
+\journaltitle{Nucleic Acids Research}
 \DOI{DOI HERE}
 \copyrightyear{2026}
 \pubyear{2026}
 \access{Advance Access Publication Date: Day Month Year}
-\appnotes{Original Paper}
+\appnotes{Computational Biology}
 \firstpage{1}
 
 \title[Benchmarking spatial domain identification methods]{Benchmarking the accuracy, robustness and
@@ -30,20 +32,18 @@ reproducibility of spatial domain identification methods}
 \revised{Date}{0}{Year}
 \accepted{Date}{0}{Year}
 
-\abstract{Methods for spatial domain identification are usually compared by small differences in adjusted Rand
-index (ARI), mostly on one tissue and from a single run. We benchmarked the accuracy, robustness and
-reproducibility of \nMethodsPub{} published methods and three training-free baselines on \nSections{} annotated
-sections from three technologies (10x Visium, STARmap and MERFISH). The highest mean ARI was reached by
-\bestDlpfc{} on DLPFC, \bestStarmap{} on STARmap and \bestMerfish{} on MERFISH; a training-free
-diffusion baseline had a higher mean ARI than \nStdBetter{} of \nStdTot{} methods (95\% hierarchical-bootstrap intervals over
-donors and datasets excluding zero) and could not be separated from BASS and BANKSY $\lambda=0.8$; no method was equivalent to it
-within an ARI margin of \statMargin. On fixed embeddings, refitting the same mixture model from different random starts
-changed ARI by \lotMean{} on average (up to \lotMax), and merely shuffling the order of the spots changed the ARI of
-R mclust by up to \mcPermMax. Choosing the best of 20 starts by likelihood improved \nGainPos{} of \nGainTot{} methods
-and worsened \nGainNeg. With its official code, HiSTaR reached a median ARI of 0.51 on DLPFC instead of the reported 0.65,
-and the released code of one method selects its reported epoch using the labels (ARI inflated by \mgcnLeak). All
-methods were run with default or published settings. We give recommendations for reporting spatial domain benchmarks.
-Code, per-run results and figures: \todo{GitHub URL and Zenodo DOI}.}
+\abstract{Spatial domain identification methods are usually compared by small differences in adjusted Rand index (ARI),
+mostly on one tissue and from a single run. We benchmarked \nMethodsPub{} published methods and three training-free baselines
+on \nSections{} annotated sections from 10x Visium, STARmap and MERFISH, and separated each learned embedding from its
+clustering step. When every embedding was clustered in the same way, a training-free neighbourhood-smoothing baseline had a
+higher mean ARI than \nRobBetter{} of \nRobTot{} comparators and could not be separated from the other \nRobUnres{}, which
+included BASS and BANKSY; no comparator was equivalent to it. The clustering step itself was a large source of variation:
+on fixed embeddings, refitting the same Gaussian mixture from different random starts changed ARI by \lotMean{} on average
+(up to \lotMax), and the default fit of R mclust, used by several methods, depended on the random seed through its
+subsampled initialisation (up to \mcsSeedMax). Keeping the most likely of 20 fits helped on human cortex but not on
+single-cell MERFISH data, where likelihood and ARI were unrelated. HiSTaR did not reproduce its published accuracy
+with its official code, and the released code of one method selects its reported epoch using the labels. We recommend
+reporting the clustering protocol and its variance, never selecting runs with labels, and including training-free baselines.}
 
 \keywords{spatial transcriptomics, spatial domains, clustering, reproducibility, benchmarking}
 
@@ -61,38 +61,43 @@ neighbourhood-augmented features \citep{singhal2024banksy} to graph neural netwo
 autoencoders such as HiSTaR \citep{yu2025histar}.
 
 Most of these methods are evaluated on the twelve manually annotated human dorsolateral prefrontal
-cortex (DLPFC) sections \citep{maynard2021dlpfc} and report median ARI improvements of a few
-hundredths over previous methods. Many share the same last step: the learned embedding is clustered
-once with mclust's EEE Gaussian mixture \citep{scrucca2016mclust}. Benchmarks have found that
-rankings depend strongly on the dataset \citep{yuan2024benchmark,nar2025bench}, that deep methods
-vary with the random seed \citep{nar2025bench}, that replacing each method's clustering algorithm
-changes results \citep{hu2024gbbench}, and that preprocessing and clustering choices often matter
-more than architectural novelty \citep{explanatory2026}. Simple training-free pipelines are also
-competitive \citep{nichepca2025,do2026graphbg}.
+cortex (DLPFC) sections \citep{maynard2021dlpfc} and report median adjusted Rand index (ARI) \citep{hubert1985ari}
+improvements of a few hundredths over previous methods \citep{dong2022stagate,long2023graphst,yu2025histar}. Several
+(for example GraphST, STAGATE and SEDR) share the same last step: the learned embedding is clustered once with the
+EEE Gaussian mixture of the R package mclust \citep{scrucca2016mclust}. Benchmarks have found that rankings depend strongly
+on the dataset \citep{yuan2024benchmark,nar2025bench}, that deep methods vary with the random seed \citep{nar2025bench}, that
+replacing each method's clustering algorithm changes results \citep{hu2024gbbench}, and that preprocessing and clustering
+choices often matter more than architectural novelty \citep{explanatory2026}. Simple training-free pipelines can also be
+competitive \citep{nichepca2025,do2026graphbg}. What these studies do not measure directly is how much of the variation
+comes from the clustering step itself when the embedding is held fixed.
 
 We benchmark \nMethodsPub{} published methods and three training-free baselines along three axes. \emph{Accuracy}: how do the
-methods compare across three technologies, and does the ranking depend on how the embeddings are clustered?
-\emph{Robustness}: on a \emph{fixed} embedding, how much does ARI change with the initialisation of the mixture model and
-with perturbations that leave the data essentially unchanged (spot order, negligible noise), and does selecting fits by
-likelihood help? \emph{Reproducibility}: do published results reproduce with the official code (here HiSTaR's DLPFC results),
-and does released code select models using the labels? The study design is summarised in Fig.~\ref{fig:overview}.
+methods compare across three technologies when their embeddings are clustered in the same way, and how does this change with
+each method's own clustering? \emph{Robustness}: on a \emph{fixed} embedding, how much does ARI change with the random
+initialisation of the mixture model and with the random seed of R mclust, and does selecting fits by likelihood help?
+\emph{Reproducibility}: do published results reproduce with the official code (here HiSTaR's DLPFC results), and does
+released code select models using the labels? The study design is summarised in \figref{fig:overview}. We find that a
+standard neighbourhood-smoothing baseline is among the most accurate methods, that the clustering step varies more than
+most differences between methods, and that released code can use the labels for model selection.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\linewidth]{nar_fig1_pipeline_v2.pdf}
-\caption{Study design. (1) Human DLPFC on a 10x Visium capture area (section 151673) and mouse sections profiled by STARmap (mPFC, section BZ5)
-and MERFISH (hypothalamus, Bregma $-0.14$); colours are the expert annotation, used only for scoring. Circles zoom into individual cells
-(Voronoi cells from the measured positions, with RNA molecules drawn schematically). (2) Each spot or cell carries a gene-expression profile and
-is linked to its six nearest neighbours; the true number of domains is given to every method. (3) \nMethodsPub{} published methods and three
-training-free baselines in three families (colours used throughout). (4) Each embedding is clustered from 20 random starts, with R mclust after
-shuffling the spot order or adding noise, and with a 20-start best-likelihood fit compared with the method's own clustering. Below: one fixed HiSTaR embedding of DLPFC section
-151669 clustered from 20 random starts (dots: ARI of each start) and the domains of the worst and best start. (5) Predicted domains
-are compared with the annotation (here linear diffusion on 151673) using agreement, per-domain, spatial and cost metrics, summarised with a
-bootstrap over donors and datasets. Icons: Bioicons (CC0) and Servier Medical Art (CC BY 3.0).}
+\caption{Study design. (\textbf{A}) Human DLPFC on a 10x Visium capture area (section 151673) and mouse sections profiled by
+STARmap (mPFC, section BZ5) and MERFISH (hypothalamus, Bregma $-0.14$); colours are the expert annotation, used only for scoring.
+(\textbf{B}) Each spot or cell carries an expression profile; the training-free baselines use the six-nearest-neighbour graph,
+and other methods build their own graph as documented. The true number of domains is given to every method.
+(\textbf{C}) \nMethodsPub{} published methods and three training-free baselines in three families (family colours are used in
+Figures 1, 2 and 5). (\textbf{D}) Each embedding is clustered with the method's default clustering and with a matched clustering
+(the same 20-start Gaussian mixture for every method); single-start refits and R mclust with different random seeds measure the
+variance of the clustering step. Below: one fixed HiSTaR embedding of DLPFC section 151669 refitted from 20 random starts
+(ARI of each start) and the domains of the worst and best start. (\textbf{E}) Predicted domains are compared with the annotation
+using agreement, per-domain, spatial and cost metrics, summarised with a bootstrap over donors and datasets. Icons: Bioicons (CC0)
+and Servier Medical Art (CC BY 3.0).}
 \label{fig:overview}
 \end{figure*}
 
-\section{Materials and methods}
+\section{Materials and Methods}
 
 \subsection{Data}
 \textbf{DLPFC (10x Visium).} Twelve sections from three donors \citep{maynard2021dlpfc}; seven
@@ -101,247 +106,273 @@ annotated layers (five for donor 2), \texttt{layer\_guess\_reordered}.
 four annotated layers (L1, L2/3, L5, L6) \citep{wang2018starmap}.
 \textbf{MERFISH mouse hypothalamus.} Animal 1, five sections from Bregma $-0.04$ to $-0.24$ (about
 5500 cells, 155 genes) with eight annotated regions \citep{moffitt2018merfish}. The STARmap and
-MERFISH annotations are those distributed with the BASS analyses \citep{li2022bass}. In total, \nSections{}
-sections from three technologies (Supplementary Table~\STqc; Supplementary Note~\SNdata).
+MERFISH annotations are those distributed with the BASS analyses \citep{li2022bass}, one of the benchmarked methods
+(see Limitations). In total, \nSections{} sections from three technologies (Supplementary Table~\STqc; Supplementary Note~\SNdata).
 
 \subsection{Preprocessing}
 DLPFC: genes in fewer than 50 spots or with fewer than 10 counts were removed, 2000 highly
 variable genes were selected (Seurat v3 flavour), counts were library-size normalised,
 log-transformed and scaled, and reduced to 200 principal components (PCs). STARmap and MERFISH
 (targeted panels): all genes, same normalisation, 50 PCs. All methods received the same input
-where they accept one; BANKSY used the log-normalised genes, and SpaGCN, GraphST and the methods
-added later (below) their own documented preprocessing of the same raw counts. The true number of domains was given to every method, and unannotated
-spots were excluded from evaluation.
+where they accept one; BANKSY used the log-normalised genes, and SpaGCN, GraphST and the other published methods
+used their own documented preprocessing of the same raw counts. The true number of domains was given to every method,
+and unannotated spots were excluded from evaluation.
 
 \subsection{Methods}
+Methods were chosen to cover the main families of spatial domain identification with maintained public code that runs on
+CPU: deep graph encoders, statistical and neighbourhood methods, and Bayesian models. Every method was run with its official
+code and default or tutorial settings on one CPU thread; none was tuned per dataset. Versions, settings and deviations from
+the tutorials (for example the neighbourhood radius, expressed in spot spacings so that it transfers across technologies) are
+listed in Supplementary Table~\STmethods.
 \begin{itemize}
-\item \textbf{HiSTaR} \citep{yu2025histar}: PyTorch port of the official code with the published
-defaults (cross-level weight 0.3, 200+200 epochs).
-\item \textbf{GraphST} \citep{long2023graphst}: official package and tutorial pipeline
-(600 epochs, 20-PC embedding, R mclust EEE; with and without its label refinement). Because of its
-CPU cost, GraphST was run with one seed on DLPFC and three seeds on STARmap and MERFISH.
-\item \textbf{BANKSY} \citep{singhal2024banksy}: official \texttt{pybanksy}, 18 neighbours,
-$m_{\max}=1$, $\lambda\in\{0.2,0.8\}$, 20 PCs.
-\item \textbf{SpaGCN} \citep{hu2021spagcn}: official tutorial pipeline without histology
-($p=0.5$, Louvain resolution search to the true number of domains, 200 epochs).
-\item \textbf{Methods added in the extended study}, each run with its official code and tutorial
-settings on one CPU thread: STAGATE \citep{dong2022stagate} (R mclust), SEDR \citep{xu2024sedr} (R mclust),
-SpaceFlow \citep{ren2022spaceflow} (Leiden with a search for the true number of domains), NichePCA \citep{nichepca2025}
-(Leiden, same search), CCST \citep{li2022ccst} and Spatial-MGCN \citep{wang2023spatialmgcn} (both $k$-means), DeepST
-\citep{xu2022deepst} (Leiden with refinement), BASS \citep{li2022bass} and BayesSpace \citep{zhao2021bayesspace}
-(Bayesian models that cluster internally; BayesSpace requires a spot lattice and was run on the
-Visium sections only). NichePCA, SEDR, SpaceFlow and DeepST were run with three seeds per section; STAGATE, CCST, Spatial-MGCN and BASS
-with one seed (seed 0) and BayesSpace once per section. Deviations from the tutorials (for example the neighbourhood radius,
-expressed in spot spacings so that it transfers across technologies) are listed in Supplementary Table~\STmethods. Spatial-MGCN's released test script reports the epoch with the highest ARI against the
-annotation; in the benchmark we report its final epoch (label-free) and give the label-selected value separately.
-\item \textbf{Training-free baselines.} \emph{Linear diffusion}: the top 30 PCs are smoothed on the
-spatial 6-nearest-neighbour graph, $H^{(t+1)}=(1-\alpha)H^{(t)}+\alpha D^{-1}AH^{(t)}$,
-$\alpha=0.5$, $T=10$. \emph{AnisoST}: the same with edge weights recomputed at every step,
-$w_{ij}^{(t)}=\exp(-\|h_i^{(t)}-h_j^{(t)}\|^2/\kappa^{(t)})$ (Perona--Malik-type edge-preserving
-diffusion \citep{perona1990}; $\kappa^{(t)}$ the median squared edge difference); a similar idea has
-been used inside a deep model \citep{wang2024pearlst}. \emph{PCA} without smoothing is the
-non-spatial reference. All baseline settings were fixed on DLPFC donor 1 before any other data
-were analysed, and none were tuned on STARmap or MERFISH; the sensitivity of linear diffusion to each setting is shown in Supplementary Fig.~\SFsens. All methods were run with default or published settings; none were tuned per dataset (equal tuning budgets are a topic for future work).
+\item \textbf{Deep graph encoders.} HiSTaR \citep{yu2025histar} (PyTorch port of the official code with the published
+defaults: cross-level weight 0.3, 200+200 epochs), GraphST \citep{long2023graphst} (official package and tutorial: 600 epochs,
+20-PC projection, R mclust; with and without its label refinement), SpaGCN \citep{hu2021spagcn} (tutorial without histology,
+Louvain resolution search to the true number of domains), STAGATE \citep{dong2022stagate}, SEDR \citep{xu2024sedr},
+SpaceFlow \citep{ren2022spaceflow}, CCST \citep{li2022ccst}, Spatial-MGCN \citep{wang2023spatialmgcn} and DeepST
+\citep{xu2022deepst}. Spatial-MGCN's released test script reports the epoch with the highest ARI against the annotation;
+in the benchmark we report its final epoch (label-free) and give the label-selected value separately.
+\item \textbf{Statistical and neighbourhood methods.} BANKSY \citep{singhal2024banksy} (official \texttt{pybanksy},
+18 neighbours, $m_{\max}=1$, 20 PCs; $\lambda=0.8$, recommended for domain segmentation, and $\lambda=0.2$, recommended for cell
+typing, included for reference), NichePCA \citep{nichepca2025} (a published training-free method: neighbour aggregation and PCA),
+and the Bayesian models BASS \citep{li2022bass} and BayesSpace \citep{zhao2021bayesspace}, which cluster internally. BayesSpace
+requires a spot lattice and was run on the Visium sections only.
+\item \textbf{Training-free baselines.} \emph{Linear diffusion} is standard neighbourhood smoothing (graph Laplacian
+smoothing): the top 30 PCs are smoothed on the spatial six-nearest-neighbour graph,
+$H^{(t+1)}=(1-\alpha)H^{(t)}+\alpha D^{-1}AH^{(t)}$, $\alpha=0.5$, $T=10$. \emph{AnisoST} uses the same scheme with edge weights
+recomputed at every step, $w_{ij}^{(t)}=\exp(-\|h_i^{(t)}-h_j^{(t)}\|^2/\kappa^{(t)})$ (Perona--Malik-type edge-preserving
+diffusion \citep{perona1990}; $\kappa^{(t)}$ the median squared edge difference); a similar idea has been used inside a deep
+model \citep{wang2024pearlst}. \emph{PCA} without smoothing is the non-spatial reference. All baseline settings were fixed on
+DLPFC donor 1 before any other data were analysed (sensitivity: Supplementary Fig.~\SFsens).
 \end{itemize}
+Seeds: three per section for most methods; one for STAGATE, CCST, Spatial-MGCN and BASS in the published pipelines, and one
+run per section for BayesSpace (Supplementary Table~\STcov).
+
+\paragraph{Neutrality.} The authors developed AnisoST, and linear diffusion and PCA are its ablations; the authors did not
+develop any of the published methods. To limit bias, all baseline settings were frozen on four development sections, every
+published method was run with its authors' defaults, and all comparisons are repeated without the development sections.
 
 \subsection{Clustering protocols}
-\emph{Standard}: each method's usual clustering. This is R mclust for GraphST, STAGATE and SEDR, a 3-start
-scikit-learn GMM \citep{pedregosa2011sklearn} with a fixed seed for HiSTaR, BANKSY and the baselines, Leiden
-or $k$-means for the other methods, and the internal model for SpaGCN, BASS and BayesSpace.
-\emph{Robust}: the method's embedding clustered with a tied-covariance Gaussian mixture (the mclust EEE model) with 20 random starts,
-keeping the fit with the highest log-likelihood (label free); available for every method that outputs an
-embedding. \emph{Lottery}: one seed-0 embedding per section and method, clustered 20 times with a
-single random start each (\lotNMethods{} methods with embeddings). \emph{mclust perturbations}: R mclust (version 6.0.1, default
-hierarchical initialisation) on the same embedding (i) unchanged, (ii) after random permutation of
-the rows, 10 times, and (iii) after adding Gaussian noise with 1\% of each feature's standard
-deviation, 10 times (\mcNMethods{} methods in the extended set, plus HiSTaR, GraphST and AnisoST).
+\emph{Default clustering}: the clustering step of each method's official pipeline. This is R mclust (EEE) for GraphST, STAGATE and
+SEDR; a 3-start scikit-learn Gaussian mixture with tied covariance \citep{pedregosa2011sklearn} for HiSTaR, BANKSY and the three
+baselines; Leiden or $k$-means for SpaceFlow, NichePCA, CCST, Spatial-MGCN and DeepST; and the internal model for SpaGCN, BASS and
+BayesSpace. \emph{Matched clustering} (primary analysis): every embedding clustered with the same tied-covariance Gaussian mixture
+(the mclust EEE model) from 20 random starts, keeping the fit with the highest log-likelihood (label-free). SpaGCN, BASS and
+BayesSpace output no embedding and keep their own clustering under both protocols.
+\emph{Initialisation experiment}: one seed-0 embedding per section and method, refitted 20 times with a single random start
+each (\lotNMethods{} methods and baselines that output an embedding). \emph{R mclust experiment}: R mclust 6.0.1
+(\texttt{Mclust(Z, G = k, modelNames = "EEE")}) on the same embeddings, (i) with its default initialisation under ten R random
+seeds and fixed row order, (ii) initialised on all observations (\texttt{initialization = list(subset = 1:n)}), and (iii) the
+same after adding Gaussian noise with 1\% of each feature's standard deviation, five times.
 
 \subsection{Evaluation and statistics}
-ARI \citep{hubert1985ari} against the manual annotation; NMI gave the same conclusions (Supplementary Table~\STnmi); further agreement, spatial and label-free metrics are in Supplementary Table~\STmetrics{} (definitions in Supplementary Note~\SNmetrics). For every (method, section) we average over seeds. Sections are not independent (12 DLPFC sections come from three donors; the STARmap and MERFISH sections come from one
-experiment each), so the unit of analysis is the cluster: \statClusters{} clusters (three DLPFC donors, STARmap, MERFISH). For each method
-we estimate the difference in mean ARI from linear diffusion, the reference, which was chosen after the means were seen, so this
-comparison is exploratory. Intervals come from a hierarchical bootstrap (\statBoot{} resamples of clusters, then of sections within a
-cluster; the estimate is the equal-weight mean of cluster means) with 95\% percentile intervals (Supplementary Note~\SNstats). A method is called equivalent to the
-reference if the 90\% interval lies within $\pm\statMargin$ ARI, a margin fixed before the analysis. Ranks and the probability of
-ranking first come from the same bootstrap. The analysis is repeated without the development sections (DLPFC donor 1 and the first
-section of STARmap and MERFISH). Run time and peak memory were measured
-for a subset of methods in a standardised runner (process-tree sampling, one CPU thread per job; Supplementary Note~\SNcompute). Supplementary Table~\STcov{} lists which method was run in which experiment, with the number of sections and seeds.
+ARI against the manual annotation is the primary metric; NMI gave the same ranking of methods (Supplementary Table~\STnmi), and
+further agreement, spatial and label-free metrics are in Supplementary Table~\STmetrics{} (definitions in Supplementary
+Note~\SNmetrics). For every method and section we average over seeds. Sections are not independent (the 12 DLPFC sections come
+from three donors; the STARmap and MERFISH sections come from one experiment each), so the unit of analysis is the group:
+\statClusters{} groups (three DLPFC donors, STARmap, MERFISH). For each method we estimate the difference in mean ARI from
+linear diffusion, the reference, which was chosen after the means were seen, so these comparisons are exploratory. Intervals
+come from a hierarchical bootstrap (\statBoot{} resamples of groups, then of sections within a group; the estimate is the
+equal-weight mean of group means) with 95\% percentile intervals (Supplementary Note~\SNstats). A method is called equivalent
+to the reference if the 90\% interval lies within $\pm\statMargin$ ARI, about the seed-to-seed standard deviation. Ranks and the
+probability of ranking first come from the same bootstrap. The analysis is repeated without the development sections (DLPFC donor 1
+and the first section of STARmap and MERFISH). With five groups the intervals are wide and no correction for multiple comparisons
+is applied; we therefore interpret only consistent patterns. Run time and peak memory were measured in a standardised runner that
+gives every method the same input (process-tree sampling, one CPU thread per job; Supplementary Note~\SNcompute); its accuracy
+agrees with the published pipelines to within the differences listed in Supplementary Table~\STagree.
 
 \section{Results}
 
-\subsection{Accuracy across methods and technologies}
-Fig.~\ref{fig:accuracy} and Fig.~\ref{fig:matched} compare all methods under both protocols (per-dataset values in Supplementary Table~\STari); Fig.~\ref{fig:maps} shows example partitions.
-Across all methods and both protocols, the highest mean ARI was reached by \bestDlpfc{} on DLPFC (\bestDlpfcVal),
-\bestStarmap{} on STARmap (\bestStarmapVal) and \bestMerfish{} on MERFISH (\bestMerfishVal). Linear graph diffusion had
-a mean ARI of \meanLinDlpfc, \meanLinStarmap{} and \meanLinMerfish{} on the three datasets (average over datasets \overallLin, against \overallBass{} for BASS and \overallBanksyHi{} for BANKSY $\lambda=0.8$).
-Because sections are nested in \statClusters{} donors and datasets, we compared methods with a hierarchical bootstrap
-(Fig.~\ref{fig:accuracy}b; Supplementary Table~\STstats). With each method's standard clustering, linear diffusion had a higher mean ARI than \nStdBetter{} of \nStdTot{} methods
-(95\% interval above zero), and this held for \nStdBetterTest{} of them with the development sections excluded. Two comparisons were
-unresolved: BASS ($\Delta$ \stdDBass, 95\% interval \stdLoBass{} to \stdHiBass) and BANKSY $\lambda=0.8$ (\stdDBanksyHi, \stdLoBanksyHi{} to \stdHiBanksyHi).
-Neither was equivalent to the baseline within an ARI margin of \statMargin, and the per-dataset differences changed sign: BASS was ahead on MERFISH
-and BANKSY $\lambda=0.8$ on STARmap. With 20-start clustering, \nRobBetter{} of \nRobTot{} comparisons favoured the baseline and \nRobUnres{} were
-unresolved (Supplementary Table~\STstatsrob). In the bootstrap, linear diffusion ranked first in \pBestLin{} of the resamples (95\% rank interval
-\rankLoLin--\rankHiLin{} among \rankMethods{} methods) and BASS in \pBestBass{} (Fig.~\ref{fig:accuracy}c; Supplementary Table~\STranks). These intervals rest on \statClusters{} clusters and are wide, and the reference was
-chosen after seeing the means, so the comparison is exploratory. The ranking of the deep methods relative
-to the baselines changed with the clustering protocol (Fig.~\ref{fig:matched}). Seed-to-seed variability also differed: HiSTaR's standard deviation of ARI was 0.047 on DLPFC and
-0.18 on STARmap, against 0.003--0.04 for the training-free baselines (Supplementary Table~\STseeds). Run time and memory differed by
-orders of magnitude between methods (Supplementary Table~\STres); in a separate feasibility test, one DLPFC section took
-tens of minutes on one CPU thread for most of the neural methods and about 50 minutes for BayesSpace.
+\subsection{A training-free smoothing baseline is among the most accurate methods}
+With matched clustering, linear diffusion had a mean ARI of \meanLinDlpfc, \meanLinStarmap{} and \meanLinMerfish{} on DLPFC,
+STARmap and MERFISH (\figref{fig:accuracy}A; per-dataset values for both protocols in Supplementary Table~\STari). Across all
+methods and both protocols, the highest dataset means were reached by \bestDlpfc{} on DLPFC (\bestDlpfcVal), \bestStarmap{} on
+STARmap (\bestStarmapVal) and \bestMerfish{} on MERFISH (\bestMerfishVal). Linear diffusion had a higher mean ARI than
+\nRobBetter{} of \nRobTot{} comparators (95\% interval above zero; \figref{fig:accuracy}B; Supplementary Table~\STstatsrob), and
+this held for \nRobBetterTest{} of them without the development sections. Five comparisons were unresolved: BASS ($\Delta$
+\robDBass, 95\% interval \robLoBass{} to \robHiBass), BANKSY $\lambda=0.8$ (\robDBanksyHi, \robLoBanksyHi{} to \robHiBanksyHi),
+HiSTaR (\robDHistar, \robLoHistar{} to \robHiHistar), SEDR (\robDSedr, \robLoSedr{} to \robHiSedr) and AnisoST (\robDAniso,
+\robLoAniso{} to \robHiAniso). No comparator was equivalent to the baseline within $\pm\statMargin$ ARI, and BASS was ahead on
+STARmap and MERFISH. Averaging the three dataset means with equal weight instead of the five groups puts BASS (\overallBass) slightly
+above linear diffusion (\overallLin). In the bootstrap, linear diffusion ranked first in \pBestLin{} of the resamples (95\% rank
+interval \rankLoLin--\rankHiLin{} among \rankMethods{} methods) and BASS in \pBestBass{} (\figref{fig:accuracy}C; Supplementary
+Table~\STranks). With each method's default clustering the picture was similar but more favourable to the baseline: \nStdBetter{}
+of \nStdTot{} comparisons favoured it and \nStdUnres{} (BASS and BANKSY $\lambda=0.8$) were unresolved (Supplementary
+Table~\STstats). Example partitions are shown in \figref{fig:maps}.
+
+Seed-to-seed variability differed between methods: HiSTaR's standard deviation of ARI was 0.047 on DLPFC and 0.18 on STARmap,
+against 0.003--0.04 for the training-free baselines (Supplementary Table~\STseeds). The median time per section on one CPU
+thread ranged from under 30 s for the baselines and BANKSY to about 40 min for CCST (Supplementary Table~\STres).
+The edge-preserving variant AnisoST did not improve on linear diffusion overall (MERFISH: 0.363 vs 0.497), although on DLPFC it
+was more accurate on spots at layer boundaries (by 0.025, 9 of 12 sections, Wilcoxon signed-rank $p=0.034$, uncorrected;
+Supplementary Fig.~\SFboundary); at single-cell resolution neighbouring cells often differ by cell type, so an edge-preserving
+rule blocks the smoothing needed to reveal regions.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\linewidth]{nar_fig2_accuracy.pdf}
-\caption{Accuracy of \nMethodsPub{} published methods and three training-free baselines (BayesSpace, run on DLPFC only, is omitted).
-\textbf{a}, Mean ARI per dataset with each method's standard clustering (training-free baselines: their 20-start clustering). Rows are ordered by the mean over the
-three datasets. Dots mark the method family. \textbf{b}, Difference in mean ARI between linear diffusion and each method, with 95\% intervals
-from a hierarchical bootstrap over \statClusters{} clusters (three DLPFC donors, STARmap, MERFISH). Filled symbols: interval above zero;
-open symbols: unresolved. The grey band is the equivalence margin of $\pm\statMargin$ ARI. \textbf{c}, Rank of each method in the bootstrap
-(dot: median; line: 95\% interval); numbers give the probability of ranking first. Linear diffusion was chosen as the reference after seeing the means, so
-this comparison is exploratory.}
+\caption{Accuracy with matched clustering (every embedding clustered with the same 20-start Gaussian mixture; SpaGCN, BASS and
+BayesSpace use their internal clustering). $n=20$ sections (12 DLPFC, 3 STARmap, 5 MERFISH); values are means over seeds.
+(\textbf{A}) Mean ARI per dataset; rows ordered by the mean over datasets; dots mark the method family. (\textbf{B}) Linear
+diffusion minus each method, with 95\% intervals from a hierarchical bootstrap over \statClusters{} groups (three DLPFC donors,
+STARmap, MERFISH). Filled symbols: interval above zero; open symbols: unresolved. Grey band: equivalence margin of
+$\pm\statMargin$ ARI. BayesSpace was run on DLPFC only. (\textbf{C}) Rank in the bootstrap (dot: median; line: 95\% interval);
+numbers give the probability of ranking first when at least 0.01. Linear diffusion was chosen as the reference after seeing the
+means, so this comparison is exploratory.}
 \label{fig:accuracy}
 \end{figure*}
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{nar_fig4_protocol.pdf}
-\caption{Effect of the clustering protocol on mean ARI. Open circles: each method's standard clustering. Filled circles: the 20-start,
-best-likelihood Gaussian mixture applied to the same embedding (blue: higher, orange: lower). Methods that cluster internally (SpaGCN, BASS,
-BayesSpace) have no embedding and are not shown.}
-\label{fig:matched}
-\end{figure*}
-
-\begin{figure*}[t]
-\centering
 \includegraphics[width=\linewidth]{nar_fig5_maps.pdf}
-\caption{Domains on DLPFC section 151673 (seed 0). The panels show the manual annotation and the partition of nine methods; predicted clusters
-were matched to the annotated layers with the Hungarian algorithm for display only, and the ARI against the annotation is given in each title.
-Spots without annotation are light grey.}
+\caption{Domains on DLPFC section 151673 (donor 3, not used for development; seed 0, default clustering). The manual annotation and
+the partitions of nine methods spanning the accuracy range; predicted clusters were matched to the annotated layers with the
+Hungarian algorithm for display only, and the ARI is given in each title. Spots without annotation are light grey.}
 \label{fig:maps}
 \end{figure*}
 
-\subsection{Edge preservation helps at boundaries on Visium but not on single-cell data}
-On DLPFC, AnisoST matched linear diffusion in ARI (0.551 vs 0.558) and improved accuracy on spots
-at layer boundaries by 0.025 (9/12 sections, $p=0.034$, uncorrected) without changing interior
-accuracy (Supplementary Fig.~\SFboundary). A pilot check that both baselines are invariant to transformations that should not change the answer is in Supplementary Table~\STinv. On MERFISH it was clearly worse (0.363 vs 0.497): at single-cell
-resolution neighbouring cells often differ by cell type, so an edge-preserving rule blocks the
-smoothing that is needed to reveal regions. We report this as a negative result for the
-edge-preserving variant; the simpler linear diffusion was the more robust baseline.
-
-\subsection{Robustness to the clustering initialisation}
-Figure~\ref{fig:robust}a shows the ARI of 20 single-start fits of the same mixture model on each
-fixed embedding. Across the \lotN{} embeddings of \lotNMethods{} methods, the ARI range within an
-embedding was \lotMean{} on average and reached \lotMax{} (\lotWorstMethod, \lotWorstSection). The effect depended
-on the method: the mean range was \lotLo{} for \lotLoName{} and \lotHi{} for \lotHiName{} (Fig.~\ref{fig:robust}a); for HiSTaR and AnisoST it was
-\lotMeanHistar{} and \lotMeanAniso{}, whereas GraphST's 20-dimensional PCA embeddings were more stable
-(\lotMeanGraphst). The best of the 20 fits by ARI exceeded the
-average single fit by \lotOracle: choosing a clustering run by its agreement with the labels, explicitly
-or by trying a few seeds, would inflate a reported result by about as much as the gap between most
-published methods. Per-method ranges are in Supplementary Table~\STlottery{} and every fit is shown in Supplementary Fig.~\SFlottery.
+\subsection{Random initialisation of the clustering step changes ARI on a fixed embedding}
+\figref{fig:robust}A shows the ARI of 20 single-start fits of the same mixture model on each fixed embedding. Across the
+\lotN{} embeddings of \lotNMethods{} methods and baselines, the ARI range within an embedding was \lotMean{} on average and reached
+\lotMax{} (\lotWorstMethod, \lotWorstSection). The training-free baselines were not immune: the mean range was \lotMeanLin{} for
+linear diffusion, against \lotLo{} for \lotLoName{} and \lotHi{} for \lotHiName{} (Supplementary Table~\STlottery). The best of
+the 20 fits by ARI exceeded the average single fit by \lotOracle: choosing a clustering run by its agreement with the labels,
+explicitly or implicitly by trying several seeds, would inflate a result by more than the few hundredths typically reported
+between successive methods. Every fit for three representative methods is shown in Supplementary Fig.~\SFlottery.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\linewidth]{nar_fig3_robustness.pdf}
-\caption{Robustness of the clustering step on fixed embeddings (\lotNMethods{} methods with embeddings; one dot per section; colour: dataset).
-\textbf{a}, ARI range over 20 single-start fits of the same Gaussian mixture model on one embedding. \textbf{b}, ARI range of R mclust
-(default settings) over 10 random permutations of the row order of the same embedding. Black bars: interquartile range; open circle: median.
-Methods are ordered by the median range in \textbf{a}. \textbf{c}, Median Spearman correlation between the log-likelihood and the ARI of the 20 fits
-(positive: better-fitting mixtures agree better with the annotation).}
+\caption{Variance of the clustering step on fixed embeddings (\lotNMethods{} methods and baselines that output an embedding; one
+symbol per section, $n=20$ per method; shape and grey level: dataset). (\textbf{A}) ARI range over 20 single-start fits of the same
+Gaussian mixture. (\textbf{B}) ARI range of R mclust with its default initialisation over ten R random seeds; STARmap sections
+have fewer than 2000 cells, are initialised on all cells and show no variation. (\textbf{C}) Median Spearman correlation between
+the log-likelihood and the ARI of the 20 fits in A (positive: better-fitting mixtures agree better with the annotation); columns
+rest on 12, 3 and 5 sections. Bars: interquartile range; open circle: median.}
 \label{fig:robust}
 \end{figure*}
 
+\subsection{The default fit of R mclust depends on a hidden random seed}
+For data with more than 2000 observations, R mclust initialises the EM algorithm by hierarchical agglomeration on a random subset
+of 2000 observations drawn with R's random number generator, so its default fit depends on the R seed. The published pipelines fix
+this seed (2020 in STAGATE and GraphST, 2023 in SEDR), which makes their result reproducible but tied to an arbitrary choice. Across
+the \mcsNBig{} embeddings with more than 2000 spots or cells, changing only the R seed changed ARI by \mcsSeedMeanBig{} on average
+(up to \mcsSeedMax; \figref{fig:robust}B), and the range exceeded 0.1 for \mcsSeedGt\% of them; the STARmap sections, with about
+1050 cells, were initialised on all cells and did not vary. Initialising on all observations removed the dependence on the seed and
+on the row order; the remaining sensitivity to 1\% noise was \mcsJitMean{} on average (up to \mcsJitMax). The full-data fit fell
+outside the range of the ten seeded fits for \mcsFullOutside\% of the embeddings (Supplementary Table~\STmclust). An earlier
+version of this experiment attributed the variation to the order of the spots; permuting the rows changes which observations are
+sampled, so it is the same effect.
 
-
-\subsection{Robustness to spot order and noise in R mclust}
-mclust initialises EM by model-based hierarchical agglomeration, so one call on a fixed embedding
-always returns the same partition. That partition, however, depended on details that carry no
-information (Fig.~\ref{fig:robust}b). Over \mcN{} embeddings, randomly permuting the order of the spots changed ARI by
-\mcPermMean{} on average within an embedding (up to \mcPermMax); on DLPFC the mean was \mcPermMeanDlpfc{} and on MERFISH \mcPermMeanMerfish. In \mcPermFrac\% of the permutations ARI moved by more than 0.05, and
-for \mcPermGt\% of the embeddings the range exceeded 0.1. Adding noise at 1\% of each
-feature's standard deviation had similar effects (mean range \mcJitMean, up to \mcJitMax; \mcJitMeanStarmap{} on STARmap). Over these embeddings, mclust's default fit had
-a mean ARI of \mcDefault{} against \mcBest{} for the best-likelihood fit of 20 random starts, and its
-log-likelihood was at least as high in only \mcLLfrac\% of cases (Supplementary Table~\STmclust).
-
-
-
-\subsection{Choosing fits by likelihood is not a remedy}
-A natural fix is to run many starts and keep the most likely fit. It helped some methods and
-hurt others. Replacing each method's standard clustering by this matched protocol raised mean ARI for \nGainPos{} of
-\nGainTot{} methods and lowered it for \nGainNeg. For example, it raised HiSTaR's mean ARI by \gainHistar{} (\gainWinsHistar/\gainNHistar{} sections,
-\gainPHistar) and GraphST's by \gainGraphst{} (\gainWinsGraphst/\gainNGraphst, \gainPGraphst), but changed SEDR's by \gainSedr{}
-and Spatial-MGCN's by \gainMgcn{} (Supplementary Table~\STgain). The reason is visible in Fig.~\ref{fig:robust}: likelihood and ARI were positively
+\subsection{Selecting fits by likelihood helps on cortex but not on single-cell data}
+A natural fix is to run many starts and keep the most likely fit. On the same embedding and model, the best-likelihood fit beat the
+average single start for \lotBLUp{} of \lotNMethods{} methods and was worse for \lotBLDown{} (Supplementary Table~\STlottery).
+Replacing each method's default clustering by matched clustering changed mean ARI by more than 0.005 upwards for \nGainPos{} of
+\nGainTot{} methods and downwards for \nGainNeg{} (\figref{fig:matched}; Supplementary Table~\STgain); for example HiSTaR gained
+\gainHistar{} (\gainPHistar) and NichePCA \gainNichepca{} (\gainPNichepca), whereas SEDR changed by \gainSedr{} (\gainPSedr) and CCST
+by \gainCcst{} (\gainPCcst), all uncorrected. The reason is visible in \figref{fig:robust}C: likelihood and ARI were positively
 related on DLPFC (median Spearman $\rho$ \rhoDlpfcMed) but not on MERFISH (median $\rho$ \rhoMerfishMed; negative for
-\rhoNegMerfish{} of \lotNMethods{} methods), where the best-fitting mixture can separate cell types rather than anatomical
-regions. Better optimisation of the mixture model is therefore not the same as better domains.
+\rhoNegMerfish{} of \lotNMethods{} methods), where the best-fitting mixture can separate cell types rather than anatomical regions.
+Better optimisation of the mixture model is therefore not the same as better domains, and the clustering protocol alone can
+reorder methods.
 
-\subsection{Reproducibility of HiSTaR's published DLPFC results}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{nar_fig4_protocol.pdf}
+\caption{Effect of the clustering protocol on mean ARI: (\textbf{A}) DLPFC, (\textbf{B}) STARmap, (\textbf{C}) MERFISH (means over
+12, 3 and 5 sections). Open circles: default clustering; filled circles: matched clustering of the same embedding; line colour:
+method family. Rows are ordered by the matched mean. SpaGCN, BASS and BayesSpace cluster internally and are not shown.}
+\label{fig:matched}
+\end{figure*}
+
+\subsection{HiSTaR's published DLPFC accuracy was not reproduced}
 With the official code and defaults, HiSTaR reached a median ARI over the twelve DLPFC sections of
-0.509 (mean 0.491, 95\% bootstrap CI 0.454--0.525) with the 3-start GMM, and 0.449 (mean, seed 0)
+0.509 (mean 0.491, 95\% bootstrap CI over sections 0.454--0.525) with the 3-start GMM, and 0.449 (mean, seed 0)
 when its embedding was clustered with R mclust as in the official pipeline, compared with a reported
 median of 0.65 \todo{verify the reported values (0.65 median; 0.718 on 151673) against the HiSTaR
 article}. Fixing a bug that applies random masking at inference did not change accuracy (0.487; Supplementary Table~\SThistar).
-Possible causes include per-section tuning of the loss weights (described in the HiSTaR supplement),
-unpublished preprocessing and the choice of seed; the robustness results above show that the clustering
-step alone produces differences of this size. \todo{Report the outcome of contacting the authors.}
+Possible causes include per-section tuning of the loss weights (described in the HiSTaR supplement), unpublished preprocessing
+and the choice of seed; the results above show that the clustering step alone can produce per-section differences of this size.
+\todo{Report the outcome of contacting the authors.}
 
-\subsection{Reproducibility and label use in released code}
+\subsection{Released code of one method selects the reported epoch using the labels}
 \todo{Contact the Spatial-MGCN authors and report their response before including this subsection.}
-Spatial-MGCN's released test scripts (\texttt{DLPFC\_test.py}, \texttt{HBC\_test.py}) compute ARI against the annotation at every training epoch
-and keep the best epoch for reporting. Applying the same selection rule in our runs (seed 0, \mgcnLeakN{} sections), this label-selected epoch had a mean ARI of
-\mgcnOracleDlpfc{} on DLPFC, \mgcnOracleStarmap{} on STARmap and \mgcnOracleMerfish{} on MERFISH, against \mgcnFinalDlpfc, \mgcnFinalStarmap{} and
-\mgcnFinalMerfish{} for the final epoch used in our benchmark, i.e.\ an inflation of \mgcnLeak{} on average (\mgcnLeakStarmap{} on STARmap; Supplementary Table~\STepoch).
-Selecting a run, epoch or seed by agreement with the labels is a form of label leakage that makes a method look competitive with the training-free baselines
-(\mgcnOracleDlpfc{} against \meanLinDlpfc{} on DLPFC) when its label-free result is not. An automated screen of all released repositories for other patterns of label use, with every candidate line read by hand, is reported in Supplementary Table~\STaudit{} and Supplementary Note~\SNaudit.
+Spatial-MGCN's released test scripts (\texttt{DLPFC\_test.py}, \texttt{HBC\_test.py}) compute ARI against the annotation at every
+training epoch and keep the best epoch for reporting. Applying the same selection rule in our runs (seed 0, \mgcnLeakN{} sections),
+this label-selected epoch had a mean ARI of \mgcnOracleDlpfc{} on DLPFC, \mgcnOracleStarmap{} on STARmap and \mgcnOracleMerfish{}
+on MERFISH, against \mgcnFinalDlpfc, \mgcnFinalStarmap{} and \mgcnFinalMerfish{} for the final epoch used in our benchmark, an
+inflation of \mgcnLeak{} on average (\mgcnLeakStarmap{} on STARmap; Supplementary Table~\STepoch). Selecting a run, epoch or seed by
+agreement with the labels is a form of label leakage that makes a method look competitive with the training-free baselines
+(\mgcnOracleDlpfc{} against \meanLinDlpfc{} on DLPFC) when its label-free result is not. An automated screen of the released
+repositories of 14 methods for other patterns of label use, with every candidate line read by hand, is reported in Supplementary
+Table~\STaudit{} and Supplementary Note~\SNaudit.
 
 \section{Discussion}
 We benchmarked \nMethodsPub{} published methods and three training-free baselines on \nSections{} sections from three
-technologies. Accuracy differences between most methods were small, and a training-free diffusion baseline matched or
-outperformed every deep encoder we tested. Robustness was a larger concern: on fixed embeddings from \lotNMethods{} methods,
-random initialisation of the clustering step alone spanned \lotMean{} ARI on average, the R implementation used by most
-published methods changed its answer when the spots were merely reordered, and better likelihood did not reliably mean better
-domains. Reproducibility was limited by both the clustering step and by choices in released code, including selecting a reported
-epoch with the labels. These results agree with recent large benchmarks
-\citep{explanatory2026,hu2024gbbench,nar2025bench} and add a direct, quantitative measurement of clustering variance on
-fixed embeddings across a broader set of methods.
+technologies and separated the learned embedding from the clustering step. When all embeddings were clustered in the same way,
+standard neighbourhood smoothing had a higher mean ARI than most methods and could not be separated from the best of the rest
+(BASS, BANKSY, HiSTaR, SEDR and AnisoST); no method was shown to be equivalent to it. The clustering step was a larger source of
+variation than most differences between methods: random initialisation of the same mixture model spanned \lotMean{} ARI on a fixed
+embedding, the default fit of R mclust, used by several widely used methods, depended on a fixed but arbitrary random seed, and
+better likelihood did not reliably mean better domains. Reproducibility was limited both by the clustering step and by choices in
+released code, including selecting a reported epoch with the labels.
 
-\paragraph{Recommendations.} (1) Report the clustering protocol: algorithm, implementation and
-version, initialisation, number of starts, seeds, and how they were chosen. (2) Never select seeds,
-epochs or runs by agreement with the labels. (3) Report distributions over training seeds \emph{and}
-clustering runs (or input permutations), with per-section values. (4) Compare encoders under the
-same clustering, and include training-free baselines such as neighbourhood smoothing. (5) Report
-runtime, memory and seed variance alongside accuracy.
+Why does simple smoothing do so well? On layered tissue such as cortex, domains are large, contiguous regions, and averaging each
+spot with its neighbours removes most of the sampling noise that separates spots of the same layer; much of what a graph encoder
+learns may be this smoothing. On single-cell MERFISH data, neighbouring cells often belong to different cell types, and the
+best-fitting mixture can then describe cell types rather than regions, which explains why likelihood and ARI disagree there. For a
+practitioner, the results suggest starting with a smoothing baseline, choosing the clustering step deliberately and reporting its
+variance. These results agree with recent benchmarks \citep{explanatory2026,hu2024gbbench,nar2025bench} and add a direct measurement
+of clustering variance on fixed embeddings for \lotNMethods{} methods across three technologies.
 
-\paragraph{Limitations.} All methods were run with default or published settings (we did not tune
-any method and we could not reproduce HiSTaR's per-section tuning), so our results
-do not show what each method can reach with its authors' own tuning. Several methods were run with one seed (Supplementary Table~\STcov), and
-BayesSpace on Visium only. The lottery and mclust experiments use one embedding per section and method. The STARmap and MERFISH
-annotations are coarse and the STARmap data contain only three small sections. Three technologies and \nSections{} sections
-do not cover the breadth of spatial data (for example Slide-seq, Stereo-seq or Xenium). The number of domains
-was given to every method. Annotations may themselves have been derived with methods similar to the ones evaluated.
+\paragraph{Recommendations.}
+(1) Report the clustering protocol: algorithm, implementation and version, initialisation, number of starts, random seeds and how
+they were chosen (\figref{fig:robust}A,B).
+(2) Never select seeds, epochs or runs by agreement with the labels (Supplementary Table~\STepoch).
+(3) Report distributions over training seeds and over clustering runs or R seeds, with per-section values (Supplementary
+Tables~\STseeds--\STmclust).
+(4) Compare encoders under the same clustering, and include training-free baselines such as neighbourhood smoothing
+(\figref{fig:matched}).
+(5) Report run time, memory and seed variance alongside accuracy (Supplementary Table~\STres).
+(6) Release per-run results and seeds so that variance can be recomputed.
+(7) If fits are selected, use a label-free criterion and report how often it agrees with the annotation.
 
-\section*{Competing interests}
-No competing interest is declared.
+\paragraph{Limitations.}
+All methods were run with default or published settings, without a tuning budget, so the results do not show what each method can
+reach with its authors' own tuning (we could not reproduce HiSTaR's per-section tuning). The reference baseline was chosen after
+the means were seen, and the comparisons with it are exploratory. Four methods were run with one seed in the published pipelines
+and BayesSpace on Visium only (Supplementary Table~\STcov), so seed variance is unavailable for them. The initialisation and R
+mclust experiments use one seed-0 embedding per section and method and do not include training-seed variance. The three datasets
+are brain tissues with laminar or regional structure; Slide-seq, Stereo-seq, Xenium and Visium HD data, larger sections and
+non-laminar tissues are not covered, and no simulated data were used. The STARmap and MERFISH annotations were distributed with the
+BASS analyses, and BASS was among the most accurate methods on these data; annotations may also have been derived with methods
+similar to the ones evaluated. The number of domains was given to every method. All runs used one CPU thread, so run times are not
+representative of GPU use. ARI is the primary metric; other metrics are in Supplementary Table~\STmetrics.
 
-\section*{Author contributions statement}
-\todo{CRediT statement.}
-
-\section*{Use of AI tools}
-\todo{Describe per journal policy: code, experiments and a first draft of this manuscript were
-produced with the assistance of an AI coding assistant (Claude, Anthropic); all results were
-checked by the authors, who take full responsibility for the content.}
+\section*{Data availability}
+DLPFC: spatialLIBD (count matrices) and the SEDR analyses repository (layer annotations) \citep{maynard2021dlpfc}. STARmap and
+MERFISH with domain annotations: BASS-Analysis repository \citep{li2022bass}, from the original studies
+\citep{wang2018starmap,moffitt2018merfish}. Code, download scripts with checksums, per-run results and the scripts that generate
+every number, table and figure: \todo{GitHub URL and Zenodo DOI}.
 
 \section*{Supplementary data}
 Supplementary Data are available at NAR Online.
 
-\section*{Data availability}
-DLPFC: spatialLIBD (count matrices) and SEDR analyses repository (layer annotations). STARmap and
-MERFISH with domain annotations: BASS-Analysis repository \citep{li2022bass}, from the original
-studies \citep{wang2018starmap,moffitt2018merfish}. Scripts that download and convert all data are
-provided with the code.
+\section*{Acknowledgements}
+Code, experiments and a first draft of this manuscript were produced with the assistance of an AI coding assistant (Claude,
+Anthropic); all results were checked by the authors, who take full responsibility for the content. \todo{Confirm wording and add
+acknowledgements.}
+
+\section*{Author contributions}
+\todo{CRediT statement.}
 
 \section*{Funding}
-\todo{Funding.}
+\todo{Funding, including funding for open access charge.}
 
-\bibliographystyle{abbrvnat}
+\section*{Conflict of interest statement}
+The authors developed AnisoST, one of the training-free baselines. No other conflict of interest is declared.
+
+\bibliographystyle{unsrtnat}
 \bibliography{refs}
 
 \end{document}

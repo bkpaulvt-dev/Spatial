@@ -19,13 +19,13 @@ rng = np.random.default_rng(0)
 
 rd = lambda f: pd.read_json(R(f), lines=True) if os.path.exists(R(f)) else pd.DataFrame()
 a = rd("anisost_main.jsonl").assign(dataset="dlpfc"); b = rd("baselines.jsonl").assign(dataset="dlpfc")
-e = rd("extra.jsonl"); g = rd("graphst.jsonl")
+e = rd("extra.jsonl"); g = rd("graphst.jsonl"); b3 = rd("baselines_3start.jsonl")
 nm = rd("new_methods.jsonl"); nm["slice"] = nm["slice"].astype(str)
 nm = nm[nm.status == "ok"].drop_duplicates(["method", "dataset", "slice", "seed"], keep="last")
 nm_std = nm[["dataset", "method", "slice", "seed", "ARI"]]
 nm_rob = nm[["dataset", "method", "slice", "seed", "ARI_robust"]].rename(columns={"ARI_robust": "ARI"}) \
     .assign(method=lambda x: x.method + "+robust").dropna(subset=["ARI"])
-d = pd.concat([a, b, e, g, nm_std, nm_rob], ignore_index=True)
+d = pd.concat([a, b, e, g, b3, nm_std, nm_rob], ignore_index=True)
 d["slice"] = d["slice"].astype(str)
 d.loc[d.method == "histar_rerun", "method"] = "histar"
 P = d.groupby(["dataset", "method", "slice"]).ARI.mean()
@@ -41,8 +41,13 @@ REF = "linear_diffusion"
 LABEL = {"histar": "HiSTaR", "graphst": "GraphST", "banksy_l0.8": "BANKSY λ=0.8", "banksy_l0.2": "BANKSY λ=0.2", "spagcn": "SpaGCN",
          "stagate": "STAGATE", "sedr": "SEDR", "spaceflow": "SpaceFlow", "nichepca": "NichePCA", "ccst": "CCST",
          "spatial_mgcn": "Spatial-MGCN", "deepst": "DeepST", "bass": "BASS", "anisost": "AnisoST", "pca_gmm": "PCA", "bayesspace": "BayesSpace"}
-STD = {m: m for m in LABEL}; STD["anisost"] = "anisost_single_gmm"; STD["pca_gmm"] = "pca_gmm"
-ROB = {m: m + "+robust" for m in LABEL if m not in ("spagcn", "bass", "bayesspace")}; ROB["anisost"] = "anisost"; ROB["pca_gmm"] = "pca_gmm"
+# "standard" = each method's own clustering (training-free baselines: the same 3-start GMM as AnisoST, HiSTaR, BANKSY);
+# "robust" = matched clustering: every embedding clustered with the same 20-start best-likelihood GMM. Methods that
+# cluster internally (SpaGCN, BASS, BayesSpace) have no embedding and keep their own clustering under both protocols.
+STD = {m: m for m in LABEL}; STD["anisost"] = "anisost_single_gmm"; STD["pca_gmm"] = "pca_gmm_single_gmm"
+STD[REF] = "linear_diffusion_single_gmm"
+ROB = {m: m + "+robust" for m in LABEL}; ROB["anisost"] = "anisost"; ROB["pca_gmm"] = "pca_gmm"; ROB[REF] = REF
+for m in ("spagcn", "bass", "bayesspace"): ROB[m] = m
 
 def series(key):
     out = {}
@@ -69,10 +74,10 @@ def classify(draws):
     if hi95 < 0: return "baseline_worse"
     return "unresolved"
 
-ref = series(REF)
 test_sec = SEC[SEC.split == "test"]
 out = {"reference": REF, "margin": MARGIN, "n_boot": B, "clusters": sorted(SEC.cluster.unique()), "comparisons": {}}
 for proto, MAP in (("standard", STD), ("robust", ROB)):
+    ref = series(MAP[REF])
     for m, lab in LABEL.items():
         if m not in MAP or m == REF: continue
         s = series(MAP[m])
@@ -91,29 +96,31 @@ for proto, MAP in (("standard", STD), ("robust", ROB)):
             "category": classify(draws), "per_dataset": per,
             "test_only": {"delta": round(pt, 3), "ci95": [round(float(x), 3) for x in np.percentile(dt, [2.5, 97.5])]}}
 
-# rank uncertainty (standard protocol, methods with all 20 sections)
+# rank uncertainty (methods with all 20 sections), for both protocols
 cand = [m for m in LABEL if m != "bayesspace"]
-cand_keys = {m: (REF if m == REF else STD[m]) for m in cand + [REF]}
-full = {}
-for m, k in cand_keys.items():
-    s = series(k)
-    if len(s) == len(SEC): full[m] = s
-names = list(full)
-groups = {c: SEC[SEC.cluster == c] for c in SEC.cluster.unique()}
-ranks = np.empty((B, len(names)), dtype=int)
-for i in range(B):
-    cl = rng.choice(list(groups), len(groups))
-    score = np.zeros(len(names))
-    for c in cl:
-        idx = rng.integers(0, len(groups[c]), len(groups[c]))
-        sel = groups[c].iloc[idx]
-        score += np.array([np.mean([full[m][(ds, s)] for ds, s in zip(sel.dataset, sel.slice)]) for m in names])
-    ranks[i] = (-score).argsort().argsort() + 1
-out["ranking"] = {LABEL.get(m, "Linear diffusion"): {"p_best": round(float((ranks[:, j] == 1).mean()), 3),
-                                                      "median_rank": float(np.median(ranks[:, j])),
-                                                      "rank95": [int(x) for x in np.percentile(ranks[:, j], [2.5, 97.5])]}
-                  for j, m in enumerate(names)}
-out["ranking_methods"] = len(names)
+def ranking(MAP):
+  cand_keys = {m: MAP[m] for m in cand + [REF]}
+  full = {}
+  for m, k in cand_keys.items():
+      s = series(k)
+      if len(s) == len(SEC): full[m] = s
+  names = list(full)
+  groups = {c: SEC[SEC.cluster == c] for c in SEC.cluster.unique()}
+  ranks = np.empty((B, len(names)), dtype=int)
+  for i in range(B):
+      cl = rng.choice(list(groups), len(groups))
+      score = np.zeros(len(names))
+      for c in cl:
+          idx = rng.integers(0, len(groups[c]), len(groups[c]))
+          sel = groups[c].iloc[idx]
+          score += np.array([np.mean([full[m][(ds, s)] for ds, s in zip(sel.dataset, sel.slice)]) for m in names])
+      ranks[i] = (-score).argsort().argsort() + 1
+  return {LABEL.get(m, "Linear diffusion"): {"p_best": round(float((ranks[:, j] == 1).mean()), 3),
+                                              "median_rank": float(np.median(ranks[:, j])),
+                                              "rank95": [int(x) for x in np.percentile(ranks[:, j], [2.5, 97.5])]}
+          for j, m in enumerate(names)}, len(names)
+out["ranking"], out["ranking_methods"] = ranking(ROB)          # primary: matched clustering
+out["ranking_own"], _ = ranking(STD)
 # per-method per-dataset means (both protocols) for the figures
 def dmeans(key):
     r_ = {}
@@ -121,8 +128,8 @@ def dmeans(key):
         v = [x for (d_, _), x in series(key).items() if d_ == ds]
         if v: r_[ds] = round(float(np.mean(v)), 4)
     return r_
-out["means_standard"] = {m: dmeans(REF if m == REF else STD[m]) for m in list(LABEL) + [REF] if m in LABEL or m == REF}
-out["means_robust"] = {m: dmeans(REF if m == REF else ROB[m]) for m in list(LABEL) + [REF] if (m in ROB) or m == REF}
+out["means_standard"] = {m: dmeans(STD[m]) for m in list(LABEL) + [REF]}
+out["means_robust"] = {m: dmeans(ROB[m]) for m in list(LABEL) + [REF]}
 json.dump(out, open(R("stats_cluster_aware.json"), "w"), indent=1)
 
 print(f"reference: linear diffusion; clusters: {out['clusters']}; margin {MARGIN}")
@@ -132,6 +139,6 @@ for proto in ("standard", "robust"):
         if v["protocol"] != proto: continue
         print(f"{v['method']:<14} n={v['n_sections']:<3} d={v['delta']:+.3f} [{v['ci95'][0]:+.3f},{v['ci95'][1]:+.3f}]  {v['category']:<16}"
               f" per-dataset {v['per_dataset']}  test-only d={v['test_only']['delta']:+.3f}")
-print("\n--- rank uncertainty (standard protocol, methods with all 20 sections)")
+print("\n--- rank uncertainty (matched clustering, methods with all 20 sections)")
 for lab, v in sorted(out["ranking"].items(), key=lambda kv: kv[1]["median_rank"]):
     print(f"{lab:<16} P(best)={v['p_best']:.2f} median rank {v['median_rank']:.0f}  95% interval {v['rank95']}")

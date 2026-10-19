@@ -29,7 +29,12 @@ ax = fig.add_axes([0, 0, 1, 1]); ax.set_xlim(0, W); ax.set_ylim(Y0, H); ax.axis(
 rng = np.random.default_rng(7)
 
 
-def T(x, y, s, size=6.2, color=INK, weight="normal", ha="left", va="center", style="normal", **kw):
+TXT2 = "#4a4a4a"  # secondary text: darker than before for contrast
+
+
+def T(x, y, s, size=6.5, color=INK, weight="normal", ha="left", va="center", style="normal", **kw):
+    size = max(size, 6.5)  # nothing below 6.5 pt at final size (figure is printed at 100%)
+    if color in (MUTE, INK2): color = TXT2
     return ax.text(x, y, s, fontsize=size, color=color, fontweight=weight, ha=ha, va=va, style=style, **kw)
 
 
@@ -49,8 +54,8 @@ def arrow(x0, y0, x1, y1, color=MUTE, lw=1.0, ms=6, rad=0.0, z=2, style="-|>"):
 
 
 def header(x, n, title):
-    T(x + 0.4, 99.6, n, 9.5, INK, "bold", zorder=5)
-    T(x + 4.4, 99.5, title, 7.2, INK, zorder=5)
+    T(x + 0.4, 99.6, n, 10, INK, "bold", zorder=5)
+    T(x + 4.6, 99.5, title, 7.5, INK, zorder=5)
 
 
 def cache(ds, s):
@@ -97,7 +102,7 @@ def zoom_cells(C, code, centre_idx, x, y, r, n_cells=26, dots=7):
 
 # ------------------------------------------------------------------ headers and flow
 X = [1.0, 45.0, 75.0, 115.0, 145.0]
-for x, n, t in zip(X, "abcde", ["Tissue and technology", "Spots and graph", "Methods", "Clustering", "Evaluation"]):
+for x, n, t in zip(X, "ABCDE", ["Tissue and technology", "Spots and graph", "Methods", "Clustering", "Evaluation"]):
     header(x, n, t)
 for x0, x1 in ((42.5, 45.5), (72.3, 75.2), (112.2, 115.2), (142.5, 145.4)):
     arrow(x0, 58.0, x1, 58.0, color=INK2, lw=1.1, ms=7)

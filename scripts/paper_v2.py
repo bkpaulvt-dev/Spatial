@@ -30,14 +30,14 @@ def rd(f):
     return pd.read_json(R(f), lines=True) if os.path.exists(R(f)) else pd.DataFrame()
 a = rd("anisost_main.jsonl").assign(dataset="dlpfc")
 b = rd("baselines.jsonl").assign(dataset="dlpfc")
-e = rd("extra.jsonl"); g = rd("graphst.jsonl")
+e = rd("extra.jsonl"); g = rd("graphst.jsonl"); b3 = rd("baselines_3start.jsonl")
 nm = rd("new_methods.jsonl")
 nm["slice"] = nm["slice"].astype(str)
 nm = nm[nm.status == "ok"].drop_duplicates(["method", "dataset", "slice", "seed"], keep="last")
 nm_std = nm[["dataset", "method", "slice", "seed", "ARI", "NMI", "time"]]
 nm_rob = nm[["dataset", "method", "slice", "seed", "ARI_robust", "NMI_robust", "time"]].rename(
     columns={"ARI_robust": "ARI", "NMI_robust": "NMI"}).assign(method=lambda x: x.method + "+robust").dropna(subset=["ARI"])
-d = pd.concat([a, b, e, g, nm_std, nm_rob], ignore_index=True)
+d = pd.concat([a, b, e, g, b3, nm_std, nm_rob], ignore_index=True)
 d["slice"] = d["slice"].astype(str)
 d = d[[c for c in ["dataset", "method", "slice", "seed", "ARI", "NMI", "time"] if c in d]]
 d.loc[d.method == "histar_rerun", "method"] = "histar"
@@ -50,8 +50,8 @@ NAMES = {"linear_diffusion": "Linear diffusion", "anisost": "AnisoST", "anisost_
 NEW = [("STAGATE", "stagate"), ("SEDR", "sedr"), ("SpaceFlow", "spaceflow"), ("NichePCA", "nichepca"), ("CCST", "ccst"),
        ("Spatial-MGCN", "spatial_mgcn"), ("DeepST", "deepst"), ("BASS", "bass"), ("BayesSpace", "bayesspace")]
 # (label, standard-clustering method, robust-clustering method)
-ROWS = [("Linear diffusion$^\\dagger$", None, "linear_diffusion"), ("AnisoST$^\\dagger$", "anisost_single_gmm", "anisost"),
-        ("PCA, non-spatial$^\\dagger$", None, "pca_gmm"), ("BANKSY $\\lambda=0.8$", "banksy_l0.8", "banksy_l0.8+robust"),
+ROWS = [("Linear diffusion$^\\dagger$", "linear_diffusion_single_gmm", "linear_diffusion"), ("AnisoST$^\\dagger$", "anisost_single_gmm", "anisost"),
+        ("PCA, non-spatial$^\\dagger$", "pca_gmm_single_gmm", "pca_gmm"), ("BANKSY $\\lambda=0.8$", "banksy_l0.8", "banksy_l0.8+robust"),
         ("BANKSY $\\lambda=0.2$", "banksy_l0.2", "banksy_l0.2+robust"), ("HiSTaR", "histar", "histar+robust"),
         ("GraphST", "graphst", "graphst+robust"), ("SpaGCN", "spagcn", None)] + \
        [(lab, m, m + "+robust") for lab, m in NEW]
@@ -259,19 +259,21 @@ mac("nPooled", str(len(out["pooled"]))); mac("nPooledSig", str(len(sig)))
 mac("nPooledNotSig", str(len(out["pooled"]) - len(sig)))
 # robust-vs-standard clustering gain for every method that has both
 Gx = {}
-for m0 in ["histar", "graphst", "anisost_single_gmm", "banksy_l0.8", "banksy_l0.2"] + [m for _, m in NEW]:
-    m1 = {"anisost_single_gmm": "anisost"}.get(m0, m0 + ("" if m0 in ("histar", "graphst") and False else "+robust"))
+for m0 in ["linear_diffusion_single_gmm", "pca_gmm_single_gmm", "histar", "graphst", "anisost_single_gmm", "banksy_l0.8",
+           "banksy_l0.2"] + [m for _, m in NEW]:
+    m1 = {"anisost_single_gmm": "anisost", "linear_diffusion_single_gmm": "linear_diffusion",
+          "pca_gmm_single_gmm": "pca_gmm"}.get(m0, m0 + "+robust")
     if m0 in S and m1 in S:
         s2 = S[[m0, m1]].dropna(); diff = s2[m1] - s2[m0]
         Gx[m0] = (float(diff.mean()), int((diff > 0).sum()), len(s2), float(wilcoxon(s2[m1], s2[m0]).pvalue))
 out["clustering_gain_all"] = {k: {"delta": round(v[0], 3), "wins": v[1], "n": v[2], "p": round(v[3], 4)} for k, v in Gx.items()}
-GN = {"histar": "Histar", "graphst": "Graphst", "anisost_single_gmm": "Aniso", "banksy_l0.8": "BanksyHi", "banksy_l0.2": "BanksyLo",
+GN = {"linear_diffusion_single_gmm": "Lin", "pca_gmm_single_gmm": "Pca", "histar": "Histar", "graphst": "Graphst", "anisost_single_gmm": "Aniso", "banksy_l0.8": "BanksyHi", "banksy_l0.2": "BanksyLo",
       **{m: MCN[m] for _, m in NEW}}
 for k, v in Gx.items():
     mac(f"gain{GN[k]}", f"{v[0]:+.3f}"); mac(f"gainWins{GN[k]}", str(v[1])); mac(f"gainN{GN[k]}", str(v[2]))
     mac(f"gainP{GN[k]}", f"p={v[3]:.3f}" if v[3] >= 0.001 else "p<0.001")
 mac("nGainPos", str(sum(v[0] > 0.005 for v in Gx.values()))); mac("nGainNeg", str(sum(v[0] < -0.005 for v in Gx.values())))
-mac("nGainTot", str(len(Gx)))
+mac("nGainTot", str(len(Gx))); mac("nGainSame", str(sum(abs(v[0]) <= 0.005 for v in Gx.values())))
 # sklearn lottery
 mac("lotN", str(len(LT))); mac("lotNMethods", str(LT.method.nunique()))
 mac("lotMean", float(LT["range"].mean()), 2); mac("lotMax", float(LT["range"].max()), 2)
@@ -280,7 +282,7 @@ bm = LT.groupby("method")["range"].mean()
 mac("lotLo", float(bm.min()), 2); mac("lotHi", float(bm.max()), 2)
 mac("lotLoName", MN2[bm.idxmin()]); mac("lotHiName", MN2[bm.idxmax()])
 wr = LT.loc[LT["range"].idxmax()]
-mac("lotWorstMethod", MN2[wr.method]); mac("lotWorstSection", f"{wr.dataset} {wr.slice}")
+mac("lotWorstMethod", MN2[wr.method]); mac("lotWorstSection", f"{ {'dlpfc': 'DLPFC', 'starmap': 'STARmap', 'merfish': 'MERFISH'}[wr.dataset]} section {wr.slice}")
 for m in MN2:
     if m in bm.index:
         mac(f"lotMean{MCN.get(m, m)}", float(bm[m]), 2); mac(f"lotMax{MCN.get(m, m)}", float(LT[LT.method == m]["range"].max()), 2)
@@ -312,6 +314,30 @@ if mf:
     mac("mcWorse", str(round(100 * float((j2.ARI < j2.best_ll - 0.02).mean()))))
     mac("mcBetter", str(round(100 * float((j2.ARI > j2.best_ll + 0.02).mean()))))
     mac("mcNJ", str(len(j2)))
+# R mclust: random-seed dependence of the default (subset) initialisation vs full-data initialisation
+msf = glob.glob(R("mclust_seed_g*.csv"))
+if msf:
+    MS = pd.concat([pd.read_csv(f) for f in msf], ignore_index=True)
+    MS["slice"] = MS["slice"].astype(str)
+    sd_ = MS[MS.kind == "seed"].groupby(["dataset", "method", "slice", "n"]).ARI.agg(["min", "max", "mean"]).reset_index()
+    sd_["rng"] = sd_["max"] - sd_["min"]
+    fj = MS[MS.kind == "full_jit"].groupby(["dataset", "method", "slice"]).ARI.agg(lambda x: x.max() - x.min()).rename("jrng").reset_index()
+    fu = MS[MS.kind == "full"][["dataset", "method", "slice", "ARI"]].rename(columns={"ARI": "full"})
+    sd_ = sd_.merge(fj, on=["dataset", "method", "slice"], how="left").merge(fu, on=["dataset", "method", "slice"], how="left")
+    sd_.to_csv(R("mclust_seed_summary.csv"), index=False)
+    out["mclust_seed"] = sd_.to_dict(orient="records")
+    big = sd_[sd_.n > 2000]
+    mac("mcsN", str(len(sd_))); mac("mcsNMethods", str(sd_.method.nunique()))
+    mac("mcsSeedMean", float(sd_.rng.mean()), 2); mac("mcsSeedMax", float(sd_.rng.max()), 2)
+    mac("mcsSeedMeanBig", float(big.rng.mean()), 2); mac("mcsNBig", str(len(big)))
+    mac("mcsSeedGt", str(round(100 * float((big.rng > 0.1).mean()))))
+    for ds in DS:
+        qd = sd_[sd_.dataset == ds]
+        if len(qd): mac(f"mcsSeedMean{DSM[ds]}", float(qd.rng.mean()), 2)
+    mac("mcsStarmapMaxN", str(int(sd_[sd_.dataset == "starmap"].n.max())) if (sd_.dataset == "starmap").any() else "--")
+    mac("mcsJitMean", float(sd_.jrng.mean()), 2); mac("mcsJitMax", float(sd_.jrng.max()), 2)
+    mac("mcsFullMinusSeed", float((sd_.full - sd_["mean"]).mean()), 3)
+    mac("mcsFullOutside", str(round(100 * float(((sd_.full < sd_["min"] - 1e-9) | (sd_.full > sd_["max"] + 1e-9)).mean()))))
 # Spatial-MGCN label-selected epoch
 sm = nm[nm.method == "spatial_mgcn"].assign(g=lambda x: x.ARI_label_selected_epoch - x.ARI)
 mac("mgcnLeak", float(sm.g.mean()), 3)
@@ -353,7 +379,7 @@ LAB = {"linear_diffusion": "linear diffusion", "anisost": "AnisoST", "pca_gmm": 
        **{m: l for l, m in NEW}}
 for ds in DS:
     cand = {k: v for k, v in out["means"][ds].items() if not np.isnan(v)}
-    k = max(cand, key=cand.get); base_k = k.replace("+robust", "").replace("anisost_single_gmm", "anisost")
+    k = max(cand, key=cand.get); base_k = k.replace("+robust", "").replace("_single_gmm", "")
     mac(f"best{DSM[ds]}", LAB.get(base_k, base_k)); mac(f"best{DSM[ds]}Val", cand[k])
     top = sorted(cand, key=cand.get, reverse=True)[:3]
 
@@ -378,6 +404,8 @@ if os.path.exists(SJ):
     mac("pBestLin", f"{rk['Linear diffusion']['p_best']:.2f}"); mac("pBestBass", f"{rk['BASS']['p_best']:.2f}")
     mac("rankLoLin", str(rk["Linear diffusion"]["rank95"][0])); mac("rankHiLin", str(rk["Linear diffusion"]["rank95"][1]))
     mac("rankMethods", str(cs["ranking_methods"]))
+    ro = cs["ranking_own"]
+    mac("pBestLinOwn", f"{ro['Linear diffusion']['p_best']:.2f}"); mac("pBestBassOwn", f"{ro['BASS']['p_best']:.2f}")
     VERD = {"baseline_better": "baseline higher", "unresolved": "unresolved", "equivalent": "equivalent", "baseline_worse": "baseline lower"}
     for proto, fn in (("standard", "table_stats.tex"), ("robust", "table_stats_robust.tex")):
         L_ = ["\\begin{tabular}{lrrrrl}", "\\toprule", "Method & $\\Delta$ ARI (95\\% CI) & DLPFC & STARmap & MERFISH & Verdict \\\\", "\\midrule"]
