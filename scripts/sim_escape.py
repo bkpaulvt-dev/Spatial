@@ -92,7 +92,8 @@ def main():
             est["indicator"][k] = lmean(idx) - base
         effs = {}
         resid = {}
-        for name, kw in [("cipher_noescape", {"escape": False}), ("cipher", {})]:
+        final = {"basal": False, "adversary": False, "direct": True}   # design chosen in Phase 1
+        for name, kw in [("cipher_noescape", {**final, "escape": False}), ("cipher", final)]:
             m = CIPHER(d, seed=seed, epochs=args.epochs, verbose=False, device=args.device, **kw).fit()
             c0 = np.log(m.predict_mean([], ctrl_idx) + 1e-3)
             est[name] = {k: np.log(m.predict_mean([f"g{k}"], ctrl_idx, mixture=False) + 1e-3) - c0

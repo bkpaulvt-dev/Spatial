@@ -9,3 +9,4 @@ results/phase1/*.log
 results/phase1_full/*.log
 .venv-gears/
 .venv-cpa/
+results/sim/*.log
