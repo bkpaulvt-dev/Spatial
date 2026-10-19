@@ -1,21 +1,20 @@
 \footnotesize
-\begin{tabular}{lrrrr}
+\begin{tabular}{lrrrrrr}
 \toprule
-Method & Permutation range & Runs $>$0.05 & Noise range & Runs $>$0.05 \\
+Method & Embeddings & Seed range (mean) & Seed range (max) & Range $>$0.1 & Noise range, full init. & Full minus seeded mean \\
 \midrule
-AnisoST & 0.13 & 38\% & 0.12 & 38\% \\
-BANKSY $\lambda$=0.2 & 0.06 & 19\% & 0.11 & 28\% \\
-BANKSY $\lambda$=0.8 & 0.13 & 38\% & 0.13 & 52\% \\
-CCST & 0.06 & 18\% & 0.10 & 31\% \\
-DeepST & 0.03 & 6\% & 0.04 & 7\% \\
-GraphST & 0.06 & 8\% & 0.08 & 19\% \\
-HiSTaR & 0.08 & 22\% & 0.11 & 30\% \\
-Linear diffusion & 0.17 & 44\% & 0.19 & 49\% \\
-NichePCA & 0.18 & 42\% & 0.22 & 50\% \\
-PCA & 0.11 & 42\% & 0.14 & 40\% \\
-SEDR & 0.11 & 29\% & 0.08 & 58\% \\
-SpaceFlow & 0.06 & 16\% & 0.09 & 33\% \\
-Spatial-MGCN & 0.07 & 17\% & 0.07 & 21\% \\
-STAGATE & 0.06 & 18\% & 0.12 & 30\% \\
+NichePCA & 1 & 0.20 & 0.20 & 100\% & 0.03 & +0.025 \\
+Linear diffusion & 1 & 0.19 & 0.19 & 100\% & 0.10 & -0.056 \\
+BANKSY $\lambda$=0.8 & 1 & 0.14 & 0.14 & 100\% & 0.06 & +0.042 \\
+PCA & 1 & 0.14 & 0.14 & 100\% & 0.07 & -0.011 \\
+AnisoST & 1 & 0.13 & 0.13 & 100\% & 0.01 & -0.022 \\
+BANKSY $\lambda$=0.2 & 1 & 0.13 & 0.13 & 100\% & 0.10 & +0.043 \\
+GraphST & 1 & 0.13 & 0.13 & 100\% & 0.08 & -0.037 \\
+HiSTaR & 1 & 0.12 & 0.12 & 100\% & 0.12 & -0.044 \\
+CCST & 1 & 0.06 & 0.06 & 0\% & 0.06 & +0.034 \\
+STAGATE & 1 & 0.06 & 0.06 & 0\% & 0.07 & +0.042 \\
+SEDR & 1 & 0.04 & 0.04 & 0\% & 0.02 & -0.083 \\
+SpaceFlow & 1 & 0.04 & 0.04 & 0\% & 0.04 & -0.005 \\
+DeepST & 1 & 0.01 & 0.01 & 0\% & 0.00 & +0.009 \\
 \bottomrule
 \end{tabular}

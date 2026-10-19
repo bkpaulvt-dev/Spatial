@@ -1,23 +1,23 @@
 \scriptsize
 \begin{tabular}{p{1.6cm}p{2.0cm}p{3.0cm}p{1.2cm}p{1.2cm}p{2.2cm}p{5.2cm}}
 \toprule
-Method & Type & Code & Commit & Settings & Own clustering & Deviations from the tutorial \\
+Method & Type & Code & Commit & Settings & Default clustering & Deviations from the tutorial \\
 \midrule
-HiSTaR & deep graph VAE & PyTorch port of the official code (hicast/histar.py) & TO RECORD (official repository commit) & paper & R mclust EEE & \parbox[t]{5.2cm}{\raggedright masking at inference removed in 'deterministic' variant only; headline uses published behaviour; per-section lambda\_sim tuning described in the paper's supplement is NOT applied} \\
+HiSTaR & deep graph VAE & PyTorch port of the official code (hicast/histar.py) & 0039a3b & paper & 3-start Gaussian mixture (scikit-learn, tied) & \parbox[t]{5.2cm}{\raggedright masking at inference removed in 'deterministic' variant only; headline uses published behaviour; per-section lambda\_sim tuning described in the paper's supplement is NOT applied} \\
 GraphST & deep graph contrastive autoencoder & pip GraphST 1.1.1; tutorials from JinmiaoChenLab/GraphST & d62b0b7 & tutorial & R mclust EEE on 20 PCs of the embedding & \parbox[t]{5.2cm}{\raggedright reported with and without the tutorial's label refinement (graphst vs graphst\_refined)} \\
-banksy & neighbourhood-augmented features (non-deep) & pip pybanksy 1.3.5 & 9278996 & tutorial & Leiden / mclust (package) & \parbox[t]{5.2cm}{\raggedright both recommended lambdas are run: 0.2 (cell typing) and 0.8 (domain segmentation)} \\
+BANKSY & neighbourhood-augmented features (non-deep) & pip pybanksy 1.3.5 & 9278996 & tutorial & 3-start Gaussian mixture (scikit-learn, tied) & \parbox[t]{5.2cm}{\raggedright both recommended lambdas are run: 0.2 (cell typing) and 0.8 (domain segmentation)} \\
 SpaGCN & graph convolutional network & pip SpaGCN 1.2.7 & dc7a1c2 & tutorial & iterative DEC clustering (own) & \parbox[t]{5.2cm}{\raggedright no histology image used (not available for all sections); reported with and without the hexagonal refinement} \\
 STAGATE & deep graph attention autoencoder & QIFEIDKN/STAGATE\_pyG, installed from the clone & ae1158c & tutorial & R mclust EEE & \parbox[t]{5.2cm}{\raggedright radius expressed in spot spacings because our coordinates are on another scale (gives 5.8 neighbours per spot, as in the tutorial); torch\_sparse replaced by a stub only if the compiled extension is unavailable (it was compiled from source here)} \\
 SEDR & deep masked graph autoencoder & JinmiaoChenLab/SEDR, installed from the clone & ef48360 & tutorial & R mclust EEE (seed 2023) & \parbox[t]{5.2cm}{\raggedright mclust called as SEDR.mclust\_R does, without its line that hard-codes the authors' R\_HOME (breaks R's LAPACK in a running session)} \\
-SpaceFlow & deep graph infomax with spatial regularisation & pip SpaceFlow 1.0.4 & 58d1ab0 & package\_default & Leiden at a fixed resolution & \parbox[t]{5.2cm}{\raggedright networkx>=3 alias for removed to\_scipy\_sparse\_matrix; all-zero genes removed (cell\_ranger HVG binning fails on them with pandas 3)} \\
-NichePCA & training-free (neighbour aggregation + PCA) & pip nichepca 0.1.0 & package 0.1.0 & package\_default & Leiden & \parbox[t]{5.2cm}{\raggedright } \\
+SpaceFlow & deep graph infomax with spatial regularisation & pip SpaceFlow 1.0.4 & 58d1ab0 & package default & Leiden at a fixed resolution & \parbox[t]{5.2cm}{\raggedright networkx>=3 alias for removed to\_scipy\_sparse\_matrix; all-zero genes removed (cell\_ranger HVG binning fails on them with pandas 3)} \\
+NichePCA & training-free (neighbour aggregation + PCA) & pip nichepca 0.1.0 & package 0.1.0 & package default & Leiden & \parbox[t]{5.2cm}{\raggedright } \\
 CCST & deep graph infomax (4 GCN layers) & xiaoyeye/CCST, re-implemented in scripts/new\_methods.py bec & 890de27 & tutorial & k-means (n\_init=100) & \parbox[t]{5.2cm}{\raggedright graph threshold chosen to give about 6 neighbours per cell (the authors hand-pick a threshold per dataset)} \\
 Spatial-MGCN & deep multi-view graph convolution & cs-wangbo/Spatial-MGCN, repository modules used directly & cf4412d & tutorial & k-means each epoch; epoch chosen by ARI against the annotation (LEAKAGE, see docs/LEAKAGE\_AUDIT.md) & \parbox[t]{5.2cm}{\raggedright unannotated spots kept (the released script deletes them before training); label-free epoch rule} \\
 DeepST & deep graph + augmentation (no histology) & JiangBioLab/DeepST (deepstkit), used from the clone & e37997f & tutorial & Leiden at the given K + spatial refinement & \parbox[t]{5.2cm}{\raggedright no histology features; memory-heavy: run one job at a time} \\
 BASS & Bayesian hierarchical model & zhengli09/BASS, installed from the clone & 5c2690f & tutorial & own (joint cell-type and domain model) & \parbox[t]{5.2cm}{\raggedright each section analysed separately (the authors' MERFISH/DLPFC analyses are multi-sample)} \\
-BayesSpace & Bayesian statistical model & edward130603/BayesSpace tag v1.5.1 (older release; newer one & ba8b422 & package\_default & own MCMC & \parbox[t]{5.2cm}{\raggedright Visium only (needs a hexagonal spot lattice)} \\
-Linear diffusion & training-free &  &  & our\_rule &  & \parbox[t]{5.2cm}{\raggedright settings fixed on DLPFC donor 1 before any other data were analysed} \\
-AnisoST & training-free, edge-preserving diffusion &  &  & our\_rule &  & \parbox[t]{5.2cm}{\raggedright same as linear\_diffusion} \\
-PCA & training-free &  &  & our\_rule &  & \parbox[t]{5.2cm}{\raggedright } \\
+BayesSpace & Bayesian statistical model & edward130603/BayesSpace tag v1.5.1 (older release; newer one & ba8b422 & package default & own MCMC & \parbox[t]{5.2cm}{\raggedright Visium only (needs a hexagonal spot lattice)} \\
+Linear diffusion & training-free &  &  & fixed rule & 3-start Gaussian mixture (scikit-learn, tied) & \parbox[t]{5.2cm}{\raggedright settings fixed on DLPFC donor 1 before any other data were analysed} \\
+AnisoST & training-free, edge-preserving diffusion &  &  & fixed rule & 3-start Gaussian mixture (scikit-learn, tied) & \parbox[t]{5.2cm}{\raggedright same as linear\_diffusion} \\
+PCA & training-free &  &  & fixed rule & 3-start Gaussian mixture (scikit-learn, tied) & \parbox[t]{5.2cm}{\raggedright } \\
 \bottomrule
 \end{tabular}

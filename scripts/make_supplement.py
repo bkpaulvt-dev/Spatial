@@ -167,6 +167,21 @@ rows = [[LAB.get(m, m), f"{r.t:.0f}", f"{r.mem:.1f}", f"{1000 * r.kwh / cnt[m]:.
 write("resources.tex", ["Method", "Median time per job (s)", "Peak memory (GB)", "Energy per job (Wh, estimate)"], rows, "lrrr", "\\footnotesize")
 items.append(("table", "STres", "Run time, peak memory and estimated energy of one whole job (data loading, embedding and clustering) in the standardised runner on one CPU thread. Energy is estimated at 10 W per busy core.", "resources.tex"))
 
+# ------------------------------------------------------------------ S: published pipeline vs standardised runner
+Pp = d.groupby(["dataset", "method", "slice"]).ARI.mean()
+Ur = U.groupby(["method", "dataset"]).ARI.mean()
+rows = []
+for m in STD:
+    cells = []
+    for ds in DS:
+        try: pv_ = float(Pp.loc[(ds, STD[m])].mean())
+        except KeyError: pv_ = np.nan
+        uv = float(Ur.get((m, ds), np.nan))
+        cells += [f3(pv_), f3(uv), "--" if np.isnan(pv_) or np.isnan(uv) else f"{uv - pv_:+.3f}"]
+    rows.append([LAB[m]] + cells)
+write("agree.tex", ["Method"] + [f"{DSN[x]} {c}" for x in DS for c in ("pipeline", "runner", "diff.")], rows, "l" + "rrr" * 3, "\\scriptsize")
+items.append(("table", "STagree", "Mean ARI with each method's default clustering in its published pipeline (used in the main text) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\\STmetrics{} and~\\STres), and their difference (runner minus pipeline).", "agree.tex"))
+
 # ------------------------------------------------------------------ S: HiSTaR reproduction
 p1 = json.load(open(R("paper_numbers.json")))
 h = p1["bench_histar"]; hd = p1["bench_histar_deterministic"]
