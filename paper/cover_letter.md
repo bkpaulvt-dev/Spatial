@@ -13,7 +13,7 @@ Our main findings are:
 
 From these results we derive seven concrete reporting recommendations for method developers and benchmark authors.
 
-All analyses are reproducible from scripts that generate every number, table and figure in the manuscript. Code, per-run results and download scripts with checksums are available at [GitHub URL] and archived at Zenodo [DOI]. The comparisons use a hierarchical bootstrap over donors and datasets. We state openly that the reference baseline was chosen after the means were seen, and that we developed one of the baselines (AnisoST). [Before submission: the authors of HiSTaR and Spatial-MGCN were contacted on [date]; their responses are reported in the manuscript.]
+All analyses are reproducible from scripts that generate every number, table and figure in the manuscript. Code, per-run results and download scripts with checksums are available at [GitHub URL] and archived at Zenodo [DOI]. The comparisons use a hierarchical bootstrap over donors and datasets. We state openly that the reference baseline was chosen after the means were seen, and that we developed one of the baselines (AnisoST).
 
 Use of AI tools: code, experiments and a first draft of the manuscript were produced with the assistance of an AI coding assistant (Claude, Anthropic). All results were checked by the authors, who take full responsibility for the content. This is also stated in the Acknowledgements.
 

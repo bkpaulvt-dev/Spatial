@@ -292,16 +292,15 @@ when its embedding was clustered with R mclust as in the official pipeline, comp
 median of 0.65 over the twelve sections and 0.718 on section 151673 \citep{yu2025histar}. Fixing a bug that applies random masking at inference did not change accuracy (0.487; Supplementary Table~\SThistar).
 Possible causes include per-section tuning of the loss weights (described in the HiSTaR supplement), unpublished preprocessing
 and the choice of seed; the results above show that the clustering step alone can produce per-section differences of this size.
-\todo{Report the outcome of contacting the authors.}
+We report these numbers to document what the released code and defaults reproduce, not to question the method itself.
 
 \subsection{Released code of one method selects the reported epoch using the labels}
-\todo{Contact the Spatial-MGCN authors and report their response before including this subsection.}
 Spatial-MGCN's released test scripts (\texttt{DLPFC\_test.py}, \texttt{HBC\_test.py}) compute ARI against the annotation at every
 training epoch and keep the best epoch for reporting. Applying the same selection rule in our runs (seed 0, \mgcnLeakN{} sections),
 this label-selected epoch had a mean ARI of \mgcnOracleDlpfc{} on DLPFC, \mgcnOracleStarmap{} on STARmap and \mgcnOracleMerfish{}
 on MERFISH, against \mgcnFinalDlpfc, \mgcnFinalStarmap{} and \mgcnFinalMerfish{} for the final epoch used in our benchmark, an
-inflation of \mgcnLeak{} on average (\mgcnLeakStarmap{} on STARmap; Supplementary Table~\STepoch). Selecting a run, epoch or seed by
-agreement with the labels is a form of label leakage that makes a method look competitive with the training-free baselines
+inflation of \mgcnLeak{} on average (\mgcnLeakStarmap{} on STARmap; Supplementary Table~\STepoch). We do not know whether the published numbers were obtained with these scripts; we report what the released code does. Selecting a run, epoch or seed by
+agreement with the labels is a form of label leakage: here it makes the method look competitive with the training-free baselines
 (\mgcnOracleDlpfc{} against \meanLinDlpfc{} on DLPFC) when its label-free result is not. An automated screen of the released
 repositories of 14 methods for other patterns of label use, with every candidate line read by hand, is reported in Supplementary
 Table~\STaudit{} and Supplementary Note~\SNaudit.
