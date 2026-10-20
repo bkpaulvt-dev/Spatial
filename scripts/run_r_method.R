@@ -13,7 +13,7 @@ if (method == "bass") {
   # BASS-Analysis/analysis/{DLPFC,STARmap,MERFISH}.Rmd (run per section here, not jointly)
   suppressPackageStartupMessages(library(BASS))
   xym <- as.matrix(xy[, c("x", "y")]); rownames(xym) <- colnames(cnt)
-  if (ds == "dlpfc") {
+  if (ds %in% c("dlpfc", "brca", "stereo")) {   # whole transcriptome: DLPFC settings (spatialbench.data.WHOLE_TRANSCRIPTOME)
     obj <- createBASSObject(list(cnt), list(xym), C = 20, R = k, beta_method = "SW", init_method = "mclust", nsample = 10000)
     obj <- BASS.preprocess(obj, doLogNormalize = TRUE, geneSelect = "sparkx", nSE = 3000, doPCA = TRUE, scaleFeature = FALSE, nPC = 20)
   } else {

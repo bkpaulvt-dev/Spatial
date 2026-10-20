@@ -18,7 +18,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, "..")
 sys.path[:0] = [ROOT, HERE]
 from benchmark_anisost import DLPFC_SLICES, N_CLUSTERS  # noqa: E402
-from prepare_extra import EXTRA  # noqa: E402
+from prepare_extra import EXTRA, n_clusters  # noqa: E402
 
 N_FITS = 20
 EMB = os.path.join(ROOT, "results", "emb")
@@ -27,7 +27,7 @@ EMB = os.path.join(ROOT, "results", "emb")
 def sections():
     out = [("dlpfc", s, N_CLUSTERS[s], f"{s}.npz") for s in DLPFC_SLICES]
     for ds, m in EXTRA.items():
-        out += [(ds, s, m["n_clusters"], f"{ds}_{s}.npz") for s in m["sections"]]
+        out += [(ds, s, n_clusters(ds, s), f"{ds}_{s}.npz") for s in m["sections"]]
     return out
 
 

@@ -24,6 +24,22 @@ EXTRA = {
     "starmap": {"sections": ["20180417_BZ5_control", "20180419_BZ9_control", "20180424_BZ14_control"], "n_clusters": 4},
     "merfish": {"sections": ["-0.04", "-0.09", "-0.14", "-0.19", "-0.24"], "n_clusters": 8},
 }
+BASS_DATASETS = list(EXTRA)   # converted from BASS-Analysis by this script
+# Held-out whole-transcriptome datasets added after the baseline settings were frozen (all split "test"); their caches
+# (same keys) are written by scripts/prepare_new_datasets.py. n_clusters = number of annotated domains (per section
+# for Stereo-seq, whose sections are annotated with different tissue sets): use n_clusters(ds, sec).
+NEW = {
+    "brca": {"sections": ["block_a_1"], "n_clusters": 20},
+    "stereo": {"sections": ["E9.5_E1S1", "E10.5_E2S1", "E10.5_E1S1"],
+               "n_clusters": {"E9.5_E1S1": 12, "E10.5_E2S1": 18, "E10.5_E1S1": 13}},
+}
+EXTRA.update(NEW)
+
+
+def n_clusters(ds, sec):
+    """Number of annotated domains of a section in EXTRA (an int per dataset or a dict per section)."""
+    k = EXTRA[ds]["n_clusters"]
+    return k[str(sec)] if isinstance(k, dict) else k
 
 
 def prepare(ds, sec):
@@ -46,6 +62,6 @@ def prepare(ds, sec):
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    for ds, m in EXTRA.items():
-        for sec in m["sections"]:
+    for ds in BASS_DATASETS:
+        for sec in EXTRA[ds]["sections"]:
             print(ds, sec, *prepare(ds, sec))

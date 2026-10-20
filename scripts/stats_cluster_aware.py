@@ -1,7 +1,7 @@
 """Cluster-aware re-analysis of the accuracy comparison (replaces the pooled Wilcoxon over 20 sections).
 
-Unit of analysis: sections are nested in clusters = DLPFC donors (3) and the STARmap and MERFISH datasets (one cluster
-each, since their sections come from one animal/experiment). Hierarchical bootstrap: resample clusters, then sections within
+Unit of analysis: sections are nested in clusters = DLPFC donors (3) and the STARmap, MERFISH, BRCA and Stereo-seq
+datasets (one cluster each, since their sections come from one animal/experiment/study). Hierarchical bootstrap: resample clusters, then sections within
 a cluster; the estimate is the equal-weight mean of cluster means. Reference method: linear diffusion (declared exploratory:
 it was picked after seeing the means). Equivalence margin: ARI 0.03, fixed before looking (about the seed SD).
 Also: rank uncertainty (P(best), 95% rank interval) and a sensitivity analysis that excludes the development sections.
@@ -86,7 +86,7 @@ for proto, MAP in (("standard", STD), ("robust", ROB)):
         draws, point = hboot(delta, SEC)
         dt, pt = hboot(delta, test_sec)
         per = {}
-        for ds in ("dlpfc", "starmap", "merfish"):
+        for ds in cfg:   # every registered dataset (brca and stereo: one cluster each)
             vals = [v for (d_, _), v in delta.items() if d_ == ds]
             if vals: per[ds] = round(float(np.mean(vals)), 3)
         out["comparisons"][f"{proto}/{m}"] = {
@@ -124,7 +124,7 @@ out["ranking_own"], _ = ranking(STD)
 # per-method per-dataset means (both protocols) for the figures
 def dmeans(key):
     r_ = {}
-    for ds in ("dlpfc", "starmap", "merfish"):
+    for ds in cfg:   # every registered dataset (brca and stereo: one cluster each)
         v = [x for (d_, _), x in series(key).items() if d_ == ds]
         if v: r_[ds] = round(float(np.mean(v)), 4)
     return r_

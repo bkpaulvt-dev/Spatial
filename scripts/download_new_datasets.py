@@ -102,7 +102,7 @@ def extract_spatial(tar_rel: str) -> None:
         for m in t.getmembers():
             if not (m.isfile() or m.isdir()) or os.path.isabs(m.name) or ".." in m.name.split("/"):
                 raise SystemExit(f"refusing suspicious tar member {m.name}")
-        t.extractall(out)
+        t.extractall(out, filter="data")
 
 
 def main() -> None:

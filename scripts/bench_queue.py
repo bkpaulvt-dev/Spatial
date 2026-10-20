@@ -13,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, "..")
 sys.path[:0] = [ROOT, HERE]
-from spatialbench.data import load_registry, sections  # noqa: E402
+from spatialbench.data import VISIUM, load_registry, sections  # noqa: E402
 from spatialbench.resources import measure_command  # noqa: E402
 from adapters import ADAPTERS, SERIAL, VISIUM_ONLY  # noqa: E402
 from bench_run import job_id  # noqa: E402
@@ -60,7 +60,7 @@ def main():
                 done.add(r["id"])
     jobs = [(ds, sec, m, s) for (ds, sec, sp_) in sections() for m in a.methods for s in a.seeds
             if sp_ in a.splits and (not a.datasets or ds in a.datasets) and (not a.sections or sec in a.sections)
-            and not (m in VISIUM_ONLY and ds != "dlpfc") and job_id(ds, sec, m, s) not in done]
+            and not (m in VISIUM_ONLY and ds not in VISIUM) and job_id(ds, sec, m, s) not in done]
     si, sn = map(int, a.shard.split("/"))
     jobs = [j for n, j in enumerate(sorted(jobs)) if n % sn == si]
     serial = [j for j in jobs if j[2] in SERIAL]

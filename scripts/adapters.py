@@ -66,7 +66,8 @@ def spagcn(a, k, seed, ds):
     sc.pp.normalize_total(b); sc.pp.log1p(b)
     b.X = np.asarray(b.X.toarray() if hasattr(b.X, "toarray") else b.X, dtype=np.float32)
     C = np.asarray(a.obsm["spatial"], float)
-    adj = spg.calculate_adj_matrix(x=C[:, 1] if ds == "dlpfc" else C[:, 0], y=C[:, 0] if ds == "dlpfc" else C[:, 1], histology=False)
+    from spatialbench.data import VISIUM
+    adj = spg.calculate_adj_matrix(x=C[:, 1] if ds in VISIUM else C[:, 0], y=C[:, 0] if ds in VISIUM else C[:, 1], histology=False)
     l = spg.search_l(0.5, adj, start=0.01, end=1000, tol=0.01, max_run=100)
     res = spg.search_res(b, adj, l, k, start=0.7, step=0.1, tol=5e-3, lr=0.05, max_epochs=20, r_seed=seed, t_seed=seed, n_seed=seed)
     random.seed(seed); torch.manual_seed(seed); np.random.seed(seed)
@@ -105,6 +106,6 @@ ADAPTERS = {"linear_diffusion": _train_free("linear"), "anisost": _train_free("a
 for _m in ("stagate", "sedr", "spaceflow", "nichepca", "ccst", "spatial_mgcn", "deepst", "bass", "bayesspace"):
     ADAPTERS[_m] = _from_new(_m)
 
-# methods that must run alone (memory) and that are Visium-only
+# methods that must run alone (memory) and that are Visium-only (datasets in spatialbench.data.VISIUM)
 SERIAL = {"deepst"}
 VISIUM_ONLY = {"bayesspace"}

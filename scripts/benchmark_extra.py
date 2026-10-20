@@ -14,7 +14,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, "..")
 sys.path[:0] = [ROOT, HERE]
-from prepare_extra import EXTRA  # noqa: E402
+from prepare_extra import EXTRA, n_clusters  # noqa: E402
 
 EMB = os.path.join(ROOT, "results", "emb")
 
@@ -66,7 +66,7 @@ def run(job):
     from anisost import AnisoST, robust_gmm
     method, ds, sec, seed = job
     z = load(ds, sec); X, G, C, y = z["X"], z["G"], z["coords"], z["labels"]
-    k = EXTRA[ds]["n_clusters"]; base = {"dataset": ds, "slice": sec, "seed": seed}
+    k = n_clusters(ds, sec); base = {"dataset": ds, "slice": sec, "seed": seed}
     t0 = time.time(); out = []
     if method == "anisost":
         m = AnisoST(seed=seed); Z = m.embed(X, C); t = time.time() - t0

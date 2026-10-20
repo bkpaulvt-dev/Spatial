@@ -68,3 +68,45 @@ datasets:
       "-0.14": {split: test}
       "-0.19": {split: test}
       "-0.24": {split: test}
+  # Held-out datasets added after the baseline settings were frozen: every section is split "test" (nothing is tuned on them).
+  # Download: scripts/download_new_datasets.py; caches for the training-free scripts: scripts/prepare_new_datasets.py.
+  brca:
+    name: Human breast cancer (10x Visium, Block A Section 1)
+    technology: 10x Visium
+    generation: spot-based, whole-transcriptome
+    species: human
+    tissue: breast cancer (ductal carcinoma in situ and invasive ductal carcinoma)
+    resolution: 55 um spots, ~100 um centre-to-centre
+    n_sections: 1
+    n_domains: 20
+    label_provenance: {class: expert, verified: false,
+      note: "metadata.tsv column fine_annot_type (20 regions: DCIS/LCIS_1-5, Healthy_1-2, IDC_1-7, Tumor_edge_1-6; all 3798 spots annotated); column annot_type is the 4-class coarse version (Healthy, Tumor, Invasive, Surrounding tumor). Described by the source (SEDR_analyses) as a manual pathologist annotation; confirm who drew it and whether expression clusters were used"}
+    coordinates: "obsm['spatial'] = (pxl_col_in_fullres, pxl_row_in_fullres) from spatial/tissue_positions_list.csv (full-resolution pixels; median nearest-neighbour spacing 273 px); obs array_row/array_col for BayesSpace"
+    source: {counts: "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Breast_Cancer_Block_A_Section_1/V1_Breast_Cancer_Block_A_Section_1_filtered_feature_bc_matrix.h5",
+             spatial: "https://cf.10xgenomics.com/samples/spatial-exp/1.1.0/V1_Breast_Cancer_Block_A_Section_1/V1_Breast_Cancer_Block_A_Section_1_spatial.tar.gz",
+             labels: "JinmiaoChenLab/SEDR_analyses (commit 00084465) data/BRCA1/metadata.tsv",
+             citation: "10x Genomics, Space Ranger 1.1.0 demonstration dataset V1_Breast_Cancer_Block_A_Section_1; annotation from SEDR_analyses (Xu et al., Genome Med 2024)"}
+    license: {status: to_check, note: "10x Genomics public datasets are distributed under CC BY 4.0 (to confirm); SEDR_analyses has no explicit licence for the annotation"}
+    sections:
+      "block_a_1": {split: test}
+  stereo:
+    name: Mouse embryo (Stereo-seq MOSTA atlas, bin50)
+    technology: Stereo-seq
+    generation: bin-based (bin50 = 50 x 50 DNB, ~25 um, square grid), whole-transcriptome
+    species: mouse
+    tissue: whole embryo (E9.5, E10.5)
+    resolution: bin50, ~25 um
+    n_sections: 3
+    n_domains: {"E9.5_E1S1": 12, "E10.5_E2S1": 18, "E10.5_E1S1": 13}
+    n_obs: {"E9.5_E1S1": 5913, "E10.5_E2S1": 8494, "E10.5_E1S1": 18408}
+    label_provenance: {class: algorithm, verified: false,
+      note: "obs['annotation'] of the MOSTA h5ad (original tissue annotation of Chen et al. 2022), used as ground truth. As far as we know the MOSTA tissue domains were obtained by unsupervised clustering of the bin50 expression and then named by marker genes and anatomy, i.e. partly algorithm-derived (circular for clustering methods); confirm in the paper's methods before ranking on this dataset"}
+    coordinates: "obsm['spatial'] of the h5ad (bin50 grid coordinates); bins with zero counts are dropped; raw counts from layers['count']"
+    source: {counts: "https://ftp.cngb.org/pub/SciRAID/stomics/STDS0000058/stomics/<section>.MOSTA.h5ad",
+             labels: "same file, obs['annotation']",
+             citation: "Chen et al., Cell 2022 (MOSTA, CNGB STOmics DB STDS0000058)"}
+    license: {status: to_check, note: "CNGB STOmics DB terms of use"}
+    sections:
+      "E9.5_E1S1": {split: test}
+      "E10.5_E2S1": {split: test}
+      "E10.5_E1S1": {split: test}

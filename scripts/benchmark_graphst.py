@@ -20,7 +20,7 @@ import numpy as np
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, "..")
 sys.path[:0] = [ROOT, HERE]
 from benchmark_anisost import DLPFC_SLICES, N_CLUSTERS  # noqa: E402
-from prepare_extra import EXTRA  # noqa: E402
+from prepare_extra import EXTRA, NEW, n_clusters  # noqa: E402
 
 
 def make_adata(ds, sec, data_root):
@@ -30,6 +30,9 @@ def make_adata(ds, sec, data_root):
         a = load_dlpfc_adata(data_root, sec)
         a.var_names_make_unique()
         return a, N_CLUSTERS[sec]                      # GraphST.preprocess selects HVGs itself
+    if ds in NEW:                                      # whole transcriptome as DLPFC: GraphST.preprocess selects HVGs
+        from spatialbench.data import load_section
+        return load_section(ds, sec), n_clusters(ds, sec)
     csv = os.path.join(ROOT, "data", "ext", "csv")
     cnt = pd.read_csv(os.path.join(csv, f"{ds}_{sec}_counts.csv"), index_col=0)
     info = pd.read_csv(os.path.join(csv, f"{ds}_{sec}_info.csv"), index_col=0).loc[cnt.index]
@@ -42,7 +45,7 @@ def make_adata(ds, sec, data_root):
     sc.pp.normalize_total(a, target_sum=1e4)           # then GraphST.preprocess's remaining steps
     sc.pp.log1p(a)
     sc.pp.scale(a, zero_center=False, max_value=10)
-    return a, EXTRA[ds]["n_clusters"]
+    return a, n_clusters(ds, sec)
 
 
 def run(job):

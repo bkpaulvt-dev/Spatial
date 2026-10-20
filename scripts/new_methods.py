@@ -8,6 +8,8 @@ import contextlib, io, os, random, sys
 import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, ".."))
+from spatialbench.data import VISIUM, WHOLE_TRANSCRIPTOME  # noqa: E402  platform groups (replace ds == "dlpfc")
 
 
 def _seed(seed):
@@ -49,8 +51,9 @@ def _lognorm_hvg(a, n_top=3000):
 def stagate(a, k, seed, ds):
     """STAGATE (Dong & Zhang, Nat Commun 2022), PyG version. Tutorial: 3000 HVGs, rad_cutoff=150
     full-resolution pixels for DLPFC Visium (~1.1 spot spacings, ~6 neighbours; expressed in spot
-    spacings because our coordinates are on another scale); KNN graph with 6 neighbours for single-cell data (no tutorial radius exists for
-    our STARmap/MERFISH coordinates). Clustering: STAGATE's mclust_R (EEE)."""
+    spacings because our coordinates are on another scale; same for every Visium dataset); KNN graph with 6 neighbours
+    for single-cell data (no tutorial radius exists for our STARmap/MERFISH coordinates) and for the Stereo-seq bin50
+    grid (not a Visium lattice). Clustering: STAGATE's mclust_R (EEE)."""
     try:
         import torch_sparse  # noqa: F401  real extension if installed
     except ImportError:
@@ -59,7 +62,7 @@ def stagate(a, k, seed, ds):
     a = _lognorm_hvg(a.copy(), 3000)
     a = a[:, a.var["highly_variable"]].copy()
     with contextlib.redirect_stdout(io.StringIO()):
-        if ds == "dlpfc":   # tutorial: rad_cutoff=150 full-resolution pixels = ~1.1 spot spacings
+        if ds in VISIUM:    # tutorial: rad_cutoff=150 full-resolution pixels = ~1.1 spot spacings
             st.Cal_Spatial_Net(a, rad_cutoff=1.1 * _nn_spacing(a.obsm["spatial"]))
         else:
             st.Cal_Spatial_Net(a, k_cutoff=6, model="KNN")
@@ -78,7 +81,7 @@ def sedr(a, k, seed, ds):
     a = a.copy()
     SEDR.fix_seed(seed)
     a.layers["count"] = a.X.toarray() if hasattr(a.X, "toarray") else np.asarray(a.X)
-    if ds == "dlpfc":
+    if ds in WHOLE_TRANSCRIPTOME:
         sc.pp.filter_genes(a, min_cells=50); sc.pp.filter_genes(a, min_counts=10)
     sc.pp.normalize_total(a, target_sum=1e6)
     if a.n_vars > 2000:
@@ -145,7 +148,8 @@ def ccst(a, k, seed, ds):
       graph    : binary distance-threshold adjacency; the repository hand-picks a threshold per dataset
                  "so that on average each cell has x neighbour cells", so we set it to give a mean
                  degree of 6 on every section; A = (1-lambda_I) A0 + lambda_I I, lambda_I = 0.3 (Visium)
-                 or 0.8 (single-cell), as in the README
+                 or 0.8 (single-cell), as in the README; Stereo-seq bin50 (multi-cell bins, whole
+                 transcriptome) is treated like the spot-based Visium data (0.3)
       model    : Deep Graph Infomax, 4 GCNConv layers (hidden 256) + PReLU, Adam lr 1e-6, 5000 epochs
       cluster  : PCA(30) of the embedding, k-means (k-means++, n_init=100, max_iter=1000, tol=1e-6)."""
     import scanpy as sc, scipy.sparse as sp, torch, torch.nn as nn
@@ -165,7 +169,7 @@ def ccst(a, k, seed, ds):
     thr = float(np.median(d[:, -1]))          # median 6th-neighbour distance -> mean degree close to 6
     A0 = NearestNeighbors(radius=thr).fit(C).radius_neighbors_graph(C, mode="connectivity").tocsr()
     A0.setdiag(0); A0.eliminate_zeros()
-    lam = 0.3 if ds == "dlpfc" else 0.8
+    lam = 0.3 if ds in WHOLE_TRANSCRIPTOME else 0.8
     A = ((1 - lam) * A0 + lam * sp.eye(A0.shape[0], format="csr")).tocoo()
     data = Data(x=torch.tensor(X), edge_index=torch.tensor(np.vstack([A.row, A.col]), dtype=torch.long),
                 edge_attr=torch.tensor(A.data, dtype=torch.float))
@@ -291,9 +295,10 @@ def bass(a, k, seed, ds):
 
 
 def bayesspace(a, k, seed, ds):
-    """BayesSpace (Zhao et al., Nat Biotechnol 2021) v1.5.1 defaults; Visium (hexagonal lattice) only."""
-    if ds != "dlpfc":
-        raise NotImplementedError("BayesSpace requires a Visium/ST spot lattice (not applicable to single-cell data)")
+    """BayesSpace (Zhao et al., Nat Biotechnol 2021) v1.5.1 defaults; Visium (hexagonal lattice) only. Its square-lattice
+    platform="ST" mode is not used for the Stereo-seq bin50 grid (designed for 100 um ST spots; untested here)."""
+    if ds not in VISIUM:
+        raise NotImplementedError("BayesSpace requires a Visium spot lattice (not applicable to single-cell or Stereo-seq data)")
     return _run_r("bayesspace", a, k, seed, ds)
 
 

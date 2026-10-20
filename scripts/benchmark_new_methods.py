@@ -16,6 +16,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.join(HERE, "..
 sys.path[:0] = [ROOT, HERE]
 from benchmark_anisost import DLPFC_SLICES  # noqa: E402
 from prepare_extra import EXTRA  # noqa: E402
+from spatialbench.data import VISIUM  # noqa: E402
 
 SEEDS = {"nichepca": [0, 1, 2], "sedr": [0, 1, 2], "spaceflow": [0, 1, 2], "deepst": [0, 1, 2],
          "stagate": [0], "bass": [0], "ccst": [0], "spatial_mgcn": [0], "bayesspace": [0]}
@@ -88,7 +89,7 @@ def main():
             if r["status"] == "ok" or not a.retry_errors:
                 done.add((r["method"], r["dataset"], r["slice"], r["seed"]))
     jobs = [(m, ds, s, sd) for sd in [0, 1, 2] for (ds, s) in secs for m in methods
-            if sd in SEEDS[m] and not (m == "bayesspace" and ds != "dlpfc") and (m, ds, s, sd) not in done]
+            if sd in SEEDS[m] and not (m == "bayesspace" and ds not in VISIUM) and (m, ds, s, sd) not in done]
     print(f"{len(jobs)} jobs", flush=True)
     os.makedirs(os.path.join(ROOT, "results", "emb"), exist_ok=True)
     with ThreadPoolExecutor(a.workers) as ex:

@@ -19,7 +19,10 @@ def load_raw(ds, sec):
         from benchmark_anisost import N_CLUSTERS
         a = load_dlpfc_adata(os.path.join(ROOT, "data", "DLPFC"), sec); a.var_names_make_unique()
         return a, N_CLUSTERS[sec]
-    from prepare_extra import EXTRA
+    from prepare_extra import NEW, n_clusters
+    if ds in NEW:                                      # held-out BRCA / Stereo-seq sections
+        from spatialbench.data import load_section
+        return load_section(ds, sec), n_clusters(ds, sec)
     csv = os.path.join(ROOT, "data", "ext", "csv")
     cnt = pd.read_csv(os.path.join(csv, f"{ds}_{sec}_counts.csv"), index_col=0)
     info = pd.read_csv(os.path.join(csv, f"{ds}_{sec}_info.csv"), index_col=0).loc[cnt.index]
@@ -28,7 +31,7 @@ def load_raw(ds, sec):
                         var=pd.DataFrame(index=cnt.columns.astype(str)))
     a.obs["ground_truth"] = info.loc[keep, "z"].astype(str).to_numpy()
     a.obsm["spatial"] = info.loc[keep, ["x", "y"]].to_numpy(np.float64)
-    return a, EXTRA[ds]["n_clusters"]
+    return a, n_clusters(ds, sec)
 
 
 def run(job):
