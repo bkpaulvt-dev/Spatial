@@ -1,0 +1,3 @@
+{"seed": 0, "method": "indicator", "effect_corr": 0.9232802951666222, "effect_slope": 0.7032473692837039, "slope_vs_rho_corr": 0.9250907402441417}
+{"seed": 0, "method": "cipher_noescape", "effect_corr": 0.9530903885917104, "effect_slope": 0.6604627446994178, "efficacy_corr": null, "efficacy_mae": null, "spurious_interaction": 0.11463544517755508, "slope_vs_rho_corr": 0.9137562293979438}
+{"seed": 0, "method": "cipher", "effect_corr": 0.7579652961507811, "effect_slope": 0.5188309499532736, "efficacy_corr": 0.47731472234123784, "efficacy_mae": 0.14760499804270857, "spurious_interaction": 0.15936599671840668, "escape_auroc": 0.6644778078498634, "slope_vs_rho_corr": 0.6289521810460988}
