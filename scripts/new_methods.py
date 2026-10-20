@@ -235,7 +235,7 @@ def spatial_mgcn(a, k, seed, ds, labels=None):
         sc.pp.highly_variable_genes(a, flavor="seurat_v3", n_top_genes=3000)
         a = a[:, a.var["highly_variable"]].copy()
     X = a.X.toarray() if hasattr(a.X, "toarray") else np.asarray(a.X, dtype=np.float64)
-    a.X = X / X.sum(1, keepdims=True) * 10000
+    a.X = X / np.maximum(X.sum(1, keepdims=True), 1) * 10000   # bins with no counts in the HVGs stay zero (Stereo-seq)
     sc.pp.scale(a, zero_center=False, max_value=10)
     radius = 4.1 * _nn_spacing(a.obsm["spatial"])   # config: 560 full-resolution px = ~4.1 spot spacings
     with contextlib.redirect_stdout(io.StringIO()):
