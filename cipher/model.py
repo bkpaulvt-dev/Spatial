@@ -51,6 +51,7 @@ class CIPHERNet(nn.Module):
                  activation="tanh", gamma=0.9, n_iter=20, escape=True, init_eff=0.9, basal=True, direct=False):
         super().__init__()
         self.basal = basal
+        self.explain_away = False   # set after the basal latent has been learned on controls
         # optional per-unit direct log-scale gene effects: the multiplicative null
         self.D = nn.Parameter(torch.zeros(n_units, n_genes)) if direct else None
         self.G, self.K, self.d_h = n_genes, n_units, d_h
@@ -139,15 +140,30 @@ class CIPHERNet(nn.Module):
         B = x.shape[0]
         b1h = F.one_hot(b, self.n_batch).float()
         xn = torch.log1p(x / lib[:, None] * 1e4)
-        hid = self.enc(xn)
-        mu, lv = self.enc_mu(hid), self.enc_lv(hid).clamp(-8, 8)
-        z = mu + torch.randn_like(mu) * torch.exp(0.5 * lv)
-        if not self.basal:
-            z = z * 0.0
         m = P.shape[1]
         M = self.masks(m, x.device)
         W = self.W()
-        lg, _ = self.logits(z, b1h, P, M, W)
+        if self.explain_away:
+            # remove each mask's predicted perturbation effect before inferring the basal state,
+            # so the basal latent cannot absorb the perturbation (encoder is frozen here)
+            with torch.no_grad():
+                z0 = torch.zeros(B, self.enc_mu.out_features, device=x.device)
+                lg0, _ = self.logits(z0, b1h, P, M, W)
+                delta = lg0 - lg0[:1]                                 # S x B x G, mask 0 = all off
+                xs = x[None] * torch.exp(-delta)
+                xn_s = torch.log1p(xs / lib[None, :, None] * 1e4)
+                mu = self.enc_mu(self.enc(xn_s))                      # S x B x d_z
+            lg = torch.stack([self.logits(mu[s], b1h, P, M[s:s + 1], W)[0][0] for s in range(M.shape[0])])
+            kl = torch.zeros(B, device=x.device)
+            lv = None
+        else:
+            hid = self.enc(xn)
+            mu, lv = self.enc_mu(hid), self.enc_lv(hid).clamp(-8, 8)
+            z = mu + torch.randn_like(mu) * torch.exp(0.5 * lv)
+            if not self.basal:
+                z = z * 0.0
+            lg, _ = self.logits(z, b1h, P, M, W)
+            kl = 0.5 * (mu.pow(2) + lv.exp() - 1 - lv).sum(-1)
         rate = torch.softmax(lg, -1) * lib[None, :, None]
         theta = torch.exp(self.log_theta)
         ll = torch.stack([nb_loglik(x, rate[s], theta) for s in range(M.shape[0])])   # S x B
@@ -155,7 +171,6 @@ class CIPHERNet(nn.Module):
         joint = ll + lp
         marg = torch.logsumexp(joint, 0)
         resp = torch.softmax(joint, 0).detach()                   # posterior over masks
-        kl = 0.5 * (mu.pow(2) + lv.exp() - 1 - lv).sum(-1)
         loss = (-marg + kl_w * kl).mean()
         out = {"nll": (-marg).mean().item(), "kl": kl.mean().item()}
         if adv_lam > 0:
@@ -163,7 +178,7 @@ class CIPHERNet(nn.Module):
             valid = P >= 0
             target[torch.arange(B, device=x.device)[:, None].expand_as(P)[valid], P[valid]] = 1.0
             target[:, -1] = (~valid).all(1).float()
-            logit = self.adv(_GradReverse.apply(mu, adv_lam))
+            logit = self.adv(_GradReverse.apply(mu if mu.dim() == 2 else mu[0], adv_lam))
             adv = F.binary_cross_entropy_with_logits(logit, target)
             loss = loss + adv * x.shape[1] / 100.0
             out["adv"] = adv.item()
@@ -181,8 +196,11 @@ class CIPHER:
 
     def __init__(self, data, seed=0, d_z=32, d_h=64, activation="tanh", escape=True,
                  adversary=True, adv_weight=1.0, basal=True, direct=False, n_iter=20, epochs=30, batch_size=256, lr=1e-3, l1=1e-4, device="cpu",
-                 threads=None, verbose=True, train_idx=None):
+                 threads=None, verbose=True, train_idx=None, control_basal=False):
         self.d, self.seed = data, seed
+        # control_basal: learn the basal latent (encoder + basal decoder) on control cells only,
+        # then freeze it, so cell-to-cell variation is modelled but cannot absorb perturbation effects
+        self.control_basal = control_basal
         self.epochs, self.bs, self.lr, self.l1 = epochs, batch_size, lr, l1
         self.adversary, self.verbose, self.device = adversary, verbose, device
         self.adv_weight = adv_weight
@@ -205,26 +223,41 @@ class CIPHER:
         return X, lib, b, P
 
     def fit(self):
-        net, d = self.net, self.d
-        opt = torch.optim.Adam(net.parameters(), lr=self.lr)
-        idx_all = self.train_idx
-        n_it = int(math.ceil(len(idx_all) / self.bs))
-        total = self.epochs * n_it
-        step = 0
+        net = self.net
         self.history = []
-        for ep in range(self.epochs):
+        if self.control_basal:
+            ctrl = self.train_idx[(self.d.P[self.train_idx] < 0).all(1)]
+            basal_params = (list(net.enc.parameters()) + list(net.enc_mu.parameters()) +
+                            list(net.enc_lv.parameters()) + list(net.dec.parameters()) + [net.log_theta])
+            self._run(ctrl, self.epochs, basal_params, adversary=False)
+            for mod in (net.enc, net.enc_mu, net.enc_lv, net.dec):
+                for q in mod.parameters():
+                    q.requires_grad_(False)
+            net.explain_away = True
+        params = [q for q in net.parameters() if q.requires_grad]
+        self._run(self.train_idx, self.epochs, params, adversary=self.adversary,
+                  kl_warmup=not self.control_basal)
+        return self
+
+    def _run(self, idx_all, epochs, params, adversary, kl_warmup=True):
+        net = self.net
+        opt = torch.optim.Adam(params, lr=self.lr)
+        n_it = int(math.ceil(len(idx_all) / self.bs))
+        total = epochs * n_it
+        step = 0
+        for ep in range(epochs):
             perm = np.random.permutation(idx_all)
             agg = {"nll": 0.0, "kl": 0.0, "adv": 0.0}
             net.train()
             for it in range(n_it):
                 bi = np.sort(perm[it * self.bs:(it + 1) * self.bs])
                 X, lib, b, P = self._tensors(bi)
-                kl_w = min(1.0, step / (0.3 * total))
-                loss, out = net(X, lib, b, P, kl_w=kl_w, adv_lam=self.adv_weight if self.adversary else 0.0)
+                kl_w = min(1.0, step / (0.3 * total)) if kl_warmup else 1.0
+                loss, out = net(X, lib, b, P, kl_w=kl_w, adv_lam=self.adv_weight if adversary else 0.0)
                 loss = loss + self.l1 * net.penalty()
                 opt.zero_grad()
                 loss.backward()
-                nn.utils.clip_grad_norm_(net.parameters(), 10.0)
+                nn.utils.clip_grad_norm_(params, 10.0)
                 opt.step()
                 step += 1
                 for k in agg:
@@ -232,7 +265,6 @@ class CIPHER:
             self.history.append(agg)
             if self.verbose:
                 print(f"  ep {ep:3d} nll {agg['nll']:.1f} kl {agg['kl']:.1f} adv {agg['adv']:.3f}", flush=True)
-        return self
 
     @torch.no_grad()
     def embed(self, idx):

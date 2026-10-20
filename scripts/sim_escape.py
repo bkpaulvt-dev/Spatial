@@ -93,7 +93,8 @@ def main():
             est["indicator"][k] = lmean(idx) - base
         effs = {}
         resid = {}
-        final = {"basal": False, "adversary": False, "direct": True, **json.loads(args.extra)}   # Phase 1 design
+        final = {"basal": True, "control_basal": True, "d_z": 8, "adversary": False, "direct": True,
+                 "lr": 0.01, **json.loads(args.extra)}   # control-anchored basal + explain-away
         for name, kw in [("cipher_noescape", {**final, "escape": False}), ("cipher", final)]:
             m = CIPHER(d, seed=seed, epochs=args.epochs, verbose=False, device=args.device, **kw).fit()
             c0 = np.log(m.predict_mean([], ctrl_idx) + 1e-3)
