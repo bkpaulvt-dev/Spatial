@@ -338,6 +338,27 @@ if msf:
     mac("mcsJitMean", float(sd_.jrng.mean()), 2); mac("mcsJitMax", float(sd_.jrng.max()), 2)
     mac("mcsFullMinusSeed", float((sd_.full - sd_["mean"]).mean()), 3)
     mac("mcsFullOutside", str(round(100 * float(((sd_.full < sd_["min"] - 1e-9) | (sd_.full > sd_["max"] + 1e-9)).mean()))))
+# sensitivity to the number of domains K (scripts/k_sensitivity.py)
+if os.path.exists(R("k_sensitivity.jsonl")):
+    KR = []
+    for l in open(R("k_sensitivity.jsonl")):
+        r = json.loads(l); f = {x["dk"]: x for x in r["fits"]}
+        if 0 not in f: continue
+        b = min(r["fits"], key=lambda x: x["bic"])
+        KR.append(dict(dataset=r["dataset"], method=r["method"], a0=f[0]["ARI"], **{f"a{dk:+d}": f[dk]["ARI"] if dk in f else np.nan for dk in (-2, -1, 1, 2)},
+                       kbic=b["dk"], abic=b["ARI"]))
+    KD = pd.DataFrame(KR); KD.to_csv(R("k_sensitivity_summary.csv"), index=False)
+    d1 = np.nanmax(np.abs(KD[["a-1", "a+1"]].values - KD[["a0"]].values), axis=1)
+    mac("kN", str(len(KD))); mac("kOneMean", float(np.nanmean(d1)), 2); mac("kOneMax", float(np.nanmax(d1)), 2)
+    mac("kBicEdge", str(int((KD.kbic == 2).sum())))
+    mac("kAriTrue", float(KD.a0.mean()), 3); mac("kAriBic", float(KD.abic.mean()), 3)
+    gm = KD.groupby("method")[["a0", "abic"]].mean()
+    from scipy.stats import spearmanr as _sp
+    mac("kRankRho", float(_sp(gm.a0, gm.abic).statistic), 2)
+    top = gm.abic.sort_values(ascending=False)
+    mac("kTopBic", MN2.get(top.index[0], top.index[0])); mac("kTopBicVal", float(top.iloc[0]), 3)
+    mac("kLinBic", float(gm.loc["linear_diffusion", "abic"]), 3)
+    mac("kLinBicRank", str(int(list(top.index).index("linear_diffusion") + 1)))
 # Spatial-MGCN label-selected epoch
 sm = nm[nm.method == "spatial_mgcn"].assign(g=lambda x: x.ARI_label_selected_epoch - x.ARI)
 mac("mgcnLeak", float(sm.g.mean()), 3)

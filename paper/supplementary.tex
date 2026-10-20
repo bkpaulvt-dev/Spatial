@@ -103,27 +103,32 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S15.} Reproduction of HiSTaR on the twelve DLPFC sections.}
+\caption*{\textbf{Supplementary Table S15.} Sensitivity to the number of domains: mean ARI over the 20 sections when the seed-0 embedding is clustered with matched clustering (20-start tied Gaussian mixture) for $K$ from two below to two above the annotated number, and for the $K$ in that range with the lowest BIC (label-free choice; it was almost always the largest $K$ allowed).}
+\input{../results/supp/ksens.tex}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S16.} Reproduction of HiSTaR on the twelve DLPFC sections.}
 \input{../results/supp/histar.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S16.} Mean ARI of the final training epoch (used in the benchmark) and of the epoch with the highest ARI against the annotation, as selected by the released test scripts (seed 0).}
+\caption*{\textbf{Supplementary Table S17.} Mean ARI of the final training epoch (used in the benchmark) and of the epoch with the highest ARI against the annotation, as selected by the released test scripts (seed 0).}
 \input{../results/supp/labelepoch.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S17.} Automated screening of released code for patterns of label use (number of candidate lines per category; L1 result chosen by agreement with labels, L2 number of domains from labels, L3 unannotated spots removed, L4 settings keyed by section, L5 loops combined with a label metric). Candidate lines are not findings: each was read manually; the 14 repositories are the benchmarked methods with released code plus SPARK, SpatialPCA and conST, which were screened but not benchmarked, and only the label-selected epoch in Spatial-MGCN's test scripts was confirmed as L1 (Supplementary Note~\SNaudit).}
+\caption*{\textbf{Supplementary Table S18.} Automated screening of released code for patterns of label use (number of candidate lines per category; L1 result chosen by agreement with labels, L2 number of domains from labels, L3 unannotated spots removed, L4 settings keyed by section, L5 loops combined with a label metric). Candidate lines are not findings: each was read manually; the 14 repositories are the benchmarked methods with released code plus SPARK, SpatialPCA and conST, which were screened but not benchmarked, and only the label-selected epoch in Spatial-MGCN's test scripts was confirmed as L1 (Supplementary Note~\SNaudit).}
 \input{../results/supp/audit.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S18.} Pilot invariance test (three training-free methods, two sections): agreement (ARI) between the partition on the original data and on transformed data that should not change the answer. The methods are invariant to rescaling, rotating and reflecting the coordinates and to rescaling expression, but not fully to spot order, because the Gaussian mixture initialisation depends on it.}
+\caption*{\textbf{Supplementary Table S19.} Pilot invariance test (three training-free methods, two sections): agreement (ARI) between the partition on the original data and on transformed data that should not change the answer. The methods are invariant to rescaling, rotating and reflecting the coordinates and to rescaling expression, but not fully to spot order, because the Gaussian mixture initialisation depends on it.}
 \input{../results/supp/invariance.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S19.} Which method was run in which experiment (sections completed / expected; seeds). n/a: the experiment needs an embedding and the method clusters internally.}
+\caption*{\textbf{Supplementary Table S20.} Which method was run in which experiment (sections completed / expected; seeds). n/a: the experiment needs an embedding and the method clusters internally.}
 \input{../results/supp/coverage.tex}
 \end{table}
 

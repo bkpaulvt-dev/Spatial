@@ -182,6 +182,14 @@ for m in STD:
 write("agree.tex", ["Method"] + [f"{DSN[x]} {c}" for x in DS for c in ("pipeline", "runner", "diff.")], rows, "l" + "rrr" * 3, "\\scriptsize")
 items.append(("table", "STagree", "Mean ARI with each method's default clustering in its published pipeline (used in the main text) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\\STmetrics{} and~\\STres), and their difference (runner minus pipeline).", "agree.tex"))
 
+# ------------------------------------------------------------------ S: number of domains
+if os.path.exists(R("k_sensitivity_summary.csv")):
+    KD = pd.read_csv(R("k_sensitivity_summary.csv"))
+    gm = KD.groupby("method").agg(a2m=("a-2", "mean"), a1m=("a-1", "mean"), a0=("a0", "mean"), a1p=("a+1", "mean"), a2p=("a+2", "mean"), abic=("abic", "mean"))
+    rows = [[LAB.get(m, m)] + [f3(r[c]) for c in ("a2m", "a1m", "a0", "a1p", "a2p", "abic")] for m, r in gm.sort_values("a0", ascending=False).iterrows()]
+    write("ksens.tex", ["Method", "$K-2$", "$K-1$", "True $K$", "$K+1$", "$K+2$", "BIC choice"], rows, "lrrrrrr", "\\footnotesize")
+    items.append(("table", "STk", "Sensitivity to the number of domains: mean ARI over the 20 sections when the seed-0 embedding is clustered with matched clustering (20-start tied Gaussian mixture) for $K$ from two below to two above the annotated number, and for the $K$ in that range with the lowest BIC (label-free choice; it was almost always the largest $K$ allowed).", "ksens.tex"))
+
 # ------------------------------------------------------------------ S: HiSTaR reproduction
 p1 = json.load(open(R("paper_numbers.json")))
 h = p1["bench_histar"]; hd = p1["bench_histar_deterministic"]

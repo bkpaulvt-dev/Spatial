@@ -199,6 +199,12 @@ Table~\STranks). With each method's default clustering the picture was similar b
 of \nStdTot{} comparisons favoured it and \nStdUnres{} (BASS and BANKSY $\lambda=0.8$) were unresolved (Supplementary
 Table~\STstats). Example partitions are shown in \figref{fig:maps}.
 
+Every method was given the annotated number of domains $K$. Misspecifying $K$ by one changed ARI by \kOneMean{} on average (up to
+\kOneMax; Supplementary Table~\STk). BIC did not provide a usable label-free choice: within $K\pm2$ it selected the largest value in
+\kBicEdge{} of \kN{} embeddings. At that choice the ranking of methods was largely preserved (Spearman $\rho=\kRankRho$ between method
+means), but \kTopBic{} (\kTopBicVal) moved ahead of linear diffusion (\kLinBic, rank \kLinBicRank), so the lead of the baseline
+depends on giving every method the true $K$.
+
 Seed-to-seed variability differed between methods: HiSTaR's standard deviation of ARI was 0.047 on DLPFC and 0.18 on STARmap,
 against 0.003--0.04 for the training-free baselines (Supplementary Table~\STseeds). The median time per section on one CPU
 thread ranged from under 30 s for the baselines and BANKSY to about 40 min for CCST (Supplementary Table~\STres).
@@ -344,7 +350,7 @@ mclust experiments use one seed-0 embedding per section and method and do not in
 are brain tissues with laminar or regional structure; Slide-seq, Stereo-seq, Xenium and Visium HD data, larger sections and
 non-laminar tissues are not covered, and no simulated data were used. The STARmap and MERFISH annotations were distributed with the
 BASS analyses, and BASS was among the most accurate methods on these data; annotations may also have been derived with methods
-similar to the ones evaluated. The number of domains was given to every method. All runs used one CPU thread, so run times are not
+similar to the ones evaluated. The number of domains was given to every method; results with a misspecified or label-free $K$ are reported in Supplementary Table~\STk. All runs used one CPU thread, so run times are not
 representative of GPU use. ARI is the primary metric; other metrics are in Supplementary Table~\STmetrics.
 
 \section*{Data availability}
