@@ -76,6 +76,14 @@ def measure_command(cmd, timeout: float | None = None, interval: float = 0.25, c
                 except psutil.Error:
                     pass
             stats["peak_rss"] = max(stats["peak_rss"], rss)
+            # memory guard: a job that would exhaust the machine is killed and recorded as out of memory, instead of
+            # taking the whole machine down (cap via SPATIALBENCH_MAX_RSS_GB; also kill when < 0.8 GB is left)
+            cap = float(os.environ.get("SPATIALBENCH_MAX_RSS_GB", "0") or 0)
+            if (cap and rss > cap * 2 ** 30) or psutil.virtual_memory().available < 0.8 * 2 ** 30:
+                stats["mem_killed"] = True
+                for q in _tree(ps)[::-1]:
+                    try: q.kill()
+                    except psutil.Error: pass
             gm, gp = _gpu_sample()
             if gm == gm:
                 stats["gpu_mem"] = gm if stats["gpu_mem"] != stats["gpu_mem"] else max(stats["gpu_mem"], gm)
@@ -114,7 +122,7 @@ def measure_command(cmd, timeout: float | None = None, interval: float = 0.25, c
         src = f"estimate ({cpu_watts_per_core:g} W per busy core" + (" + GPU power)" if stats["gpu_wh"] else ")")
     return {"wall_s": wall, "cpu_s": cpu_s, "peak_rss_gb": stats["peak_rss"] / 2 ** 30, "peak_gpu_mem_gb": stats["gpu_mem"],
             "energy_kwh": energy, "energy_source": src, "exit_code": proc.returncode,
-            "oom_killed": proc.returncode == -9, "timed_out": timed_out,
+            "oom_killed": proc.returncode == -9 or bool(stats.get("mem_killed")), "timed_out": timed_out,
             "stdout": (out or "")[-2000:], "stderr": (err or "")[-2000:]}
 
 
