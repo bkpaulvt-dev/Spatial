@@ -46,7 +46,7 @@ def run(job):
     path = os.path.join(EMB, f"{ds}_{s}_{method}.npy")
     if os.path.exists(path):
         Z = np.load(path)
-    elif method == "graphst":                       # written by benchmark_graphst.py only
+    elif method not in ("histar", "anisost"):       # other embeddings are written by their benchmark runs only
         return None
     else:
         if method == "histar":
