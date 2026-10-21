@@ -264,8 +264,8 @@ of 2000 observations drawn with R's random number generator, so its default fit 
 this seed (2020 in STAGATE and GraphST, 2023 in SEDR), which makes their result reproducible but tied to an arbitrary choice. Across
 the \mcsNBig{} embeddings with more than 2000 spots or cells, changing only the R seed changed ARI by \mcsSeedMeanBig{} on average
 (up to \mcsSeedMax; \figref{fig:robust}B), and the range exceeded 0.1 for \mcsSeedGt\% of them; the STARmap sections, with about
-1050 cells, were initialised on all cells and did not vary. Initialising on all observations removed the dependence on the seed and
-on the row order; the remaining sensitivity to 1\% noise was \mcsJitMean{} on average (up to \mcsJitMax). The full-data fit fell
+1050 cells, were initialised on all cells and did not vary. Initialising on all observations makes the fit deterministic, but it remained sensitive to noise far below
+the measurement noise: adding 1\% noise changed ARI by \mcsJitMean{} on average (up to \mcsJitMax). The full-data fit fell
 outside the range of the ten seeded fits for \mcsFullOutside\% of the embeddings (Supplementary Table~\STmclust). An earlier
 version of this experiment attributed the variation to the order of the spots; permuting the rows changes which observations are
 sampled, so it is the same effect.
