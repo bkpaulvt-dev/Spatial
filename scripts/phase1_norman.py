@@ -141,6 +141,8 @@ def main():
     ap.add_argument("--max-cells", type=int, default=400, help="cells per condition; 0 = all cells")
     ap.add_argument("--splits", default=None, help="splits.json (default: <outdir>/splits.json)")
     ap.add_argument("--device", default="cpu", help='e.g. "cpu", "cuda", "cuda:1"')
+    ap.add_argument("--save-preds", action="store_true",
+                    help="also save predicted and true profiles per fold (fold{k}_preds.npz), for Fig. 4")
     args = ap.parse_args()
     os.makedirs(args.outdir, exist_ok=True)
     b, conds = load_raw(args.h5ad, max_cells=args.max_cells, n_ctrl=4000 if args.max_cells else 0)
@@ -199,6 +201,19 @@ def main():
                     r.update(method=meth, fold=k, seed=seed, cond=c, selected=sel,
                              val_mse_de20=vsc, n_genes=len(d.genes), n_cells=int(d.X.shape[0]))
                     f.write(json.dumps(r) + "\n")
+        if args.save_preds:
+            # seed-averaged predicted profiles per method, plus the true profiles needed downstream
+            pm_all = {}
+            for meth, seed, pm, sel, vsc in rows:
+                for c, p in pm.items():
+                    pm_all.setdefault(meth, {}).setdefault(c, []).append(p)
+            out = {"genes": np.asarray(d.genes), "test": np.asarray(test), "ctrl": ctrl}
+            for c in set(test) | {g for t in test for g in t.split("+")}:
+                out[f"true|{c}"] = prof[c]
+            for meth, pc in pm_all.items():
+                for c, ps in pc.items():
+                    out[f"pred|{meth}|{c}"] = np.mean(ps, 0)
+            np.savez_compressed(os.path.join(args.outdir, f"fold{k}_preds.npz"), **out)
         print(f"[fold {k}] done", flush=True)
 
 
