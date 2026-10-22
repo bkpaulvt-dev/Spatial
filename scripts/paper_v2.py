@@ -319,6 +319,7 @@ msf = glob.glob(R("mclust_seed_g*.csv"))
 if msf:
     MS = pd.concat([pd.read_csv(f) for f in msf], ignore_index=True)
     MS["slice"] = MS["slice"].astype(str)
+    MS = MS.drop_duplicates(["dataset", "slice", "method", "kind", "rep"])   # groups can overlap on new sections
     sd_ = MS[MS.kind == "seed"].groupby(["dataset", "method", "slice", "n"]).ARI.agg(["min", "max", "mean"]).reset_index()
     sd_["rng"] = sd_["max"] - sd_["min"]
     fj = MS[MS.kind == "full_jit"].groupby(["dataset", "method", "slice"]).ARI.agg(lambda x: x.max() - x.min()).rename("jrng").reset_index()
