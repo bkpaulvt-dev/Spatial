@@ -239,7 +239,7 @@ items.append(("table", "STinv", "Pilot invariance test (three training-free meth
 
 # ------------------------------------------------------------------ S: coverage
 cov = pd.read_csv(R("coverage_matrix.csv"))
-rows = [[esc(LAB.get(r[0], r[0]))] + [esc(str(x).replace("0/24", "not run").replace("0/13", "not run")) for x in r[1:]] for r in cov.itertuples(index=False)]
+rows = [[esc(LAB.get(r[0], r[0]))] + [esc(re.sub(r"^0/\d+", "not run", str(x))) for x in r[1:]] for r in cov.itertuples(index=False)]
 write("coverage.tex", [esc(c[:1].upper() + c[1:]).replace("lottery", "initialisation experiment") for c in cov.columns], rows, "l" + "p{2.6cm}" * (len(cov.columns) - 1), "\\scriptsize")
 items.append(("table", "STcov", "Which method was run in which experiment (sections completed / expected; seeds). n/a: the experiment needs an embedding and the method clusters internally.", "coverage.tex"))
 
