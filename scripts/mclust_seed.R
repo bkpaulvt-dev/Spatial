@@ -34,7 +34,8 @@ for (f in files) {
   t0 <- Sys.time(); m <- fit(Z, k, initialization = list(subset = 1:n))
   rows[[length(rows) + 1]] <- rec("full", 0, m, as.numeric(Sys.time() - t0, units = "secs"))
   sds <- apply(Z, 2, sd)
-  for (r in 1:5) { set.seed(100 + r); Zj <- Z + matrix(rnorm(length(Z)), n) %*% diag(0.01 * sds, ncol(Z))
+  # MCLUST_NO_JIT=1: skip the noise repetitions (each full-data fit takes ~30 min on the 18,408-bin Stereo-seq section)
+  if (Sys.getenv("MCLUST_NO_JIT") != "1") for (r in 1:5) { set.seed(100 + r); Zj <- Z + matrix(rnorm(length(Z)), n) %*% diag(0.01 * sds, ncol(Z))
     m <- fit(Zj, k, initialization = list(subset = 1:n)); rows[[length(rows) + 1]] <- rec("full_jit", r, m, NA) }
   write.table(do.call(rbind, rows), out, sep = ",", row.names = FALSE, col.names = !file.exists(out), append = file.exists(out))
   unlink(lock, recursive = TRUE)

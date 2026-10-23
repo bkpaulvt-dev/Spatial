@@ -19,5 +19,6 @@ for f in glob.glob("results/mclust_seed_g*.csv"):
 PY
 METHODS=graphst WORKERS=1 python scripts/clustering_lottery.py
 python scripts/k_sensitivity.py
-Rscript scripts/mclust_seed.R results/emb/csv results/mclust_seed_g6.csv "stereo__.*__graphst__"
+Rscript scripts/mclust_seed.R results/emb/csv results/mclust_seed_g5.csv "stereo__(E9.5_E1S1|E10.5_E2S1)__graphst__"
+MCLUST_NO_JIT=1 Rscript scripts/mclust_seed.R results/emb/csv results/mclust_seed_g6.csv "stereo__E10.5_E1S1__graphst__"
 echo GRAPHST_DONE

@@ -188,7 +188,8 @@ def load_mclust_seed():
     d["ARI"] = pd.to_numeric(d["ARI"], errors="coerce"); d = d.dropna(subset=["ARI"])
     d["slice"] = d["slice"].astype(str)
     d = d.drop_duplicates(["dataset", "slice", "method", "kind", "rep"])
-    return d[d.groupby(["dataset", "slice", "method"]).ARI.transform("size") == 16]   # complete embeddings only
+    ok = d.groupby(["dataset", "slice", "method"]).kind.transform(lambda k: ((k == "seed").sum() == 10) & ((k == "full").sum() == 1))
+    return d[ok]   # finished embeddings only (10 seeded fits and the full-data fit)
 
 
 def ranges(d, kind, min_n):

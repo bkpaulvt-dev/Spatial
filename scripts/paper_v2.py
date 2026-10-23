@@ -341,9 +341,11 @@ if msf:
     MS = pd.concat([pd.read_csv(f) for f in msf], ignore_index=True)
     MS["slice"] = MS["slice"].astype(str)
     MS = MS.drop_duplicates(["dataset", "slice", "method", "kind", "rep"])   # groups can overlap on new sections
-    # only embeddings with all 16 fits (10 seeds, full, 5 noise); a worker may still be writing others
-    nfit = MS.groupby(["dataset", "slice", "method"]).ARI.transform("size")
-    MS = MS[nfit == 16]
+    # only finished embeddings: 10 seeded fits and the full-data fit (the 5 noise repetitions were skipped on the
+    # 18,408-bin Stereo-seq section, MCLUST_NO_JIT); a worker may still be writing others
+    g_ = MS.groupby(["dataset", "slice", "method"])
+    ok_ = g_.kind.transform(lambda k: ((k == "seed").sum() == 10) & ((k == "full").sum() == 1))
+    MS = MS[ok_]
     sd_ = MS[MS.kind == "seed"].groupby(["dataset", "method", "slice", "n"]).ARI.agg(["min", "max", "mean"]).reset_index()
     sd_["rng"] = sd_["max"] - sd_["min"]
     fj = MS[MS.kind == "full_jit"].groupby(["dataset", "method", "slice"]).ARI.agg(lambda x: x.max() - x.min()).rename("jrng").reset_index()
