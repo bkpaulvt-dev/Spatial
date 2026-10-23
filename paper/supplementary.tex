@@ -14,7 +14,7 @@
 Benchmarking the accuracy, robustness and reproducibility of spatial domain identification methods\end{center}
 \section*{Supplementary Notes}
 \subsection*{Supplementary Note 1. Data and preprocessing}
-DLPFC count matrices from spatialLIBD and layer annotations from the SEDR analyses repository; STARmap and MERFISH matrices and annotations from the BASS analyses. Genes in fewer than 50 spots or with fewer than 10 counts were removed for Visium; 2000 highly variable genes were selected on the counts (Seurat v3 flavour; Visium) or all panel genes kept, then counts were normalised to the library size, log-transformed, scaled and reduced by PCA (200 components for Visium, 50 for panels). Sections, splits and label provenance are listed in configs/datasets.yaml; per-section statistics are in Supplementary Table~\STqc.
+DLPFC count matrices from spatialLIBD and layer annotations from the SEDR analyses repository; STARmap and MERFISH matrices and annotations from the BASS analyses. Breast cancer: 10x Genomics Space Ranger 1.1.0 dataset V1\_Breast\_Cancer\_Block\_A\_Section\_1 with the 20-region annotation (column fine\_annot\_type) of the SEDR analyses repository (data/BRCA1/metadata.tsv). Stereo-seq: MOSTA atlas files E9.5\_E1S1, E10.5\_E2S1 and E10.5\_E1S1 (bin50, CNGB STOmics DB STDS0000058), raw counts and the published tissue annotation (obs annotation); bins without counts were removed. The two later datasets were added after the analysis of the first three was complete and run with unchanged settings in the standardised runner (three seeds per method; two for CCST on E10.5\_E1S1). Genes in fewer than 50 spots or with fewer than 10 counts were removed for the whole-transcriptome data (Visium, Stereo-seq); 2000 highly variable genes were selected on the counts (Seurat v3 flavour) or all panel genes kept (STARmap, MERFISH), then counts were normalised to the library size, log-transformed, scaled and reduced by PCA (200 components for whole-transcriptome data, 50 for panels). Sections, splits and label provenance are listed in configs/datasets.yaml; per-section statistics are in Supplementary Table~\STqc.
 
 \subsection*{Supplementary Note 2. Methods and settings}
 Every method was run from its official code with the settings of its tutorial or paper (Supplementary Table~\STmethods). The true number of domains was given to every method. Neighbourhood radii given in pixels were converted to multiples of the spot or cell spacing so that they transfer across technologies. Methods that output an embedding were additionally clustered with matched clustering: a 20-start tied-covariance Gaussian mixture keeping the best likelihood, the same for every method.
@@ -23,13 +23,13 @@ Every method was run from its official code with the settings of its tutorial or
 Agreement: ARI, NMI, AMI. Per-domain: clusters matched to domains with the Hungarian algorithm; macro-F1, missed domains, recall of domains below 5\% of spots. Spatial: CHAOS (mean distance to the nearest same-cluster neighbour), PAS (fraction of spots whose cluster differs from most of their ten neighbours), Moran's I of the labels, boundary F1. Label-free: silhouette, Davies--Bouldin, Calinski--Harabasz. Definitions and code: spatialbench/metrics.py (unit tests in tests/).
 
 \subsection*{Supplementary Note 4. Statistics}
-Sections are nested in groups (three DLPFC donors, STARmap, MERFISH). Differences to the reference are equal-weight means of group means with 95\% percentile intervals from a hierarchical bootstrap (5000 resamples: groups, then sections within groups). Equivalence: 90\% interval within $\pm$0.03 ARI, about the seed-to-seed standard deviation. No correction for multiple comparisons is applied. Ranks and the probability of ranking first come from the same resamples. The reference method was chosen after seeing the means, so these comparisons are exploratory. Code: \texttt{scripts/stats\_cluster\_aware.py}.
+Sections are nested in groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq). Differences to the reference are equal-weight means of group means with 95\% percentile intervals from a hierarchical bootstrap (5000 resamples: groups, then sections within groups). Equivalence: 90\% interval within $\pm$0.03 ARI, about the seed-to-seed standard deviation. No correction for multiple comparisons is applied. Ranks and the probability of ranking first come from the same resamples. The reference method was chosen after seeing the means, so these comparisons are exploratory. Code: \texttt{scripts/stats\_cluster\_aware.py}.
 
 \subsection*{Supplementary Note 5. Audit of released code}
 Repositories were screened with \texttt{scripts/audit\_leakage.py} for five patterns of label use (Supplementary Table~\STaudit), and every candidate line was read by one author. The taxonomy and all judgements, including false alarms, are in \texttt{docs/LEAKAGE\_AUDIT.md}. The audit describes what the released code does; it does not establish how published results were obtained.
 
 \subsection*{Supplementary Note 6. Computing environment}
-All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB of memory, Python 3.13, R 4.3.3 and mclust 6.0.1. Memory-heavy methods (DeepST, BayesSpace, NichePCA) were run one job at a time.
+All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB of memory, Python 3.13, R 4.3.3 and mclust 6.0.1. Memory-heavy methods (DeepST, BayesSpace, NichePCA) were run one job at a time. For the breast cancer and Stereo-seq runs every job ran alone with a cap of 12 GB resident memory (process tree, sampled once per second); a job above the cap, or leaving less than 0.8 GB of system memory, was stopped and recorded as out of memory.
 
 \clearpage\section*{Supplementary Tables}
 \begin{table}[!htbp]\centering
@@ -53,7 +53,7 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S5.} Difference in mean ARI between linear diffusion and each method, both with their default clustering; equal-weight mean of group means; 95\% interval from a hierarchical bootstrap over five groups (three DLPFC donors, STARmap, MERFISH). Test only: the same estimate without the development sections. Verdict: baseline higher if the interval is above zero; unresolved otherwise; no comparison met the equivalence criterion (90\% interval within $\pm$0.03).}
+\caption*{\textbf{Supplementary Table S5.} Difference in mean ARI between linear diffusion and each method, both with their default clustering; equal-weight mean of group means; 95\% interval from a hierarchical bootstrap over seven groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq); per-dataset columns give the mean difference within each dataset. Test only: the same estimate without the development sections. Verdict: baseline higher if the interval is above zero; unresolved otherwise; no comparison met the equivalence criterion (90\% interval within $\pm$0.03).}
 \input{../results/supp/stats_std.tex}
 \end{table}
 
@@ -63,7 +63,7 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S7.} Rank of each method in the hierarchical bootstrap with matched clustering (first three columns) and with default clustering (last three); methods with all 20 sections.}
+\caption*{\textbf{Supplementary Table S7.} Rank of each method in the hierarchical bootstrap with matched clustering (first three columns) and with default clustering (last three); methods with a result on every section (methods that exceeded the memory cap on the largest Stereo-seq section and BayesSpace, run on Visium only, are not ranked).}
 \input{../results/supp/ranks.tex}
 \end{table}
 
@@ -73,7 +73,7 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S9.} Initialisation experiment: one fixed embedding per section refitted 20 times with a single-start Gaussian mixture (20 sections per method). Range and SD of ARI across the 20 fits; best-by-ARI minus mean: ARI gain of choosing the best fit by agreement with the labels; best-likelihood minus mean: gain of choosing the fit with the highest likelihood; $\rho$: median Spearman correlation between log-likelihood and ARI.}
+\caption*{\textbf{Supplementary Table S9.} Initialisation experiment: one fixed embedding per section refitted 20 times with a single-start Gaussian mixture (up to 24 sections per method). Range and SD of ARI across the 20 fits; best-by-ARI minus mean: ARI gain of choosing the best fit by agreement with the labels; best-likelihood minus mean: gain of choosing the fit with the highest likelihood; $\rho$: median Spearman correlation between log-likelihood and ARI.}
 \input{../results/supp/lottery.tex}
 \end{table}
 
@@ -83,12 +83,12 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S11.} Change in mean ARI when each method's default clustering is replaced by matched clustering (20-start best-likelihood Gaussian mixture) on the same embedding (20 sections). The two protocols can differ in algorithm and number of starts.}
+\caption*{\textbf{Supplementary Table S11.} Change in mean ARI when each method's default clustering is replaced by matched clustering (20-start best-likelihood Gaussian mixture) on the same embedding (all sections with both results). The two protocols can differ in algorithm and number of starts.}
 \input{../results/supp/gain.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S12.} Metric panel from the standardised runner (shared preprocessing for all methods; mean over the three datasets of the per-dataset means). Values differ slightly from Supplementary Table~\STari{} because the preprocessing is shared. Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: 60 per method (20 sections, 3 seeds), except DeepST (20, seed 0) and BayesSpace (12 Visium sections, seed 0).}
+\caption*{\textbf{Supplementary Table S12.} Metric panel from the standardised runner (shared preprocessing for all methods; mean over the five datasets of the per-dataset means). Values differ slightly from Supplementary Table~\STari{} because the preprocessing is shared. Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: 60 per method (20 sections, 3 seeds), except DeepST (20, seed 0) and BayesSpace (12 Visium sections, seed 0).}
 \input{../results/supp/metrics.tex}
 \end{table}
 
@@ -98,12 +98,12 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S14.} Mean ARI with each method's default clustering in its published pipeline (used in the main text) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\STmetrics{} and~\STres), and their difference (runner minus pipeline).}
+\caption*{\textbf{Supplementary Table S14.} Mean ARI with each method's default clustering in its published pipeline (used in the main text for DLPFC, STARmap and MERFISH) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\STmetrics{} and~\STres), and their difference (runner minus pipeline).}
 \input{../results/supp/agree.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S15.} Sensitivity to the number of domains: mean ARI over the 20 sections when the seed-0 embedding is clustered with matched clustering (20-start tied Gaussian mixture) for $K$ from two below to two above the annotated number, and for the $K$ in that range with the lowest BIC (label-free choice; it was almost always the largest $K$ allowed).}
+\caption*{\textbf{Supplementary Table S15.} Sensitivity to the number of domains: mean ARI over all sections when the seed-0 embedding is clustered with matched clustering (20-start tied Gaussian mixture) for $K$ from two below to two above the annotated number, and for the $K$ in that range with the lowest BIC (label-free choice; it was almost always the largest $K$ allowed).}
 \input{../results/supp/ksens.tex}
 \end{table}
 
