@@ -45,7 +45,7 @@ ru = []
 for r in (map(json.loads, open(R("benchmark_runs.jsonl"))) if os.path.exists(R("benchmark_runs.jsonl")) else []):
     if r.get("status") != "ok" or r["dataset"] not in ("brca", "stereo"): continue
     base_ = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"], time=r["resources"].get("wall_s"))
-    if r["method"] not in ("linear_diffusion", "pca_gmm"):
+    if r["method"] not in ("linear_diffusion", "pca_gmm", "anisost"):   # own (3-start) fits of the baselines: baselines_3start.jsonl
         ru.append(dict(base_, method={"anisost": "anisost_single_gmm"}.get(r["method"], r["method"]),
                        ARI=r["metrics"]["ARI"], NMI=r["metrics"]["NMI"]))
     if r["method"] not in ("spagcn", "bass", "bayesspace") and isinstance(r.get("metrics_matched"), dict):
@@ -328,12 +328,22 @@ if mf:
     mac("mcWorse", str(round(100 * float((j2.ARI < j2.best_ll - 0.02).mean()))))
     mac("mcBetter", str(round(100 * float((j2.ARI > j2.best_ll + 0.02).mean()))))
     mac("mcNJ", str(len(j2)))
+# seed-to-seed SD of ARI (default clustering; mean over sections per dataset), as Supplementary Table "seeds"
+SDT = d.groupby(["dataset", "method", "slice"]).ARI.agg(["std", "count"]).reset_index()
+SDT = SDT[SDT["count"] > 1].groupby(["method", "dataset"])["std"].mean()
+bsd = [SDT[(m, ds)] for m in ("linear_diffusion_single_gmm", "anisost_single_gmm", "pca_gmm_single_gmm") for ds in DS if (m, ds) in SDT]
+mac("sdBaseLo", float(min(bsd)), 3); mac("sdBaseHi", float(max(bsd)), 3)
+for ds in ("dlpfc", "starmap"):
+    if ("histar", ds) in SDT: mac(f"sdHistar{DSM[ds]}", float(SDT[("histar", ds)]), 3)
 # R mclust: random-seed dependence of the default (subset) initialisation vs full-data initialisation
 msf = glob.glob(R("mclust_seed_g*.csv"))
 if msf:
     MS = pd.concat([pd.read_csv(f) for f in msf], ignore_index=True)
     MS["slice"] = MS["slice"].astype(str)
     MS = MS.drop_duplicates(["dataset", "slice", "method", "kind", "rep"])   # groups can overlap on new sections
+    # only embeddings with all 16 fits (10 seeds, full, 5 noise); a worker may still be writing others
+    nfit = MS.groupby(["dataset", "slice", "method"]).ARI.transform("size")
+    MS = MS[nfit == 16]
     sd_ = MS[MS.kind == "seed"].groupby(["dataset", "method", "slice", "n"]).ARI.agg(["min", "max", "mean"]).reset_index()
     sd_["rng"] = sd_["max"] - sd_["min"]
     fj = MS[MS.kind == "full_jit"].groupby(["dataset", "method", "slice"]).ARI.agg(lambda x: x.max() - x.min()).rename("jrng").reset_index()
@@ -364,7 +374,9 @@ if os.path.exists(R("k_sensitivity.jsonl")):
                        kbic=b["dk"], abic=b["ARI"]))
     KD = pd.DataFrame(KR); KD.to_csv(R("k_sensitivity_summary.csv"), index=False)
     d1 = np.nanmax(np.abs(KD[["a-1", "a+1"]].values - KD[["a0"]].values), axis=1)
+    d1avg = np.nanmean(np.abs(KD[["a-1", "a+1"]].values - KD[["a0"]].values), axis=1)
     mac("kN", str(len(KD))); mac("kOneMean", float(np.nanmean(d1)), 2); mac("kOneMax", float(np.nanmax(d1)), 2)
+    mac("kOneAvg", float(np.nanmean(d1avg)), 2)
     mac("kBicEdge", str(int((KD.kbic == 2).sum())))
     mac("kAriTrue", float(KD.a0.mean()), 3); mac("kAriBic", float(KD.abic.mean()), 3)
     gm = KD.groupby("method")[["a0", "abic"]].mean()
@@ -374,6 +386,8 @@ if os.path.exists(R("k_sensitivity.jsonl")):
     mac("kTopBic", MN2.get(top.index[0], top.index[0])); mac("kTopBicVal", float(top.iloc[0]), 3)
     mac("kLinBic", float(gm.loc["linear_diffusion", "abic"]), 3)
     mac("kLinBicRank", str(int(list(top.index).index("linear_diffusion") + 1)))
+    above = [MN2.get(m, m) for m in gm.abic.sort_values(ascending=False).index[:list(gm.abic.sort_values(ascending=False).index).index("linear_diffusion")]]
+    mac("kAboveLinBic", " and ".join(above) if len(above) <= 2 else ", ".join(above[:-1]) + " and " + above[-1])
 # Spatial-MGCN label-selected epoch
 sm = nm[nm.method == "spatial_mgcn"].assign(g=lambda x: x.ARI_label_selected_epoch - x.ARI)
 mac("mgcnLeak", float(sm.g.mean()), 3)
@@ -391,6 +405,7 @@ rsm = RS.groupby("method").agg(t=("t", "median"), mem=("mem", "max"), kwh=("kwh"
 for m, r_ in rsm.iterrows():
     nme = MCN.get(m, m)
     mac(f"timeMed{nme}", f"{r_.t:.0f}"); mac(f"memMax{nme}", f"{r_.mem:.1f}")
+    mac(f"timeMin{nme}", f"{r_.t / 60:.0f}")
 # runs stopped at the per-job memory cap (spatialbench/resources.py; SPATIALBENCH_MAX_RSS_GB, 12 GB)
 OOM = sorted({x["method"] for x in ur if x["status"] != "ok" and "out of memory" in str(x.get("error", ""))})
 OL = {"bass": "BASS", "graphst": "GraphST", "nichepca": "NichePCA", "spatial_mgcn": "Spatial-MGCN", "deepst": "DeepST",
@@ -465,9 +480,24 @@ if os.path.exists(SJ):
     mac("dOther", float(np.mean([np.mean([v["per_dataset"][x] for x in ("brca", "stereo") if x in v["per_dataset"]])
                                  for v in rv if any(x in v["per_dataset"] for x in ("brca", "stereo"))])), 3)
     rk = cs["ranking"]
-    mac("pBestLin", f"{rk['Linear diffusion']['p_best']:.2f}")
-    rk2 = sorted([(v["p_best"], k) for k, v in rk.items() if k != "Linear diffusion"], reverse=True)
-    mac("pBestSecond", rk2[0][1].replace("λ", "$\\lambda$")); mac("pBestSecondVal", f"{rk2[0][0]:.2f}")
+    mac("pBestLin", f"{rk['Linear diffusion']['p_best']:.2f}"); mac("pBestBass", f"{rk['BASS']['p_best']:.2f}")
+    mac("rankSections", str(cs["ranking_sections"]))
+    rk2 = sorted([(v["p_best"], k) for k, v in rk.items() if k not in ("Linear diffusion", "BASS")], reverse=True)
+    mac("pBestThird", rk2[0][1].replace("λ", "$\\lambda$")); mac("pBestThirdVal", f"{rk2[0][0]:.2f}")
+    mac("nTopRank", str(sum(v["rank95"][0] == 1 for v in rk.values())))
+    rc = cs["ranking_complete"]
+    mac("pBestLinComplete", f"{rc['Linear diffusion']['p_best']:.2f}"); mac("rankMethodsComplete", str(cs["ranking_complete_methods"]))
+    # Bonferroni over the 16 comparisons (matched clustering)
+    bonf = sorted([k.split("/", 1)[1] for k, v in cs["comparisons"].items() if v["protocol"] == "robust" and v["ci_bonf"][0] > 0],
+                  key=lambda m: cs["comparisons"][f"robust/{m}"]["delta"])
+    mac("nRobBetterBonf", str(len(bonf))); mac("listRobBetterBonf", joinl([TL[m] for m in bonf]))
+    # sensitivity: every dataset from the standardised runner
+    if os.path.exists(R("stats_cluster_aware_runner.json")):
+        cr = json.load(open(R("stats_cluster_aware_runner.json")))
+        vr = [v for v in cr["comparisons"].values() if v["protocol"] == "robust"]
+        mac("nRobBetterRunner", str(sum(v["category"] == "baseline_better" for v in vr)))
+        mac("nRobUnresRunner", str(sum(v["category"] == "unresolved" for v in vr)))
+        mac("pBestLinRunner", f"{cr['ranking']['Linear diffusion']['p_best']:.2f}"); mac("pBestBassRunner", f"{cr['ranking']['BASS']['p_best']:.2f}")
     mac("rankExcluded", joinl([TL[m] for m in TL if TL[m].replace("$\\lambda$", "λ").replace("$\\lambda=", "λ=").replace("$", "") not in rk and m != "bayesspace"]))
     mac("rankLoLin", str(rk["Linear diffusion"]["rank95"][0])); mac("rankHiLin", str(rk["Linear diffusion"]["rank95"][1]))
     mac("rankMethods", str(cs["ranking_methods"]))

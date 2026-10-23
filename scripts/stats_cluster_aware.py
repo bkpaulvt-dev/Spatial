@@ -29,19 +29,26 @@ nm_rob = nm[["dataset", "method", "slice", "seed", "ARI_robust"]].rename(columns
 # (scripts/bench_run.py), which records each method's own clustering ("metrics") and the matched clustering
 # ("metrics_matched"). Named here with the same keys as the pipeline results (see STD / ROB below).
 RUNNER_ONLY = ("brca", "stereo")
+# sensitivity analysis (STATS_SOURCE=runner): every dataset from the standardised runner (one execution environment)
+SOURCE = os.environ.get("STATS_SOURCE", "pipeline")
+if SOURCE == "runner":
+    RUNNER_ONLY = tuple(yaml.safe_load(open(os.path.join(ROOT, "configs", "datasets.yaml")))["datasets"])
 OWN_KEY = {"anisost": "anisost_single_gmm"}
 NO_EMB = ("spagcn", "bass", "bayesspace")
 ru = []
 for r in rd("benchmark_runs.jsonl").to_dict("records") if os.path.exists(R("benchmark_runs.jsonl")) else []:
     if r.get("status") != "ok" or r["dataset"] not in RUNNER_ONLY: continue
     base = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"])
-    if r["method"] not in ("linear_diffusion", "pca_gmm"):   # own clustering of these two: baselines_3start.jsonl
+    if r["method"] not in ("linear_diffusion", "pca_gmm", "anisost"):   # own (3-start) fits of the baselines: baselines_3start.jsonl   # own clustering of these two: baselines_3start.jsonl
         ru.append(dict(base, method=OWN_KEY.get(r["method"], r["method"]), ARI=r["metrics"]["ARI"]))
     if r["method"] not in NO_EMB and isinstance(r.get("metrics_matched"), dict):
         m = r["method"] if r["method"] in ("linear_diffusion", "pca_gmm", "anisost") else r["method"] + "+robust"
         ru.append(dict(base, method=m, ARI=r["metrics_matched"]["ARI"]))
 ru = pd.DataFrame(ru)
-d = pd.concat([a, b, e, g, b3, nm_std, nm_rob, ru], ignore_index=True)
+if SOURCE == "runner":
+    d = pd.concat([b3, ru], ignore_index=True)
+else:
+    d = pd.concat([a, b, e, g, b3, nm_std, nm_rob, ru], ignore_index=True)
 d["slice"] = d["slice"].astype(str)
 d.loc[d.method == "histar_rerun", "method"] = "histar"
 P = d.groupby(["dataset", "method", "slice"]).ARI.mean()
@@ -109,19 +116,27 @@ for proto, MAP in (("standard", STD), ("robust", ROB)):
             "method": lab, "protocol": proto, "n_sections": len(delta), "delta": round(point, 3),
             "ci95": [round(float(x), 3) for x in np.percentile(draws, [2.5, 97.5])],
             "ci90": [round(float(x), 3) for x in np.percentile(draws, [5, 95])],
+            # Bonferroni over the 16 comparisons of a protocol: two-sided 1 - 0.05/16 interval
+            "ci_bonf": [round(float(x), 3) for x in np.percentile(draws, [100 * 0.025 / 16, 100 - 100 * 0.025 / 16])],
             "category": classify(draws), "per_dataset": per,
             "test_only": {"delta": round(pt, 3), "ci95": [round(float(x), 3) for x in np.percentile(dt, [2.5, 97.5])]}}
 
 # rank uncertainty (methods with all 20 sections), for both protocols
 cand = [m for m in LABEL if m != "bayesspace"]
-def ranking(MAP):
+def ranking(MAP, shared=True):
+  """shared=True: every method (BayesSpace aside) on the sections all of them completed (methods stopped at the memory
+  cap on one section stay in); shared=False: only methods with a result on every section, all sections."""
   cand_keys = {m: MAP[m] for m in cand + [REF]}
-  full = {}
-  for m, k in cand_keys.items():
-      s = series(k)
-      if len(s) == len(SEC): full[m] = s
+  allser = {m: series(k) for m, k in cand_keys.items()}
+  if shared:
+      common = set.intersection(*[set(v) for v in allser.values() if v])
+      full = {m: v for m, v in allser.items() if v}
+      sec = SEC[[(d_, s_) in common for d_, s_ in zip(SEC.dataset, SEC.slice)]]
+  else:
+      full = {m: v for m, v in allser.items() if len(v) == len(SEC)}
+      sec = SEC
   names = list(full)
-  groups = {c: SEC[SEC.cluster == c] for c in SEC.cluster.unique()}
+  groups = {c: sec[sec.cluster == c] for c in sec.cluster.unique()}
   ranks = np.empty((B, len(names)), dtype=int)
   for i in range(B):
       cl = rng.choice(list(groups), len(groups))
@@ -134,9 +149,10 @@ def ranking(MAP):
   return {LABEL.get(m, "Linear diffusion"): {"p_best": round(float((ranks[:, j] == 1).mean()), 3),
                                               "median_rank": float(np.median(ranks[:, j])),
                                               "rank95": [int(x) for x in np.percentile(ranks[:, j], [2.5, 97.5])]}
-          for j, m in enumerate(names)}, len(names)
-out["ranking"], out["ranking_methods"] = ranking(ROB)          # primary: matched clustering
-out["ranking_own"], _ = ranking(STD)
+          for j, m in enumerate(names)}, len(names), int(len(sec))
+out["ranking"], out["ranking_methods"], out["ranking_sections"] = ranking(ROB)          # primary: matched clustering
+out["ranking_own"], _, _ = ranking(STD)
+out["ranking_complete"], out["ranking_complete_methods"], _ = ranking(ROB, shared=False)   # methods with every section
 # per-method per-dataset means (both protocols) for the figures
 def dmeans(key):
     r_ = {}
@@ -146,7 +162,7 @@ def dmeans(key):
     return r_
 out["means_standard"] = {m: dmeans(STD[m]) for m in list(LABEL) + [REF]}
 out["means_robust"] = {m: dmeans(ROB[m]) for m in list(LABEL) + [REF]}
-json.dump(out, open(R("stats_cluster_aware.json"), "w"), indent=1)
+json.dump(out, open(R("stats_cluster_aware.json" if SOURCE == "pipeline" else "stats_cluster_aware_runner.json"), "w"), indent=1)
 
 print(f"reference: linear diffusion; clusters: {out['clusters']}; margin {MARGIN}")
 for proto in ("standard", "robust"):
@@ -155,6 +171,6 @@ for proto in ("standard", "robust"):
         if v["protocol"] != proto: continue
         print(f"{v['method']:<14} n={v['n_sections']:<3} d={v['delta']:+.3f} [{v['ci95'][0]:+.3f},{v['ci95'][1]:+.3f}]  {v['category']:<16}"
               f" per-dataset {v['per_dataset']}  test-only d={v['test_only']['delta']:+.3f}")
-print("\n--- rank uncertainty (matched clustering, methods with all 20 sections)")
+print(f"\n--- rank uncertainty (matched clustering, {out['ranking_sections']} sections completed by every method)")
 for lab, v in sorted(out["ranking"].items(), key=lambda kv: kv[1]["median_rank"]):
     print(f"{lab:<16} P(best)={v['p_best']:.2f} median rank {v['median_rank']:.0f}  95% interval {v['rank95']}")

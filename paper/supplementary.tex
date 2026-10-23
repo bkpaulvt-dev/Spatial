@@ -63,72 +63,77 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S7.} Rank of each method in the hierarchical bootstrap with matched clustering (first three columns) and with default clustering (last three); methods with a result on every section (methods that exceeded the memory cap on the largest Stereo-seq section and BayesSpace, run on Visium only, are not ranked).}
+\caption*{\textbf{Supplementary Table S7.} Sensitivity analysis: as Supplementary Table~\STstatsrob{} (matched clustering) but with every dataset taken from the standardised runner (one execution environment, shared preprocessing), and the corresponding bootstrap ranks on the sections completed by every method.}
+\input{../results/supp/stats_runner.tex}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S8.} Rank of each method in the hierarchical bootstrap with matched clustering (first three columns) and with default clustering (last three), on the sections completed by every method (BayesSpace, run on Visium only, is not ranked). The last rows give the ranking restricted to methods with a result on every section, which excludes the methods stopped at the memory cap on the largest Stereo-seq section.}
 \input{../results/supp/ranks.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S8.} Seed-to-seed standard deviation of ARI (mean over sections; default clustering). Methods run with one seed have no value.}
+\caption*{\textbf{Supplementary Table S9.} Seed-to-seed standard deviation of ARI (mean over sections; default clustering). Methods run with one seed have no value.}
 \input{../results/supp/seeds.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S9.} Initialisation experiment: one fixed embedding per section refitted 20 times with a single-start Gaussian mixture (up to 24 sections per method). Range and SD of ARI across the 20 fits; best-by-ARI minus mean: ARI gain of choosing the best fit by agreement with the labels; best-likelihood minus mean: gain of choosing the fit with the highest likelihood; $\rho$: median Spearman correlation between log-likelihood and ARI.}
+\caption*{\textbf{Supplementary Table S10.} Initialisation experiment: one fixed embedding per section refitted 20 times with a single-start Gaussian mixture (up to 24 sections per method). Range and SD of ARI across the 20 fits; best-by-ARI minus mean: ARI gain of choosing the best fit by agreement with the labels; best-likelihood minus mean: gain of choosing the fit with the highest likelihood; $\rho$: median Spearman correlation between log-likelihood and ARI.}
 \input{../results/supp/lottery.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S10.} R mclust 6.0.1 (EEE) on fixed embeddings. Seed range: ARI range over ten R random seeds with the default initialisation, which uses a random subset of 2000 observations when there are more (sections with more than 2000 spots or cells only; STARmap sections are smaller and do not vary). Noise range: ARI range over five repetitions with 1\% Gaussian noise when EM is initialised on all observations, which is deterministic. Full minus seeded mean: ARI of the full-data initialisation minus the mean of the ten seeded fits.}
+\caption*{\textbf{Supplementary Table S11.} R mclust 6.0.1 (EEE) on fixed embeddings. Seed range: ARI range over ten R random seeds with the default initialisation, which uses a random subset of 2000 observations when there are more (sections with more than 2000 spots or cells only; STARmap sections are smaller and do not vary). Noise range: ARI range over five repetitions with 1\% Gaussian noise when EM is initialised on all observations, which is deterministic. Full minus seeded mean: ARI of the full-data initialisation minus the mean of the ten seeded fits.}
 \input{../results/supp/mclust.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S11.} Change in mean ARI when each method's default clustering is replaced by matched clustering (20-start best-likelihood Gaussian mixture) on the same embedding (all sections with both results). The two protocols can differ in algorithm and number of starts.}
+\caption*{\textbf{Supplementary Table S12.} Change in mean ARI when each method's default clustering is replaced by matched clustering (20-start best-likelihood Gaussian mixture) on the same embedding (all sections with both results). The two protocols can differ in algorithm and number of starts.}
 \input{../results/supp/gain.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S12.} Metric panel from the standardised runner (shared preprocessing for all methods; mean over the five datasets of the per-dataset means). Values differ slightly from Supplementary Table~\STari{} because the preprocessing is shared. Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: 60 per method (20 sections, 3 seeds), except DeepST (20, seed 0) and BayesSpace (12 Visium sections, seed 0).}
+\caption*{\textbf{Supplementary Table S13.} Metric panel from the standardised runner (shared preprocessing for all methods; mean over the five datasets of the per-dataset means). Values differ slightly from Supplementary Table~\STari{} because the preprocessing is shared. Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: last column (successful runs; up to 72 = 24 sections $\times$ 3 seeds).}
 \input{../results/supp/metrics.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S13.} Run time, peak memory and estimated energy of one whole job (data loading, embedding and clustering) in the standardised runner on one CPU thread. Energy is estimated at 10 W per busy core.}
+\caption*{\textbf{Supplementary Table S14.} Run time, peak memory and estimated energy of one whole job (data loading, embedding and clustering) in the standardised runner on one CPU thread. Energy is estimated at 10 W per busy core.}
 \input{../results/supp/resources.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S14.} Mean ARI with each method's default clustering in its published pipeline (used in the main text for DLPFC, STARmap and MERFISH) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\STmetrics{} and~\STres), and their difference (runner minus pipeline).}
+\caption*{\textbf{Supplementary Table S15.} Mean ARI with each method's default clustering in its published pipeline (used in the main text for DLPFC, STARmap and MERFISH) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\STmetrics{} and~\STres), and their difference (runner minus pipeline). For the three training-free baselines the runner's own clustering is the 20-start Gaussian mixture, so they are compared with the pipeline's matched-clustering value.}
 \input{../results/supp/agree.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S15.} Sensitivity to the number of domains: mean ARI over all sections when the seed-0 embedding is clustered with matched clustering (20-start tied Gaussian mixture) for $K$ from two below to two above the annotated number, and for the $K$ in that range with the lowest BIC (label-free choice; it was almost always the largest $K$ allowed).}
+\caption*{\textbf{Supplementary Table S16.} Sensitivity to the number of domains: mean ARI over all sections when the seed-0 embedding is clustered with matched clustering (20-start tied Gaussian mixture) for $K$ from two below to two above the annotated number, and for the $K$ in that range with the lowest BIC (label-free choice; it was almost always the largest $K$ allowed).}
 \input{../results/supp/ksens.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S16.} Reproduction of HiSTaR on the twelve DLPFC sections.}
+\caption*{\textbf{Supplementary Table S17.} Reproduction of HiSTaR on the twelve DLPFC sections.}
 \input{../results/supp/histar.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S17.} Mean ARI of the final training epoch (used in the benchmark) and of the epoch with the highest ARI against the annotation, as selected by the released test scripts (seed 0).}
+\caption*{\textbf{Supplementary Table S18.} Mean ARI of the final training epoch (used in the benchmark) and of the epoch with the highest ARI against the annotation, as selected by the released test scripts (seed 0).}
 \input{../results/supp/labelepoch.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S18.} Automated screening of released code for patterns of label use (number of candidate lines per category; L1 result chosen by agreement with labels, L2 number of domains from labels, L3 unannotated spots removed, L4 settings keyed by section, L5 loops combined with a label metric). Candidate lines are not findings: each was read manually; the 14 repositories are the benchmarked methods with released code plus SPARK, SpatialPCA and conST, which were screened but not benchmarked, and only the label-selected epoch in Spatial-MGCN's test scripts was confirmed as L1 (Supplementary Note~\SNaudit).}
+\caption*{\textbf{Supplementary Table S19.} Automated screening of released code for patterns of label use (number of candidate lines per category; L1 result chosen by agreement with labels, L2 number of domains from labels, L3 unannotated spots removed, L4 settings keyed by section, L5 loops combined with a label metric). Candidate lines are not findings: each was read manually; the 14 repositories are the benchmarked methods with released code plus SPARK, SpatialPCA and conST, which were screened but not benchmarked, and only the label-selected epoch in Spatial-MGCN's test scripts was confirmed as L1 (Supplementary Note~\SNaudit).}
 \input{../results/supp/audit.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S19.} Pilot invariance test (three training-free methods, two sections): agreement (ARI) between the partition on the original data and on transformed data that should not change the answer. The methods are invariant to rescaling, rotating and reflecting the coordinates and to rescaling expression, but not fully to spot order, because the Gaussian mixture initialisation depends on it.}
+\caption*{\textbf{Supplementary Table S20.} Pilot invariance test (three training-free methods, two sections): agreement (ARI) between the partition on the original data and on transformed data that should not change the answer. The methods are invariant to rescaling, rotating and reflecting the coordinates and to rescaling expression, but not fully to spot order, because the Gaussian mixture initialisation depends on it.}
 \input{../results/supp/invariance.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S20.} Which method was run in which experiment (sections completed / expected; seeds). n/a: the experiment needs an embedding and the method clusters internally.}
+\caption*{\textbf{Supplementary Table S21.} Which method was run in which experiment (sections completed / expected; seeds). n/a: the experiment needs an embedding and the method clusters internally.}
 \input{../results/supp/coverage.tex}
 \end{table}
 

@@ -17,14 +17,17 @@ from benchmark_anisost import DLPFC_SLICES, N_CLUSTERS  # noqa: E402
 from prepare_extra import EXTRA, n_clusters  # noqa: E402
 
 OUT = os.path.join(ROOT, "results", "baselines_3start.jsonl")
-METHODS = {"linear_diffusion_single_gmm": "linear", "pca_gmm_single_gmm": "none"}
+METHODS = {"linear_diffusion_single_gmm": "linear", "pca_gmm_single_gmm": "none", "anisost_single_gmm": "anisotropic"}
+# AnisoST's 3-start fit on the first three datasets is in anisost_main.jsonl; here only for the datasets run later
+ONLY_NEW = {"anisost_single_gmm": ("brca", "stereo")}
 
 
 def jobs():
     secs = [("dlpfc", s, N_CLUSTERS[s], f"{s}.npz") for s in DLPFC_SLICES]
     for ds, m in EXTRA.items():
         secs += [(ds, s, n_clusters(ds, s), f"{ds}_{s}.npz") for s in m["sections"]]
-    return [(m, ds, s, k, f, seed) for m in METHODS for ds, s, k, f in secs for seed in (0, 1, 2)]
+    return [(m, ds, s, k, f, seed) for m in METHODS for ds, s, k, f in secs for seed in (0, 1, 2)
+            if m not in ONLY_NEW or ds in ONLY_NEW[m]]
 
 
 def run(job):

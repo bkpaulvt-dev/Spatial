@@ -35,7 +35,7 @@
 \newcommand{\dLinStagate}{0.082}
 \newcommand{\dLinStagateRob}{0.051}
 \newcommand{\dOther}{\ensuremath{-}0.025}
-\newcommand{\gainAniso}{+0.017}
+\newcommand{\gainAniso}{+0.014}
 \newcommand{\gainBanksyHi}{\ensuremath{-}0.001}
 \newcommand{\gainBanksyLo}{+0.007}
 \newcommand{\gainCcst}{\ensuremath{-}0.059}
@@ -59,7 +59,7 @@
 \newcommand{\gainNSpaceflow}{24}
 \newcommand{\gainNStagate}{24}
 \newcommand{\gainNichepca}{+0.077}
-\newcommand{\gainPAniso}{$p=0.020$}
+\newcommand{\gainPAniso}{$p=0.121$}
 \newcommand{\gainPBanksyHi}{$p=0.987$}
 \newcommand{\gainPBanksyLo}{$p=0.241$}
 \newcommand{\gainPCcst}{$p=0.010$}
@@ -91,12 +91,14 @@
 \newcommand{\gainWinsSedr}{7}
 \newcommand{\gainWinsSpaceflow}{9}
 \newcommand{\gainWinsStagate}{13}
+\newcommand{\kAboveLinBic}{BANKSY $\lambda=0.8$ and NichePCA}
 \newcommand{\kAriBic}{0.404}
 \newcommand{\kAriTrue}{0.428}
 \newcommand{\kBicEdge}{324}
 \newcommand{\kLinBic}{0.462}
 \newcommand{\kLinBicRank}{3}
 \newcommand{\kN}{331}
+\newcommand{\kOneAvg}{0.06}
 \newcommand{\kOneMax}{0.49}
 \newcommand{\kOneMean}{0.09}
 \newcommand{\kRankRho}{0.93}
@@ -104,6 +106,7 @@
 \newcommand{\kTopBicVal}{0.487}
 \newcommand{\listOom}{BASS, DeepST, GraphST, NichePCA and Spatial-MGCN}
 \newcommand{\listRobBetter}{BayesSpace, DeepST, SEDR, SpaceFlow, SpaGCN, PCA, CCST and Spatial-MGCN}
+\newcommand{\listRobBetterBonf}{CCST and Spatial-MGCN}
 \newcommand{\listRobUnres}{BASS, BANKSY $\lambda=0.8$, NichePCA, AnisoST, STAGATE, HiSTaR, GraphST and BANKSY $\lambda=0.2$}
 \newcommand{\listStdBetter}{SEDR, STAGATE, HiSTaR, NichePCA, DeepST, CCST, SpaceFlow, SpaGCN, Spatial-MGCN and PCA}
 \newcommand{\listStdUnres}{BASS, BANKSY $\lambda=0.8$, AnisoST, BANKSY $\lambda=0.2$, BayesSpace and GraphST}
@@ -349,10 +352,13 @@
 \newcommand{\nPooledNotSig}{9}
 \newcommand{\nPooledSig}{15}
 \newcommand{\nRobBetter}{8}
+\newcommand{\nRobBetterBonf}{2}
+\newcommand{\nRobBetterRunner}{9}
 \newcommand{\nRobBetterTest}{6}
 \newcommand{\nRobEquiv}{0}
 \newcommand{\nRobTot}{16}
 \newcommand{\nRobUnres}{8}
+\newcommand{\nRobUnresRunner}{7}
 \newcommand{\nRobWorse}{0}
 \newcommand{\nSections}{24}
 \newcommand{\nStdBetter}{10}
@@ -361,6 +367,7 @@
 \newcommand{\nStdTot}{16}
 \newcommand{\nStdUnres}{6}
 \newcommand{\nStdWorse}{0}
+\newcommand{\nTopRank}{6}
 \newcommand{\overallAniso}{0.512}
 \newcommand{\overallBanksyHi}{0.554}
 \newcommand{\overallBanksyLo}{0.409}
@@ -378,10 +385,14 @@
 \newcommand{\overallSpaceflow}{0.443}
 \newcommand{\overallSpagcn}{0.280}
 \newcommand{\overallStagate}{0.448}
-\newcommand{\pBestLin}{0.73}
-\newcommand{\pBestLinOwn}{0.68}
-\newcommand{\pBestSecond}{BANKSY $\lambda$=0.8}
-\newcommand{\pBestSecondVal}{0.11}
+\newcommand{\pBestBass}{0.50}
+\newcommand{\pBestBassRunner}{0.43}
+\newcommand{\pBestLin}{0.29}
+\newcommand{\pBestLinComplete}{0.74}
+\newcommand{\pBestLinOwn}{0.24}
+\newcommand{\pBestLinRunner}{0.45}
+\newcommand{\pBestThird}{BANKSY $\lambda$=0.8}
+\newcommand{\pBestThirdVal}{0.06}
 \newcommand{\pLinAniso}{$p=0.320$}
 \newcommand{\pLinBanksyHi}{$p=0.220$}
 \newcommand{\pLinBanksyHiRob}{$p=0.220$}
@@ -406,10 +417,12 @@
 \newcommand{\pLinSpagcn}{$p<0.001$}
 \newcommand{\pLinStagate}{$p=0.022$}
 \newcommand{\pLinStagateRob}{$p=0.220$}
-\newcommand{\rankExcluded}{GraphST, NichePCA, Spatial-MGCN, DeepST and BASS}
-\newcommand{\rankHiLin}{5}
+\newcommand{\rankExcluded}{none}
+\newcommand{\rankHiLin}{8}
 \newcommand{\rankLoLin}{1}
-\newcommand{\rankMethods}{11}
+\newcommand{\rankMethods}{16}
+\newcommand{\rankMethodsComplete}{11}
+\newcommand{\rankSections}{23}
 \newcommand{\rhoBrcaHi}{0.27}
 \newcommand{\rhoBrcaLo}{\ensuremath{-}0.51}
 \newcommand{\rhoBrcaMed}{\ensuremath{-}0.13}
@@ -533,10 +546,14 @@
 \newcommand{\robustStagateMerfish}{0.342}
 \newcommand{\robustStagateStarmap}{0.572}
 \newcommand{\robustStagateStereo}{0.326}
+\newcommand{\sdBaseHi}{0.054}
+\newcommand{\sdBaseLo}{0.012}
+\newcommand{\sdHistarDlpfc}{0.047}
+\newcommand{\sdHistarStarmap}{0.180}
 \newcommand{\statBoot}{5000}
 \newcommand{\statClusters}{7}
 \newcommand{\statMargin}{0.03}
-\newcommand{\stdDAniso}{+0.038}
+\newcommand{\stdDAniso}{+0.033}
 \newcommand{\stdDBanksyHi}{+0.013}
 \newcommand{\stdDBanksyLo}{+0.069}
 \newcommand{\stdDBass}{\ensuremath{-}0.011}
@@ -552,7 +569,7 @@
 \newcommand{\stdDSpaceflow}{+0.134}
 \newcommand{\stdDSpagcn}{+0.146}
 \newcommand{\stdDStagate}{+0.071}
-\newcommand{\stdHiAniso}{+0.088}
+\newcommand{\stdHiAniso}{+0.086}
 \newcommand{\stdHiBanksyHi}{+0.055}
 \newcommand{\stdHiBanksyLo}{+0.167}
 \newcommand{\stdHiBass}{+0.051}
@@ -568,7 +585,7 @@
 \newcommand{\stdHiSpaceflow}{+0.217}
 \newcommand{\stdHiSpagcn}{+0.279}
 \newcommand{\stdHiStagate}{+0.145}
-\newcommand{\stdLoAniso}{\ensuremath{-}0.007}
+\newcommand{\stdLoAniso}{\ensuremath{-}0.016}
 \newcommand{\stdLoBanksyHi}{\ensuremath{-}0.030}
 \newcommand{\stdLoBanksyLo}{\ensuremath{-}0.011}
 \newcommand{\stdLoBass}{\ensuremath{-}0.067}
@@ -601,6 +618,23 @@
 \newcommand{\timeMedSpaceflow}{949}
 \newcommand{\timeMedSpagcn}{61}
 \newcommand{\timeMedStagate}{1045}
+\newcommand{\timeMinAniso}{0}
+\newcommand{\timeMinBanksyHi}{0}
+\newcommand{\timeMinBanksyLo}{0}
+\newcommand{\timeMinBass}{12}
+\newcommand{\timeMinBayesspace}{32}
+\newcommand{\timeMinCcst}{46}
+\newcommand{\timeMinDeepst}{13}
+\newcommand{\timeMinGraphst}{21}
+\newcommand{\timeMinHistar}{2}
+\newcommand{\timeMinLin}{0}
+\newcommand{\timeMinMgcn}{25}
+\newcommand{\timeMinNichepca}{1}
+\newcommand{\timeMinPca}{0}
+\newcommand{\timeMinSedr}{2}
+\newcommand{\timeMinSpaceflow}{16}
+\newcommand{\timeMinSpagcn}{1}
+\newcommand{\timeMinStagate}{17}
 \newcommand{\timePilotBass}{910}
 \newcommand{\timePilotBayesspace}{3115}
 \newcommand{\timePilotCcst}{2490}

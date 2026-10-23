@@ -33,16 +33,16 @@ reproducibility of spatial domain identification methods}
 \accepted{Date}{0}{Year}
 
 \abstract{Spatial domain identification methods are usually compared by small differences in adjusted Rand index (ARI),
-mostly on one tissue and from a single run. We benchmarked \nMethodsPub{} published methods and three training-free baselines
+mostly on one tissue and one run. We benchmarked \nMethodsPub{} published methods and three training-free baselines
 on \nSections{} annotated sections of brain, breast cancer and mouse embryo from 10x Visium, STARmap, MERFISH and Stereo-seq,
 separating each learned embedding from its clustering step. With the same clustering for every embedding, a training-free
 neighbourhood-smoothing baseline had a higher mean ARI than \nRobBetter{} of \nRobTot{} comparators and could not be separated
-from the other \nRobUnres{}; its lead came from brain tissue, while on breast cancer and embryo most methods were slightly ahead.
-On fixed embeddings, refitting the same Gaussian mixture from different
-random starts changed ARI by \lotMean{} on average (up to \lotMax), and the default fit of R mclust depended on its random seed
-(up to \mcsSeedMax). Keeping the most likely of 20 fits helped only on cortex. HiSTaR did not reproduce its published accuracy with its official code, and released code of one method
+from the other \nRobUnres{} (exploratory comparisons); BASS and it were most likely to rank first. Its lead came from
+brain tissue: on breast cancer and embryo most methods, including PCA without smoothing, were slightly ahead.
+On fixed embeddings, random restarts of the same Gaussian mixture changed ARI by \lotMean{} on average (up to \lotMax),
+and R mclust's default fit depended on its random seed. Keeping the most likely of 20 fits helped only on cortex. HiSTaR's published accuracy was not reproduced, and released code of one method
 selects its reported epoch using the labels. We recommend reporting the clustering protocol and its variance, never selecting
-runs with labels, and including training-free baselines.}
+runs with labels, and evaluating training-free baselines on several tissues.}
 
 \keywords{spatial transcriptomics, spatial domains, clustering, reproducibility, benchmarking}
 
@@ -54,8 +54,9 @@ runs with labels, and including training-free baselines.}
 Spatial transcriptomics measures gene expression at thousands of locations in a tissue section
 while retaining their coordinates. Identifying \emph{spatial domains}, regions with coherent
 expression such as cortical layers, is one of the first analyses of such data, and many methods
-have been proposed for it, from Bayesian models \citep{zhao2021bayesspace} and
-neighbourhood-augmented features \citep{singhal2024banksy} to graph neural networks
+have been proposed for it, from Bayesian and probabilistic models \citep{zhao2021bayesspace,liu2023precast},
+spatially aware dimension reduction \citep{shang2022spatialpca} and neighbourhood-augmented features
+\citep{singhal2024banksy,varrone2024cellcharter,yuan2024mender} to graph neural networks
 \citep{hu2021spagcn,dong2022stagate,long2023graphst} and hierarchical graph variational
 autoencoders such as HiSTaR \citep{yu2025histar}.
 
@@ -151,14 +152,17 @@ diffusion \citep{perona1990}; $\kappa^{(t)}$ the median squared edge difference)
 model \citep{wang2024pearlst}. \emph{PCA} without smoothing is the non-spatial reference. All baseline settings were fixed on
 DLPFC donor 1 before any other data were analysed (sensitivity: Supplementary Fig.~\SFsens).
 \end{itemize}
-Seeds: three per section for most methods; one for STAGATE, CCST, Spatial-MGCN and BASS in the published pipelines, and one
-run per section for BayesSpace (Supplementary Table~\STcov). The breast cancer and Stereo-seq sections were run only in the
-standardised runner described below, with three seeds for every method (two for CCST on the largest Stereo-seq section, where one
-run takes more than 5 h). Every job had a memory cap of \memCap{} GB; runs that exceeded it are reported as failures.
+Seeds: three per section for most methods; one for STAGATE, CCST, Spatial-MGCN and BASS in the published pipelines and for
+GraphST on DLPFC, and one run per section for BayesSpace (Supplementary Table~\STcov). The breast cancer and Stereo-seq sections
+were run only in the standardised runner described below, with three seeds per method (two for CCST on the largest Stereo-seq
+section, where one run takes more than 5 h; one run for BayesSpace). On these two datasets every job had a memory cap of
+\memCap{} GB on a 15 GB machine and runs that exceeded it are reported as failures; the earlier runs on the first three datasets
+had no cap (the largest, BayesSpace on DLPFC, used 12.5 GB).
 
 \paragraph{Neutrality.} The authors developed AnisoST, and linear diffusion and PCA are its ablations; the authors did not
-develop any of the published methods. To limit bias, all baseline settings were frozen on four development sections, every
-published method was run with its authors' defaults, and all comparisons are repeated without the development sections.
+develop any of the published methods. To limit bias, all baseline settings were frozen on the four sections of DLPFC donor 1, every
+published method was run with its authors' defaults, and all comparisons are repeated without the six development sections
+(those four and the first STARmap and MERFISH sections, used to test the pipelines).
 
 \subsection{Clustering protocols}
 \emph{Default clustering}: the clustering step of each method's official pipeline. This is R mclust (EEE) for GraphST, STAGATE and
@@ -185,8 +189,9 @@ come from a hierarchical bootstrap (\statBoot{} resamples of groups, then of sec
 equal-weight mean of group means) with 95\% percentile intervals (Supplementary Note~\SNstats). A method is called equivalent
 to the reference if the 90\% interval lies within $\pm\statMargin$ ARI, about the seed-to-seed standard deviation. Ranks and the
 probability of ranking first come from the same bootstrap. The analysis is repeated without the development sections (DLPFC donor 1
-and the first section of STARmap and MERFISH). With \statClusters{} groups the intervals are wide and no correction for multiple comparisons
-is applied; we therefore interpret only consistent patterns. Run time and peak memory were measured in a standardised runner that
+and the first section of STARmap and MERFISH). With \statClusters{} groups the intervals are wide; we report
+uncorrected 95\% intervals and, as a check, Bonferroni-corrected intervals over the 16 comparisons, and interpret only consistent
+patterns. Run time and peak memory were measured in a standardised runner that
 gives every method the same input (process-tree sampling, one CPU thread per job; Supplementary Note~\SNcompute); its accuracy
 agrees with the published pipelines to within the differences listed in Supplementary Table~\STagree. For the first three datasets
 the accuracy analyses use the published pipelines; for breast cancer and Stereo-seq they use the runner, which records both the
@@ -204,9 +209,14 @@ reached by \bestDlpfc{} on DLPFC (\bestDlpfcVal), \bestStarmap{} on STARmap (\be
 this held for \nRobBetterTest{} of them without the development sections. The baseline was ahead of \listRobBetter. The other
 \nRobUnres{} comparisons were unresolved (\listRobUnres; for example BASS $\Delta$ \robDBass, 95\% interval \robLoBass{} to
 \robHiBass, and BANKSY $\lambda=0.8$ \robDBanksyHi, \robLoBanksyHi{} to \robHiBanksyHi), and no comparator was equivalent to the
-baseline within $\pm\statMargin$ ARI. In the bootstrap, linear diffusion ranked first in \pBestLin{} of the resamples (95\% rank
-interval \rankLoLin--\rankHiLin{} among the \rankMethods{} methods with results on every section) and \pBestSecond{} in
-\pBestSecondVal{} (\figref{fig:accuracy}C; Supplementary Table~\STranks). With each method's default clustering \nStdBetter{}
+baseline within $\pm\statMargin$ ARI. With a Bonferroni correction only \nRobBetterBonf{} comparisons (\listRobBetterBonf)
+remained above zero. Ranked on the \rankSections{} sections that every method completed, BASS was first in \pBestBass{} of the
+bootstrap resamples, linear diffusion in \pBestLin{} and \pBestThird{} in \pBestThirdVal; \nTopRank{} methods had rank 1 within
+their 95\% interval (\figref{fig:accuracy}C; Supplementary Table~\STranks). Among the \rankMethodsComplete{} methods with a result
+on every section, which excludes BASS, linear diffusion was first in \pBestLinComplete. Taking all datasets from the standardised
+runner instead of the published pipelines gave the same picture (\nRobBetterRunner{} comparisons favouring the baseline,
+\nRobUnresRunner{} unresolved; first rank BASS \pBestBassRunner, linear diffusion \pBestLinRunner; Supplementary
+Table~\STstatsrunner). With each method's default clustering \nStdBetter{}
 of \nStdTot{} comparisons favoured the baseline and \nStdUnres{} (\listStdUnres) were unresolved (Supplementary
 Table~\STstats).
 
@@ -215,19 +225,20 @@ diffusion on DLPFC, \nAheadStarmap{} on STARmap and \nAheadMerfish{} on MERFISH 
 equal-weight average of the three brain datasets, \overallBass{} against \overallLin), but \nAheadBrca{} of \nCmpBrca{} comparators were ahead on breast
 cancer and \nAheadStereo{} of \nCmpStereo{} on Stereo-seq. Averaged over comparators, the difference from the baseline was
 \dBrain{} ARI on the three brain datasets and \dOther{} on the other two. On these two datasets the methods were close to each
-other (\figref{fig:accuracy}A), so the gap between published methods and the baseline seen on brain data did not reappear in the
-opposite direction; rather, no method stood out. \nOom{} methods (\listOom) exceeded the \memCap{} GB memory cap on the largest
-Stereo-seq section (18,408 bins) and have no result there; they are compared on the remaining sections and are not ranked. Example partitions are shown in \figref{fig:maps}.
+other (\figref{fig:accuracy}A), and PCA without any smoothing was also ahead of linear diffusion (\meanPcaBrca{} against
+\meanLinBrca{} on breast cancer, \meanPcaStereo{} against \meanLinStereo{} on Stereo-seq): smoothing with the settings fixed on
+DLPFC did not help on these tissues, and no method stood out. In our runs \listOom{} exceeded the \memCap{} GB memory cap on the
+largest Stereo-seq section (18,408 bins) and have no result there; they are compared on the remaining sections. Example partitions are shown in \figref{fig:maps}.
 
-Every method was given the annotated number of domains $K$. Misspecifying $K$ by one changed ARI by \kOneMean{} on average (up to
-\kOneMax; Supplementary Table~\STk). BIC did not provide a usable label-free choice: within $K\pm2$ it selected the largest value in
+Every method was given the annotated number of domains $K$. Changing $K$ by one changed ARI by \kOneAvg{} on average (the
+larger of the two directions \kOneMean, up to \kOneMax; Supplementary Table~\STk). BIC did not provide a usable label-free choice: within $K\pm2$ it selected the largest value in
 \kBicEdge{} of \kN{} embeddings. At that choice the ranking of methods was largely preserved (Spearman $\rho=\kRankRho$ between method
-means), but \kTopBic{} (\kTopBicVal) moved ahead of linear diffusion (\kLinBic, rank \kLinBicRank), so the lead of the baseline
+means), but \kAboveLinBic{} moved ahead of linear diffusion (\kLinBic, rank \kLinBicRank), so the lead of the baseline
 depends on giving every method the true $K$.
 
-Seed-to-seed variability differed between methods: HiSTaR's standard deviation of ARI was 0.047 on DLPFC and 0.18 on STARmap,
-against 0.003--0.04 for the training-free baselines (Supplementary Table~\STseeds). The median time per section on one CPU
-thread ranged from under 30 s for the baselines and BANKSY to about 40 min for CCST, and CCST took more than 5 h on the largest
+Seed-to-seed variability differed between methods: HiSTaR's standard deviation of ARI was \sdHistarDlpfc{} on DLPFC and \sdHistarStarmap{} on
+STARmap, against \sdBaseLo--\sdBaseHi{} for the training-free baselines (Supplementary Table~\STseeds). The median time per section on one CPU
+thread ranged from under 30 s for the baselines and BANKSY to about \timeMinCcst{} min for CCST, and CCST took more than 5 h on the largest
 Stereo-seq section (Supplementary Table~\STres).
 The edge-preserving variant AnisoST did not improve on linear diffusion overall (MERFISH: 0.363 vs 0.497), although on DLPFC it
 was more accurate on spots at layer boundaries (by 0.025, 9 of 12 sections, Wilcoxon signed-rank $p=0.034$, uncorrected;
@@ -243,8 +254,8 @@ values are means over seeds. (\textbf{A}) Mean ARI per dataset; rows ordered by 
 *: mean over the two smaller Stereo-seq sections (memory cap exceeded on the largest). (\textbf{B}) Linear diffusion minus each
 method, with 95\% intervals from a hierarchical bootstrap over \statClusters{} groups (three DLPFC donors, STARmap, MERFISH, breast
 cancer, Stereo-seq). Filled symbols: interval above zero; open symbols: unresolved. Grey band: equivalence margin of
-$\pm\statMargin$ ARI. BayesSpace was run on the Visium data only. (\textbf{C}) Rank in the bootstrap among methods with a result on
-every section (dot: median; line: 95\% interval); numbers give the probability of ranking first when at least 0.01. Linear diffusion was chosen as the reference after seeing the
+$\pm\statMargin$ ARI. BayesSpace was run on the Visium data only. (\textbf{C}) Rank in the bootstrap (dot: median; line: 95\% interval); numbers give the probability of ranking first when at least 0.01. Ranks use the \rankSections{} sections that every method
+completed (BayesSpace, run on Visium only, is not ranked). Linear diffusion was chosen as the reference after seeing the
 means, so this comparison is exploratory.}
 \label{fig:accuracy}
 \end{figure*}
@@ -274,13 +285,13 @@ between successive methods. Every fit for three representative methods is shown 
 symbol per section, up to \nSections{} per method; shape and grey level: dataset). (\textbf{A}) ARI range over 20 single-start fits of the same
 Gaussian mixture. (\textbf{B}) ARI range of R mclust with its default initialisation over ten R random seeds; crosses: range over five
 repetitions with 1\% noise when initialised on all observations. STARmap sections have fewer than 2000 cells, are initialised
-on all cells and show no seed variation. (\textbf{C}) Median Spearman correlation between
+on all cells and show no seed variation. In A and B, bars: interquartile range; open circle: median. (\textbf{C}) Median Spearman correlation between
 the log-likelihood and the ARI of the 20 fits in A (positive: better-fitting mixtures agree better with the annotation); columns
-rest on 12, 3, 5, 1 and 3 sections. Bars: interquartile range; open circle: median.}
+rest on 12, 3, 5, 1 and 3 sections.}
 \label{fig:robust}
 \end{figure*}
 
-\subsection{The default fit of R mclust depends on a hidden random seed}
+\subsection{The default fit of R mclust depends on its random seed}
 For data with more than 2000 observations, R mclust initialises the EM algorithm by hierarchical agglomeration on a random subset
 of 2000 observations drawn with R's random number generator, so its default fit depends on the R seed. The published pipelines fix
 this seed (2020 in STAGATE and GraphST, 2023 in SEDR), which makes their result reproducible but tied to an arbitrary choice. Across
@@ -288,11 +299,9 @@ the \mcsNBig{} embeddings with more than 2000 spots or cells, changing only the 
 (up to \mcsSeedMax; \figref{fig:robust}B), and the range exceeded 0.1 for \mcsSeedGt\% of them; the STARmap sections, with about
 1050 cells, were initialised on all cells and did not vary. Initialising on all observations makes the fit deterministic, but it remained sensitive to noise far below
 the measurement noise: adding 1\% noise changed ARI by \mcsJitMean{} on average (up to \mcsJitMax). The full-data fit fell
-outside the range of the ten seeded fits for \mcsFullOutside\% of the embeddings (Supplementary Table~\STmclust). An earlier
-version of this experiment attributed the variation to the order of the spots; permuting the rows changes which observations are
-sampled, so it is the same effect.
+outside the range of the ten seeded fits for \mcsFullOutside\% of the embeddings (Supplementary Table~\STmclust).
 
-\subsection{Selecting fits by likelihood helps on cortex but not on single-cell data}
+\subsection{Selecting fits by likelihood helps on cortex but not on the other tissues}
 A natural fix is to run many starts and keep the most likely fit. On the same embedding and model, the best-likelihood fit beat the
 average single start for \lotBLUp{} of \lotNMethods{} methods and was worse for \lotBLDown{} (Supplementary Table~\STlottery).
 Replacing each method's default clustering by matched clustering changed mean ARI by more than 0.005 upwards for \nGainPos{} of
@@ -310,12 +319,13 @@ reorder methods.
 \includegraphics[width=\linewidth]{nar_fig4_protocol.pdf}
 \caption{Effect of the clustering protocol on mean ARI: (\textbf{A}) DLPFC, (\textbf{B}) STARmap, (\textbf{C}) MERFISH,
 (\textbf{D}) breast cancer, (\textbf{E}) Stereo-seq (means over 12, 3, 5, 1 and 3 sections). Open circles: default clustering; filled circles: matched clustering of the same embedding; line colour:
-method family. Rows are ordered by the matched mean. SpaGCN, BASS and BayesSpace cluster internally and are not shown.}
+method family. Rows are ordered by the matched-clustering mean over the five datasets; Stereo-seq values of methods stopped at the
+memory cap are means over the two smaller sections. SpaGCN, BASS and BayesSpace cluster internally and are not shown.}
 \label{fig:matched}
 \end{figure*}
 
 \subsection{HiSTaR's published DLPFC accuracy was not reproduced}
-With the official code and defaults, HiSTaR reached a median ARI over the twelve DLPFC sections of
+With our PyTorch port of the official code and its published defaults, HiSTaR reached a median ARI over the twelve DLPFC sections of
 0.509 (mean 0.491, 95\% bootstrap CI over sections 0.454--0.525) with the 3-start GMM, and 0.449 (mean, seed 0)
 when its embedding was clustered with R mclust as in the official pipeline, compared with a reported
 median of 0.65 over the twelve sections and 0.718 on section 151673 \citep{yu2025histar}. Fixing a bug that applies random masking at inference did not change accuracy (0.487; Supplementary Table~\SThistar).
@@ -338,8 +348,9 @@ Table~\STaudit{} and Supplementary Note~\SNaudit.
 We benchmarked \nMethodsPub{} published methods and three training-free baselines on \nSections{} sections from four
 technologies and three tissue types and separated the learned embedding from the clustering step. When all embeddings were
 clustered in the same way, standard neighbourhood smoothing had a higher mean ARI than \nRobBetter{} of \nRobTot{} comparators and
-could not be separated from the rest; no method was shown to be equivalent to it. This lead came from the brain datasets: on
-breast cancer and mouse embryo the baseline was slightly behind most methods, and the methods were close to each other. The clustering step was a larger source of
+could not be separated from the rest; no method was shown to be equivalent to it, and BASS was as likely to rank first. This lead
+came from the brain datasets: on breast cancer and mouse embryo the baseline was slightly behind most methods, including PCA without
+smoothing, and the methods were close to each other. The clustering step was a larger source of
 variation than most differences between methods: random initialisation of the same mixture model spanned \lotMean{} ARI on a fixed
 embedding, the default fit of R mclust, used by several widely used methods, depended on a fixed but arbitrary random seed, and
 better likelihood did not reliably mean better domains. Reproducibility was limited both by the clustering step and by choices in
@@ -348,8 +359,8 @@ released code, including selecting a reported epoch with the labels.
 Why does simple smoothing do so well on brain tissue? On layered tissue such as cortex, domains are large, contiguous regions, and
 averaging each spot with its neighbours removes most of the sampling noise that separates spots of the same layer; much of what a
 graph encoder learns may be this smoothing. In tumour and embryo sections, domains are smaller, interleaved and defined partly by
-cell composition, so a fixed amount of smoothing blurs them; there the methods performed similarly, and on the embryo sections
-every method reached a much lower ARI than on brain tissue. The ranking
+cell composition; a possible explanation, which we did not test, is that a fixed amount of smoothing tuned on cortex then blurs
+them. There the methods performed similarly, and smoothing gave no gain over PCA alone. The ranking
 of methods is therefore tissue-dependent, and a benchmark on one tissue, especially DLPFC alone, does not identify a generally best
 method. On single-cell MERFISH data, neighbouring cells often belong to different cell types, and the
 best-fitting mixture can then describe cell types rather than regions, which explains why likelihood and ARI disagree there. For a
@@ -386,11 +397,14 @@ either annotation independently. The number of domains was given to every method
 representative of GPU use. ARI is the primary metric; other metrics are in Supplementary Table~\STmetrics.
 
 \section*{Data availability}
-DLPFC: spatialLIBD (count matrices) and the SEDR analyses repository (layer annotations) \citep{maynard2021dlpfc}. STARmap and
-MERFISH with domain annotations: BASS-Analysis repository \citep{li2022bass}, from the original studies
-\citep{wang2018starmap,moffitt2018merfish}. Breast cancer: 10x Genomics (V1\_Breast\_Cancer\_Block\_A\_Section\_1)
-\citep{tenx2020brca}, annotation from the SEDR analyses repository \citep{xu2024sedr}. Stereo-seq: MOSTA atlas, CNGB STOmics
-database STDS0000058 \citep{chen2022mosta}. Code, download scripts with checksums, per-run results and the scripts that generate
+DLPFC: spatialLIBD (count matrices; \url{http://spatial.libd.org/spatialLIBD}) and the SEDR analyses repository (layer
+annotations; \url{https://github.com/JinmiaoChenLab/SEDR_analyses}) \citep{maynard2021dlpfc}. STARmap and MERFISH with domain
+annotations: BASS-Analysis repository (\url{https://github.com/zhengli09/BASS-Analysis}) \citep{li2022bass}, from the original
+studies \citep{wang2018starmap,moffitt2018merfish}. Breast cancer: 10x Genomics dataset V1\_Breast\_Cancer\_Block\_A\_Section\_1
+(\url{https://www.10xgenomics.com/datasets}) \citep{tenx2020brca}, annotation from the SEDR analyses repository \citep{xu2024sedr}.
+Stereo-seq: MOSTA atlas, CNGB STOmics database STDS0000058 (\url{https://db.cngb.org/stomics/mosta/}) \citep{chen2022mosta}.
+Exact file URLs, repository commits and SHA-256 checksums are listed in \texttt{configs/datasets.yaml} and
+\texttt{data/CHECKSUMS.sha256}. Code, download scripts with checksums, per-run results and the scripts that generate
 every number, table and figure: \todo{GitHub URL and Zenodo DOI}.
 
 \section*{Supplementary data}

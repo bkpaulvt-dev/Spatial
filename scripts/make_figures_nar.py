@@ -144,7 +144,7 @@ def fig_accuracy():
          Line2D([], [], marker="o", ls="", mfc="white", mec=INK2, ms=4.5, label="unresolved"),
          Patch(color="#e9e9e6", label="±0.03 equivalence margin")]
     p2_ = ax2.get_position()
-    fig.legend(handles=h, loc="lower left", ncol=1, frameon=False, bbox_to_anchor=(p2_.x0 - 0.035, 0.0),
+    fig.legend(handles=h, loc="lower left", ncol=1, frameon=False, bbox_to_anchor=(p2_.x0 - 0.01, 0.0),
                handletextpad=0.3, labelspacing=0.3)
     # C: rank intervals (matched clustering)
     NR = cs["ranking_methods"]; XP = NR + 3.6
@@ -187,7 +187,8 @@ def load_mclust_seed():
     d = pd.concat(parts, ignore_index=True)
     d["ARI"] = pd.to_numeric(d["ARI"], errors="coerce"); d = d.dropna(subset=["ARI"])
     d["slice"] = d["slice"].astype(str)
-    return d
+    d = d.drop_duplicates(["dataset", "slice", "method", "kind", "rep"])
+    return d[d.groupby(["dataset", "slice", "method"]).ARI.transform("size") == 16]   # complete embeddings only
 
 
 def ranges(d, kind, min_n):

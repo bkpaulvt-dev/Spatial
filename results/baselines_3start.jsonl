@@ -142,3 +142,15 @@
 {"method": "pca_gmm_single_gmm", "dataset": "stereo", "slice": "E10.5_E1S1", "seed": 2, "time": 3.0460329055786133, "ARI": 0.3429895180310769, "NMI": 0.5112669866975226}
 {"method": "pca_gmm_single_gmm", "dataset": "stereo", "slice": "E10.5_E1S1", "seed": 1, "time": 3.3467185497283936, "ARI": 0.2888420110781843, "NMI": 0.49783713477060376}
 {"method": "pca_gmm_single_gmm", "dataset": "stereo", "slice": "E10.5_E1S1", "seed": 0, "time": 4.169795989990234, "ARI": 0.2991105031202516, "NMI": 0.5138566843552191}
+{"method": "anisost_single_gmm", "dataset": "brca", "slice": "block_a_1", "seed": 0, "time": 1.6024806499481201, "ARI": 0.5429687421717319, "NMI": 0.6683325150234}
+{"method": "anisost_single_gmm", "dataset": "brca", "slice": "block_a_1", "seed": 1, "time": 1.2568538188934326, "ARI": 0.6160577349849147, "NMI": 0.6816491091673157}
+{"method": "anisost_single_gmm", "dataset": "brca", "slice": "block_a_1", "seed": 2, "time": 1.5098965167999268, "ARI": 0.5442208395952994, "NMI": 0.6740710366093057}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E9.5_E1S1", "seed": 0, "time": 1.73484206199646, "ARI": 0.31558127582558665, "NMI": 0.549527437939458}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E9.5_E1S1", "seed": 1, "time": 1.4984099864959717, "ARI": 0.3089637015814723, "NMI": 0.5471083549066731}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E9.5_E1S1", "seed": 2, "time": 1.9303781986236572, "ARI": 0.337730498417763, "NMI": 0.5366316518742872}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E10.5_E2S1", "seed": 0, "time": 3.5717782974243164, "ARI": 0.3374205818016389, "NMI": 0.5932371710100308}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E10.5_E2S1", "seed": 1, "time": 3.3277106285095215, "ARI": 0.41788754506352316, "NMI": 0.6235639500816329}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E10.5_E2S1", "seed": 2, "time": 2.4588043689727783, "ARI": 0.36946283253601503, "NMI": 0.5913520724953314}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E10.5_E1S1", "seed": 0, "time": 4.9480671882629395, "ARI": 0.3708630214008722, "NMI": 0.5518752914703781}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E10.5_E1S1", "seed": 1, "time": 4.8921496868133545, "ARI": 0.4072023561939255, "NMI": 0.5869655091143055}
+{"method": "anisost_single_gmm", "dataset": "stereo", "slice": "E10.5_E1S1", "seed": 2, "time": 4.7576117515563965, "ARI": 0.35161874379429015, "NMI": 0.5380724439038603}

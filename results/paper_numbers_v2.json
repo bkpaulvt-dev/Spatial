@@ -103,7 +103,7 @@
   },
   "brca": {
    "anisost": 0.544,
-   "anisost_single_gmm": 0.544,
+   "anisost_single_gmm": 0.568,
    "banksy_l0.2": 0.59,
    "banksy_l0.2+robust": 0.582,
    "banksy_l0.8": 0.61,
@@ -136,7 +136,7 @@
   },
   "stereo": {
    "anisost": 0.346,
-   "anisost_single_gmm": 0.346,
+   "anisost_single_gmm": 0.357,
    "banksy_l0.2": 0.341,
    "banksy_l0.2+robust": 0.341,
    "banksy_l0.8": 0.32,
@@ -271,7 +271,7 @@
   },
   "brca": {
    "anisost": 0.045,
-   "anisost_single_gmm": 0.045,
+   "anisost_single_gmm": 0.042,
    "banksy_l0.2": 0.023,
    "banksy_l0.2+robust": 0.026,
    "banksy_l0.8": 0.022,
@@ -304,7 +304,7 @@
   },
   "stereo": {
    "anisost": 0.024,
-   "anisost_single_gmm": 0.024,
+   "anisost_single_gmm": 0.028,
    "banksy_l0.2": 0.015,
    "banksy_l0.2+robust": 0.019,
    "banksy_l0.8": 0.016,
@@ -439,7 +439,7 @@
   },
   "brca": {
    "anisost": 29.1,
-   "anisost_single_gmm": 29.1,
+   "anisost_single_gmm": 1.5,
    "banksy_l0.2": 25.3,
    "banksy_l0.2+robust": 25.3,
    "banksy_l0.8": 27.5,
@@ -472,7 +472,7 @@
   },
   "stereo": {
    "anisost": 58.4,
-   "anisost_single_gmm": 58.4,
+   "anisost_single_gmm": 3.3,
    "banksy_l0.2": 42.3,
    "banksy_l0.2+robust": 42.3,
    "banksy_l0.8": 41.0,
@@ -701,16 +701,16 @@
    }
   },
   "anisost_single_gmm": {
-   "delta": 0.017,
+   "delta": 0.014,
    "wins": 14,
    "n": 24,
-   "p": 0.0196,
+   "p": 0.1209,
    "per_dataset": {
     "dlpfc": 0.024,
     "starmap": 0.058,
     "merfish": -0.013,
-    "brca": 0.0,
-    "stereo": 0.0
+    "brca": -0.024,
+    "stereo": -0.011
    }
   },
   "banksy_l0.8": {
@@ -1974,10 +1974,10 @@
    "p": 0.1114
   },
   "anisost_single_gmm": {
-   "delta": 0.017,
+   "delta": 0.014,
    "wins": 14,
    "n": 24,
-   "p": 0.0196
+   "p": 0.1209
   },
   "banksy_l0.8": {
    "delta": -0.001,

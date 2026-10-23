@@ -24,7 +24,8 @@ f3 = lambda x, d=3: "--" if x is None or (isinstance(x, float) and np.isnan(x)) 
 
 def write(name, header, rows, colspec, size="\\small", note=None):
     L = [size, f"\\begin{{tabular}}{{{colspec}}}", "\\toprule", " & ".join(header) + " \\\\", "\\midrule"]
-    L += [" & ".join(r) + " \\\\" for r in rows]
+    MINUS = lambda c: re.sub(r"(?<![\w$\\])-(?=\d|\.\d)", "$-$", str(c))
+    L += ["\\midrule" if r == ["MIDRULE"] else " & ".join(MINUS(c) for c in r) + " \\\\" for r in rows]
     L += ["\\bottomrule", "\\end{tabular}"]
     if note: L.append(f"\\par\\vspace{{2pt}}{{\\footnotesize {note}}}")
     open(os.path.join(SUP, name), "w").write("\n".join(L) + "\n")
@@ -44,7 +45,7 @@ ru = []
 for r in (map(json.loads, open(R("benchmark_runs.jsonl"))) if os.path.exists(R("benchmark_runs.jsonl")) else []):
     if r.get("status") != "ok" or r["dataset"] not in ("brca", "stereo"): continue
     b_ = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"])
-    if r["method"] not in ("linear_diffusion", "pca_gmm"):
+    if r["method"] not in ("linear_diffusion", "pca_gmm", "anisost"):   # own (3-start) fits of the baselines: baselines_3start.jsonl
         ru.append(dict(b_, method={"anisost": "anisost_single_gmm"}.get(r["method"], r["method"]), ARI=r["metrics"]["ARI"], NMI=r["metrics"]["NMI"]))
     if r["method"] not in ("spagcn", "bass", "bayesspace") and isinstance(r.get("metrics_matched"), dict):
         ru.append(dict(b_, method=r["method"] if r["method"] in ("linear_diffusion", "pca_gmm", "anisost") else r["method"] + "+robust",
@@ -76,7 +77,7 @@ for k, v in my.items():
               "linear_diffusion": "3-start Gaussian mixture (scikit-learn, tied)", "anisost": "3-start Gaussian mixture (scikit-learn, tied)",
               "pca_gmm": "3-start Gaussian mixture (scikit-learn, tied)"}
     nice = lambda t: esc(str(t).replace("package_default", "package default").replace("our_rule", "fixed rule").replace("_", " "))
-    rows.append([esc(LAB.get(k, k)), nice(v.get("kind", "")), esc(code.get("source", ""))[:60], esc(code.get("commit", "")),
+    rows.append([esc(LAB.get(k, k)), nice(v.get("kind", "")), "\\raggedright " + esc(code.get("source", "")).replace("/", "/\\allowbreak{}"), esc(code.get("commit", "")),
                  nice(v.get("settings_source", "")), esc(DEFCLU.get(k, clu.get("official", clu.get("ours_standard", "")))), "\\parbox[t]{5.2cm}{\\raggedright " + esc(dev) + "}"])
 write("methods.tex", ["Method", "Type", "Code", "Commit", "Settings", "Default clustering", "Deviations from the tutorial"], rows,
       "p{1.6cm}p{2.0cm}p{3.0cm}p{1.2cm}p{1.2cm}p{2.2cm}p{5.2cm}", "\\scriptsize")
@@ -105,15 +106,31 @@ cs = json.load(open(R("stats_cluster_aware.json")))
 for proto, fname, macro, title in (("standard", "stats_std.tex", "STstats", "Difference in mean ARI between linear diffusion and each method, both with their default clustering; equal-weight mean of group means; 95\\% interval from a hierarchical bootstrap over seven groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq); per-dataset columns give the mean difference within each dataset. Test only: the same estimate without the development sections. Verdict: baseline higher if the interval is above zero; unresolved otherwise; no comparison met the equivalence criterion (90\\% interval within $\\pm$0.03)."),
                                    ("robust", "stats_rob.tex", "STstatsrob", "Primary analysis: as Supplementary Table~\\STstats{} with matched clustering (the same 20-start best-likelihood Gaussian mixture on every embedding; SpaGCN, BASS and BayesSpace use their internal clustering).")):
     vs = sorted([v for v in cs["comparisons"].values() if v["protocol"] == proto], key=lambda v: -v["delta"])
-    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DS],
+    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})", *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DS],
              f"{v['test_only']['delta']:+.3f}", f"({v['test_only']['ci95'][0]:+.3f}, {v['test_only']['ci95'][1]:+.3f})", v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
-    write(fname, ["Method", "$\\Delta$", "95\\% CI", *[DSN[x] for x in DS], "Test only", "95\\% CI", "Verdict"], rows, "lrr" + "r" * len(DS) + "rrl", "\\scriptsize")
+    write(fname, ["Method", "$\\Delta$", "95\\% CI", "Bonferroni CI", *[DSN[x] for x in DS], "Test only", "95\\% CI", "Verdict"], rows, "lrrr" + "r" * len(DS) + "rrl", "\\scriptsize")
     items.append(("table", macro, title, fname))
+if os.path.exists(R("stats_cluster_aware_runner.json")):
+    cr = json.load(open(R("stats_cluster_aware_runner.json")))
+    vs = sorted([v for v in cr["comparisons"].values() if v["protocol"] == "robust"], key=lambda v: -v["delta"])
+    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})",
+             *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DS],
+             v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
+    rows += [["MIDRULE"], ["\\emph{Bootstrap rank}", "P(rank 1)", "median", "95\\% interval"] + [""] * (len(DS) + 1)]
+    rows += [[esc(k), f3(v["p_best"], 2), f"{v['median_rank']:.0f}", f"{v['rank95'][0]}--{v['rank95'][1]}"] + [""] * (len(DS) + 1)
+             for k, v in sorted(cr["ranking"].items(), key=lambda kv: kv[1]["median_rank"])]
+    write("stats_runner.tex", ["Method", "$\\Delta$", "95\\% CI", "Bonferroni CI", *[DSN[x] for x in DS], "Verdict"], rows, "lrrr" + "r" * len(DS) + "l", "\\scriptsize")
+    items.append(("table", "STstatsrunner", "Sensitivity analysis: as Supplementary Table~\\STstatsrob{} (matched clustering) but with every dataset taken from the standardised runner (one execution environment, shared preprocessing), and the corresponding bootstrap ranks on the sections completed by every method.", "stats_runner.tex"))
 rk = cs["ranking"]; ro = cs["ranking_own"]
 rows = [[esc(k), f3(v["p_best"], 2), f"{v['median_rank']:.0f}", f"{v['rank95'][0]}--{v['rank95'][1]}",
          f3(ro[k]["p_best"], 2), f"{ro[k]['median_rank']:.0f}", f"{ro[k]['rank95'][0]}--{ro[k]['rank95'][1]}"] for k, v in sorted(rk.items(), key=lambda kv: kv[1]["median_rank"])]
+rc = cs.get("ranking_complete", {})
+if rc:
+    rows += [["MIDRULE"], ["\\emph{Methods with every section}", "", "", "", "", "", ""]]
+    rows += [[esc(k), f3(v["p_best"], 2), f"{v['median_rank']:.0f}", f"{v['rank95'][0]}--{v['rank95'][1]}", "", "", ""]
+             for k, v in sorted(rc.items(), key=lambda kv: kv[1]["median_rank"])]
 write("ranks.tex", ["Method", "P(rank 1)", "Median rank", "95\\% interval", "P(rank 1), default", "Median rank, default", "95\\% interval, default"], rows, "lrrrrrr", "\\footnotesize")
-items.append(("table", "STranks", "Rank of each method in the hierarchical bootstrap with matched clustering (first three columns) and with default clustering (last three); methods with a result on every section (methods that exceeded the memory cap on the largest Stereo-seq section and BayesSpace, run on Visium only, are not ranked).", "ranks.tex"))
+items.append(("table", "STranks", "Rank of each method in the hierarchical bootstrap with matched clustering (first three columns) and with default clustering (last three), on the sections completed by every method (BayesSpace, run on Visium only, is not ranked). The last rows give the ranking restricted to methods with a result on every section, which excludes the methods stopped at the memory cap on the largest Stereo-seq section.", "ranks.tex"))
 
 # ------------------------------------------------------------------ S: seed variability
 sd = d.groupby(["dataset", "method", "slice"]).ARI.agg(["std", "count"]).reset_index()
@@ -150,9 +167,9 @@ rows = []
 if len(MSS):
     for m, gq in sorted(MSS.groupby("method"), key=lambda kv: -kv[1].rng.mean()):
         big = gq[gq.n > 2000]
-        rows.append([LAB.get(m, m), str(len(gq)), f3(big.rng.mean(), 2), f3(big.rng.max(), 2), f"{100 * (big.rng > 0.1).mean():.0f}\\%",
+        rows.append([LAB.get(m, m), f"{len(big)} of {len(gq)}", f3(big.rng.mean(), 2), f3(big.rng.max(), 2), f"{100 * (big.rng > 0.1).mean():.0f}\\%",
                      f3(gq.jrng.mean(), 2), f"{(gq.full - gq['mean']).mean():+.3f}"])
-write("mclust.tex", ["Method", "Embeddings", "Seed range (mean)", "Seed range (max)", "Range $>$0.1", "Noise range, full init.", "Full minus seeded mean"], rows, "lrrrrrr", "\\footnotesize")
+write("mclust.tex", ["Method", "Embeddings ($n>2000$)", "Seed range (mean)", "Seed range (max)", "Range $>$0.1", "Noise range, full init.", "Full minus seeded mean"], rows, "lrrrrrr", "\\footnotesize")
 items.append(("table", "STmclust", "R mclust 6.0.1 (EEE) on fixed embeddings. Seed range: ARI range over ten R random seeds with the default initialisation, which uses a random subset of 2000 observations when there are more (sections with more than 2000 spots or cells only; STARmap sections are smaller and do not vary). Noise range: ARI range over five repetitions with 1\\% Gaussian noise when EM is initialised on all observations, which is deterministic. Full minus seeded mean: ARI of the full-data initialisation minus the mean of the ten seeded fits.", "mclust.tex"))
 
 # ------------------------------------------------------------------ S: clustering protocol gain
@@ -173,7 +190,7 @@ dsm = U.groupby(["method", "dataset"])[cols].mean().groupby("method").mean()
 cnt = U.groupby("method").size()
 rows = [[LAB.get(m, m)] + [f3(r[c], 3 if c not in ("n_missed_domains",) else 2) for c in cols] + [str(cnt[m])] for m, r in dsm.sort_values("ARI", ascending=False).iterrows()]
 write("metrics.tex", ["Method", "ARI", "NMI", "Macro-F1", "Missed domains", "Small-domain recall", "CHAOS$\\downarrow$", "PAS$\\downarrow$", "Boundary F1", "Runs"], rows, "lrrrrrrrrr", "\\scriptsize")
-items.append(("table", "STmetrics", "Metric panel from the standardised runner (shared preprocessing for all methods; mean over the five datasets of the per-dataset means). Values differ slightly from Supplementary Table~\\STari{} because the preprocessing is shared. Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: 60 per method (20 sections, 3 seeds), except DeepST (20, seed 0) and BayesSpace (12 Visium sections, seed 0).", "metrics.tex"))
+items.append(("table", "STmetrics", "Metric panel from the standardised runner (shared preprocessing for all methods; mean over the five datasets of the per-dataset means). Values differ slightly from Supplementary Table~\\STari{} because the preprocessing is shared. Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: last column (successful runs; up to 72 = 24 sections $\\times$ 3 seeds).", "metrics.tex"))
 rs = U.groupby("method").agg(t=("t", "median"), mem=("mem", "max"), kwh=("kwh", "sum"))
 rows = [[LAB.get(m, m), f"{r.t:.0f}", f"{r.mem:.1f}", f"{1000 * r.kwh / cnt[m]:.2f}"] for m, r in rs.sort_values("t").iterrows()]
 write("resources.tex", ["Method", "Median time per job (s)", "Peak memory (GB)", "Energy per job (Wh, estimate)"], rows, "lrrr", "\\footnotesize")
@@ -186,13 +203,14 @@ rows = []
 for m in STD:
     cells = []
     for ds in DS[:3]:
-        try: pv_ = float(Pp.loc[(ds, STD[m])].mean())
+        key = ROB[m] if m in ("linear_diffusion", "pca_gmm", "anisost") else STD[m]   # runner baselines use the 20-start fit
+        try: pv_ = float(Pp.loc[(ds, key)].mean())
         except KeyError: pv_ = np.nan
         uv = float(Ur.get((m, ds), np.nan))
         cells += [f3(pv_), f3(uv), "--" if np.isnan(pv_) or np.isnan(uv) else f"{uv - pv_:+.3f}"]
     rows.append([LAB[m]] + cells)
 write("agree.tex", ["Method"] + [hd(DSN[x], c) for x in DS[:3] for c in ("pipeline", "runner", "diff.")], rows, "l" + "rrr" * 3, "\\scriptsize")
-items.append(("table", "STagree", "Mean ARI with each method's default clustering in its published pipeline (used in the main text for DLPFC, STARmap and MERFISH) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\\STmetrics{} and~\\STres), and their difference (runner minus pipeline).", "agree.tex"))
+items.append(("table", "STagree", "Mean ARI with each method's default clustering in its published pipeline (used in the main text for DLPFC, STARmap and MERFISH) and in the standardised runner (shared preprocessing, used for Supplementary Tables~\\STmetrics{} and~\\STres), and their difference (runner minus pipeline). For the three training-free baselines the runner's own clustering is the 20-start Gaussian mixture, so they are compared with the pipeline's matched-clustering value.", "agree.tex"))
 
 # ------------------------------------------------------------------ S: number of domains
 if os.path.exists(R("k_sensitivity_summary.csv")):

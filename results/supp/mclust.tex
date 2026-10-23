@@ -1,21 +1,21 @@
 \footnotesize
 \begin{tabular}{lrrrrrr}
 \toprule
-Method & Embeddings & Seed range (mean) & Seed range (max) & Range $>$0.1 & Noise range, full init. & Full minus seeded mean \\
+Method & Embeddings ($n>2000$) & Seed range (mean) & Seed range (max) & Range $>$0.1 & Noise range, full init. & Full minus seeded mean \\
 \midrule
-Linear diffusion & 23 & 0.17 & 0.35 & 75\% & 0.12 & -0.000 \\
-NichePCA & 23 & 0.17 & 0.42 & 75\% & 0.17 & +0.007 \\
-PCA & 23 & 0.15 & 0.46 & 55\% & 0.11 & -0.018 \\
-SEDR & 23 & 0.13 & 0.33 & 65\% & 0.08 & +0.008 \\
-BANKSY $\lambda$=0.8 & 23 & 0.13 & 0.34 & 55\% & 0.10 & -0.005 \\
-STAGATE & 23 & 0.12 & 0.27 & 55\% & 0.08 & +0.022 \\
-HiSTaR & 23 & 0.11 & 0.32 & 55\% & 0.08 & -0.005 \\
-AnisoST & 23 & 0.10 & 0.22 & 45\% & 0.06 & -0.029 \\
-Spatial-MGCN & 22 & 0.10 & 0.40 & 37\% & 0.06 & +0.010 \\
-BANKSY $\lambda$=0.2 & 24 & 0.09 & 0.28 & 48\% & 0.07 & -0.003 \\
-CCST & 23 & 0.09 & 0.35 & 20\% & 0.06 & +0.011 \\
-SpaceFlow & 23 & 0.09 & 0.20 & 40\% & 0.08 & +0.001 \\
-GraphST & 23 & 0.08 & 0.26 & 35\% & 0.06 & -0.004 \\
-DeepST & 23 & 0.05 & 0.17 & 20\% & 0.03 & +0.008 \\
+Linear diffusion & 20 of 23 & 0.17 & 0.35 & 75\% & 0.12 & $-$0.000 \\
+NichePCA & 20 of 23 & 0.17 & 0.42 & 75\% & 0.17 & +0.007 \\
+PCA & 20 of 23 & 0.15 & 0.46 & 55\% & 0.11 & $-$0.018 \\
+SEDR & 20 of 23 & 0.13 & 0.33 & 65\% & 0.08 & +0.008 \\
+BANKSY $\lambda$=0.8 & 20 of 23 & 0.13 & 0.34 & 55\% & 0.10 & $-$0.005 \\
+STAGATE & 20 of 23 & 0.12 & 0.27 & 55\% & 0.08 & +0.022 \\
+HiSTaR & 20 of 23 & 0.11 & 0.32 & 55\% & 0.08 & $-$0.005 \\
+AnisoST & 20 of 23 & 0.10 & 0.22 & 45\% & 0.06 & $-$0.029 \\
+Spatial-MGCN & 19 of 22 & 0.10 & 0.40 & 37\% & 0.06 & +0.010 \\
+BANKSY $\lambda$=0.2 & 21 of 24 & 0.09 & 0.28 & 48\% & 0.07 & $-$0.003 \\
+CCST & 20 of 23 & 0.09 & 0.35 & 20\% & 0.06 & +0.011 \\
+SpaceFlow & 20 of 23 & 0.09 & 0.20 & 40\% & 0.08 & +0.001 \\
+GraphST & 20 of 23 & 0.08 & 0.26 & 35\% & 0.06 & $-$0.004 \\
+DeepST & 20 of 23 & 0.05 & 0.17 & 20\% & 0.03 & +0.008 \\
 \bottomrule
 \end{tabular}

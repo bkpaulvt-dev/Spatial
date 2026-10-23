@@ -16,7 +16,7 @@ claims = [
  ("HiSTaR CI", f"CI over sections {f(v1['bench_histar']['ci_lo'])}--{f(v1['bench_histar']['ci_hi'])}"),
  ("HiSTaR deterministic", "(" + f(v1["bench_histar_deterministic"]["mean"])),
  ("HiSTaR + R mclust DLPFC", "placeholder"),   # replaced below
- ("HiSTaR seed SD", f"{f(v2['seed_sd']['dlpfc']['histar'])} on DLPFC and {f(v2['seed_sd']['starmap']['histar'],2)} on STARmap"),
+ # HiSTaR seed SD: now the macros \\sdHistarDlpfc and \\sdHistarStarmap (scripts/paper_v2.py)
  ("AnisoST vs lin MERFISH", f"(MERFISH: {f(v2['means']['merfish']['anisost'])} vs {f(v2['means']['merfish']['linear_diffusion'])})"),
  ("boundary", f"(by {f(v1['boundary_acc_boundary']['delta'])}, {v1['boundary_acc_boundary']['wins']} of 12 sections, Wilcoxon signed-rank $p={f(v1['boundary_acc_boundary']['p'])}$"),
 ]

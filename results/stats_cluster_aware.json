@@ -25,6 +25,10 @@
     0.017,
     0.146
    ],
+   "ci_bonf": [
+    -0.019,
+    0.199
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.053,
@@ -53,6 +57,10 @@
    "ci90": [
     0.009,
     0.174
+   ],
+   "ci_bonf": [
+    -0.031,
+    0.259
    ],
    "category": "unresolved",
    "per_dataset": {
@@ -83,6 +91,10 @@
     -0.023,
     0.048
    ],
+   "ci_bonf": [
+    -0.048,
+    0.074
+   ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.05,
@@ -111,6 +123,10 @@
    "ci90": [
     -0.001,
     0.15
+   ],
+   "ci_bonf": [
+    -0.034,
+    0.22
    ],
    "category": "unresolved",
    "per_dataset": {
@@ -141,6 +157,10 @@
     0.036,
     0.257
    ],
+   "ci_bonf": [
+    -0.028,
+    0.35
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.122,
@@ -169,6 +189,10 @@
    "ci90": [
     0.011,
     0.133
+   ],
+   "ci_bonf": [
+    -0.028,
+    0.184
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -199,6 +223,10 @@
     0.022,
     0.102
    ],
+   "ci_bonf": [
+    -0.003,
+    0.14
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.028,
@@ -227,6 +255,10 @@
    "ci90": [
     0.071,
     0.203
+   ],
+   "ci_bonf": [
+    0.028,
+    0.255
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -257,6 +289,10 @@
     0.024,
     0.173
    ],
+   "ci_bonf": [
+    -0.019,
+    0.221
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.222,
@@ -285,6 +321,10 @@
    "ci90": [
     0.062,
     0.179
+   ],
+   "ci_bonf": [
+    0.027,
+    0.227
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -315,6 +355,10 @@
     0.068,
     0.25
    ],
+   "ci_bonf": [
+    0.016,
+    0.322
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.125,
@@ -343,6 +387,10 @@
    "ci90": [
     0.032,
     0.205
+   ],
+   "ci_bonf": [
+    -0.015,
+    0.265
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -373,6 +421,10 @@
     -0.058,
     0.042
    ],
+   "ci_bonf": [
+    -0.088,
+    0.088
+   ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.059,
@@ -393,28 +445,32 @@
    "method": "AnisoST",
    "protocol": "standard",
    "n_sections": 24,
-   "delta": 0.038,
+   "delta": 0.033,
    "ci95": [
-    -0.007,
-    0.088
+    -0.016,
+    0.086
    ],
    "ci90": [
-    -0.001,
-    0.08
+    -0.009,
+    0.077
+   ],
+   "ci_bonf": [
+    -0.033,
+    0.115
    ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.017,
     "starmap": 0.144,
     "merfish": 0.105,
-    "brca": 0.002,
-    "stereo": -0.04
+    "brca": -0.022,
+    "stereo": -0.051
    },
    "test_only": {
-    "delta": 0.038,
+    "delta": 0.032,
     "ci95": [
-     -0.004,
-     0.081
+     -0.015,
+     0.079
     ]
    }
   },
@@ -430,6 +486,10 @@
    "ci90": [
     0.067,
     0.276
+   ],
+   "ci_bonf": [
+    0.007,
+    0.364
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -460,6 +520,10 @@
     0.008,
     0.151
    ],
+   "ci_bonf": [
+    -0.025,
+    0.211
+   ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.106,
@@ -485,6 +549,10 @@
    "ci90": [
     -0.003,
     0.111
+   ],
+   "ci_bonf": [
+    -0.036,
+    0.163
    ],
    "category": "unresolved",
    "per_dataset": {
@@ -515,6 +583,10 @@
     -0.005,
     0.145
    ],
+   "ci_bonf": [
+    -0.046,
+    0.205
+   ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.027,
@@ -543,6 +615,10 @@
    "ci90": [
     -0.013,
     0.063
+   ],
+   "ci_bonf": [
+    -0.04,
+    0.092
    ],
    "category": "unresolved",
    "per_dataset": {
@@ -573,6 +649,10 @@
     -0.0,
     0.154
    ],
+   "ci_bonf": [
+    -0.042,
+    0.237
+   ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.04,
@@ -601,6 +681,10 @@
    "ci90": [
     0.045,
     0.265
+   ],
+   "ci_bonf": [
+    -0.027,
+    0.346
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -631,6 +715,10 @@
     -0.004,
     0.09
    ],
+   "ci_bonf": [
+    -0.028,
+    0.138
+   ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.01,
@@ -659,6 +747,10 @@
    "ci90": [
     0.022,
     0.25
+   ],
+   "ci_bonf": [
+    -0.035,
+    0.35
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -689,6 +781,10 @@
     0.056,
     0.214
    ],
+   "ci_bonf": [
+    -0.003,
+    0.263
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.232,
@@ -717,6 +813,10 @@
    "ci90": [
     -0.025,
     0.083
+   ],
+   "ci_bonf": [
+    -0.062,
+    0.125
    ],
    "category": "unresolved",
    "per_dataset": {
@@ -747,6 +847,10 @@
     0.084,
     0.258
    ],
+   "ci_bonf": [
+    0.018,
+    0.315
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.199,
@@ -775,6 +879,10 @@
    "ci90": [
     0.085,
     0.303
+   ],
+   "ci_bonf": [
+    0.015,
+    0.4
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -805,6 +913,10 @@
     0.04,
     0.222
    ],
+   "ci_bonf": [
+    -0.019,
+    0.291
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.123,
@@ -833,6 +945,10 @@
    "ci90": [
     -0.054,
     0.052
+   ],
+   "ci_bonf": [
+    -0.084,
+    0.095
    ],
    "category": "unresolved",
    "per_dataset": {
@@ -863,6 +979,10 @@
     -0.009,
     0.072
    ],
+   "ci_bonf": [
+    -0.033,
+    0.106
+   ],
    "category": "unresolved",
    "per_dataset": {
     "dlpfc": 0.007,
@@ -891,6 +1011,10 @@
    "ci90": [
     0.066,
     0.271
+   ],
+   "ci_bonf": [
+    -0.007,
+    0.353
    ],
    "category": "baseline_better",
    "per_dataset": {
@@ -921,6 +1045,10 @@
     0.014,
     0.162
    ],
+   "ci_bonf": [
+    -0.021,
+    0.219
+   ],
    "category": "baseline_better",
    "per_dataset": {
     "dlpfc": 0.121,
@@ -937,6 +1065,268 @@
  },
  "ranking": {
   "HiSTaR": {
+   "p_best": 0.027,
+   "median_rank": 7.0,
+   "rank95": [
+    1,
+    10
+   ]
+  },
+  "GraphST": {
+   "p_best": 0.01,
+   "median_rank": 8.0,
+   "rank95": [
+    3,
+    10
+   ]
+  },
+  "BANKSY \u03bb=0.8": {
+   "p_best": 0.057,
+   "median_rank": 3.0,
+   "rank95": [
+    1,
+    9
+   ]
+  },
+  "BANKSY \u03bb=0.2": {
+   "p_best": 0.006,
+   "median_rank": 8.0,
+   "rank95": [
+    3,
+    10
+   ]
+  },
+  "SpaGCN": {
+   "p_best": 0.0,
+   "median_rank": 13.0,
+   "rank95": [
+    9,
+    15
+   ]
+  },
+  "STAGATE": {
+   "p_best": 0.011,
+   "median_rank": 6.0,
+   "rank95": [
+    2,
+    8
+   ]
+  },
+  "SEDR": {
+   "p_best": 0.008,
+   "median_rank": 11.0,
+   "rank95": [
+    4,
+    16
+   ]
+  },
+  "SpaceFlow": {
+   "p_best": 0.0,
+   "median_rank": 12.0,
+   "rank95": [
+    7,
+    16
+   ]
+  },
+  "NichePCA": {
+   "p_best": 0.056,
+   "median_rank": 4.0,
+   "rank95": [
+    1,
+    9
+   ]
+  },
+  "CCST": {
+   "p_best": 0.0,
+   "median_rank": 14.0,
+   "rank95": [
+    11,
+    16
+   ]
+  },
+  "Spatial-MGCN": {
+   "p_best": 0.0,
+   "median_rank": 16.0,
+   "rank95": [
+    12,
+    16
+   ]
+  },
+  "DeepST": {
+   "p_best": 0.0,
+   "median_rank": 11.0,
+   "rank95": [
+    10,
+    13
+   ]
+  },
+  "BASS": {
+   "p_best": 0.497,
+   "median_rank": 2.0,
+   "rank95": [
+    1,
+    10
+   ]
+  },
+  "AnisoST": {
+   "p_best": 0.037,
+   "median_rank": 4.0,
+   "rank95": [
+    1,
+    7
+   ]
+  },
+  "PCA": {
+   "p_best": 0.0,
+   "median_rank": 14.0,
+   "rank95": [
+    11,
+    16
+   ]
+  },
+  "Linear diffusion": {
+   "p_best": 0.291,
+   "median_rank": 2.0,
+   "rank95": [
+    1,
+    8
+   ]
+  }
+ },
+ "ranking_methods": 16,
+ "ranking_sections": 23,
+ "ranking_own": {
+  "HiSTaR": {
+   "p_best": 0.001,
+   "median_rank": 8.0,
+   "rank95": [
+    4,
+    12
+   ]
+  },
+  "GraphST": {
+   "p_best": 0.004,
+   "median_rank": 9.0,
+   "rank95": [
+    4,
+    13
+   ]
+  },
+  "BANKSY \u03bb=0.8": {
+   "p_best": 0.103,
+   "median_rank": 3.0,
+   "rank95": [
+    1,
+    8
+   ]
+  },
+  "BANKSY \u03bb=0.2": {
+   "p_best": 0.022,
+   "median_rank": 7.0,
+   "rank95": [
+    2,
+    11
+   ]
+  },
+  "SpaGCN": {
+   "p_best": 0.0,
+   "median_rank": 14.0,
+   "rank95": [
+    7,
+    16
+   ]
+  },
+  "STAGATE": {
+   "p_best": 0.006,
+   "median_rank": 7.0,
+   "rank95": [
+    3,
+    12
+   ]
+  },
+  "SEDR": {
+   "p_best": 0.001,
+   "median_rank": 6.0,
+   "rank95": [
+    3,
+    14
+   ]
+  },
+  "SpaceFlow": {
+   "p_best": 0.0,
+   "median_rank": 13.0,
+   "rank95": [
+    6,
+    16
+   ]
+  },
+  "NichePCA": {
+   "p_best": 0.0,
+   "median_rank": 10.0,
+   "rank95": [
+    4,
+    15
+   ]
+  },
+  "CCST": {
+   "p_best": 0.0,
+   "median_rank": 11.0,
+   "rank95": [
+    8,
+    15
+   ]
+  },
+  "Spatial-MGCN": {
+   "p_best": 0.0,
+   "median_rank": 14.0,
+   "rank95": [
+    11,
+    16
+   ]
+  },
+  "DeepST": {
+   "p_best": 0.0,
+   "median_rank": 11.0,
+   "rank95": [
+    7,
+    13
+   ]
+  },
+  "BASS": {
+   "p_best": 0.594,
+   "median_rank": 1.0,
+   "rank95": [
+    1,
+    7
+   ]
+  },
+  "AnisoST": {
+   "p_best": 0.03,
+   "median_rank": 4.0,
+   "rank95": [
+    1,
+    6
+   ]
+  },
+  "PCA": {
+   "p_best": 0.0,
+   "median_rank": 15.0,
+   "rank95": [
+    11,
+    16
+   ]
+  },
+  "Linear diffusion": {
+   "p_best": 0.239,
+   "median_rank": 2.0,
+   "rank95": [
+    1,
+    5
+   ]
+  }
+ },
+ "ranking_complete": {
+  "HiSTaR": {
    "p_best": 0.04,
    "median_rank": 5.0,
    "rank95": [
@@ -945,7 +1335,7 @@
    ]
   },
   "BANKSY \u03bb=0.8": {
-   "p_best": 0.114,
+   "p_best": 0.108,
    "median_rank": 2.0,
    "rank95": [
     1,
@@ -969,7 +1359,7 @@
    ]
   },
   "STAGATE": {
-   "p_best": 0.012,
+   "p_best": 0.011,
    "median_rank": 4.0,
    "rank95": [
     2,
@@ -977,7 +1367,7 @@
    ]
   },
   "SEDR": {
-   "p_best": 0.009,
+   "p_best": 0.01,
    "median_rank": 8.0,
    "rank95": [
     4,
@@ -1001,7 +1391,7 @@
    ]
   },
   "AnisoST": {
-   "p_best": 0.077,
+   "p_best": 0.076,
    "median_rank": 3.0,
    "rank95": [
     1,
@@ -1017,7 +1407,7 @@
    ]
   },
   "Linear diffusion": {
-   "p_best": 0.729,
+   "p_best": 0.738,
    "median_rank": 1.0,
    "rank95": [
     1,
@@ -1025,97 +1415,7 @@
    ]
   }
  },
- "ranking_methods": 11,
- "ranking_own": {
-  "HiSTaR": {
-   "p_best": 0.003,
-   "median_rank": 6.0,
-   "rank95": [
-    3,
-    8
-   ]
-  },
-  "BANKSY \u03bb=0.8": {
-   "p_best": 0.248,
-   "median_rank": 2.0,
-   "rank95": [
-    1,
-    6
-   ]
-  },
-  "BANKSY \u03bb=0.2": {
-   "p_best": 0.032,
-   "median_rank": 6.0,
-   "rank95": [
-    1,
-    8
-   ]
-  },
-  "SpaGCN": {
-   "p_best": 0.002,
-   "median_rank": 10.0,
-   "rank95": [
-    5,
-    11
-   ]
-  },
-  "STAGATE": {
-   "p_best": 0.014,
-   "median_rank": 6.0,
-   "rank95": [
-    2,
-    9
-   ]
-  },
-  "SEDR": {
-   "p_best": 0.002,
-   "median_rank": 5.0,
-   "rank95": [
-    2,
-    10
-   ]
-  },
-  "SpaceFlow": {
-   "p_best": 0.0,
-   "median_rank": 9.0,
-   "rank95": [
-    4,
-    11
-   ]
-  },
-  "CCST": {
-   "p_best": 0.0,
-   "median_rank": 9.0,
-   "rank95": [
-    6,
-    11
-   ]
-  },
-  "AnisoST": {
-   "p_best": 0.021,
-   "median_rank": 3.0,
-   "rank95": [
-    2,
-    5
-   ]
-  },
-  "PCA": {
-   "p_best": 0.0,
-   "median_rank": 11.0,
-   "rank95": [
-    8,
-    11
-   ]
-  },
-  "Linear diffusion": {
-   "p_best": 0.679,
-   "median_rank": 1.0,
-   "rank95": [
-    1,
-    4
-   ]
-  }
- },
+ "ranking_complete_methods": 11,
  "means_standard": {
   "histar": {
    "dlpfc": 0.4906,
@@ -1212,8 +1512,8 @@
    "dlpfc": 0.5262,
    "starmap": 0.5642,
    "merfish": 0.3767,
-   "brca": 0.5438,
-   "stereo": 0.3464
+   "brca": 0.5677,
+   "stereo": 0.3574
   },
   "pca_gmm": {
    "dlpfc": 0.3878,
