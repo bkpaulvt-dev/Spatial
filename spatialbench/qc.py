@@ -32,9 +32,10 @@ def _log_pca(X, n_pcs=30, n_hvg=2000, seed=0):
     lib[lib == 0] = 1
     X = sp.diags(1e4 / lib) @ X
     X.data = np.log1p(X.data)
+    if X.shape[1] > n_hvg:   # gene variance on the sparse matrix (identical to the dense result, without densifying all genes)
+        mu = np.asarray(X.mean(0)).ravel(); var = np.asarray(X.multiply(X).mean(0)).ravel() - mu ** 2
+        X = X[:, np.argsort(-var, kind="stable")[:n_hvg]]
     X = X.toarray()
-    if X.shape[1] > n_hvg:
-        X = X[:, np.argsort(-X.var(0))[:n_hvg]]
     sd = X.std(0)
     X = (X - X.mean(0)) / np.where(sd > 0, sd, 1)
     X = np.clip(X, -10, 10)
