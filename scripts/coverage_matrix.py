@@ -8,14 +8,14 @@ import pandas as pd
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 R = lambda f: os.path.join(ROOT, "results", f)
-NSEC = {"dlpfc": 12, "starmap": 3, "merfish": 5}
+NSEC = {"dlpfc": 12, "starmap": 3, "merfish": 5, "brca": 1, "stereo": 3}
 METHODS = ["linear_diffusion", "anisost", "pca_gmm", "banksy_l0.2", "banksy_l0.8", "histar", "graphst", "spagcn", "stagate",
            "sedr", "spaceflow", "nichepca", "ccst", "spatial_mgcn", "deepst", "bass", "bayesspace"]
 NO_EMB = {"spagcn", "bass", "bayesspace"}            # cluster internally: no embedding to re-cluster
 VISIUM_ONLY = {"bayesspace"}
 rd = lambda f: [json.loads(l) for l in open(R(f))] if os.path.exists(R(f)) else []
 
-def nsec(m): return 12 if m in VISIUM_ONLY else 20
+def nsec(m): return NSEC["dlpfc"] + NSEC["brca"] if m in VISIUM_ONLY else sum(NSEC.values())
 
 # --- accuracy sources: paper pipeline (older files + pilot) and the standardised runner
 paper = set()
@@ -38,6 +38,10 @@ inv = {}
 if os.path.exists(R("invariance_pilot.json")):
     inv = json.load(open(R("invariance_pilot.json")))
 invm = set(inv) if isinstance(inv, dict) else set()
+mcs = set()
+for f in glob.glob(R("mclust_seed_g*.csv")):
+    d = pd.read_csv(f)
+    mcs |= {(r.method, r.dataset, str(r["slice"])) for _, r in d[d.kind == "seed"].iterrows()}
 
 rows = []
 for m in METHODS:
@@ -52,6 +56,7 @@ for m in METHODS:
         "standardised runner + metric panel + resources (sections / seeds)": f"{len(acc_u)}/{n} / {len(seeds_u)}",
         "lottery (20 starts)": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in lot if k[0] == m})}/{n}",
         "R mclust perturbation": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in mc if k[0] == m})}/{n}",
+        "R mclust seeds": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in mcs if k[0] == m})}/{n}",
         "invariance tests (sections)": f"{len({k.rsplit('/', 1)[0] for k in invm if k.endswith('/' + m)})}/{n}",
     })
 df = pd.DataFrame(rows); df.to_csv(R("coverage_matrix.csv"), index=False)
