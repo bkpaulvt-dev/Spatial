@@ -153,8 +153,9 @@ time. Runtime and memory comparisons are specific to this machine.
 
 The breast cancer and Stereo-seq runs (`make benchmark-new`) ran one job at a time with a per-job cap of 12 GB resident
 memory (`SPATIALBENCH_MAX_RSS_GB`, enforced by `spatialbench/resources.py`; a job above the cap, or leaving less than
-0.8 GB free, is stopped and recorded as out of memory). On the 18,408-bin Stereo-seq section BASS, DeepST, Spatial-MGCN
-and NichePCA (default workflow) exceeded it; CCST took about 5.5 h per run. One R mclust fit on that section uses about
+0.8 GB free, is stopped and recorded as out of memory). On the 18,408-bin Stereo-seq section BASS, DeepST, GraphST (also
+with its Stereo-seq setting), Spatial-MGCN and NichePCA (default workflow) exceeded it, as did DeepST seeds 1-2 on
+E10.5_E2S1; CCST took about 5.5 h per run. One R mclust fit on that section uses about
 5 GB, so run at most two `mclust_seed.R` workers at a time on a 16 GB machine; workers can share one output file (each
 embedding is claimed with a lock directory `<out>.lock_*`; delete stale lock directories after a crash).
 Embeddings of these runs are exported with `scripts/export_runner_emb.py`; the coarse-class breast cancer analysis is
