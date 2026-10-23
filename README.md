@@ -10,13 +10,15 @@ methods, submitted to *Nucleic Acids Research* (manuscript: `paper/main.tex`, su
   baselines: linear diffusion (standard neighbourhood smoothing of PCs on the spatial k-NN graph), AnisoST
   (edge-preserving diffusion) and PCA without spatial information. Versions, commits, settings and every
   deviation from the authors' tutorials: `configs/methods.yaml` (Supplementary Table S2).
-* **Data (20 sections, 3 technologies):** 12 human DLPFC sections (10x Visium, spatialLIBD), 3 mouse mPFC
-  sections (STARmap) and 5 mouse hypothalamus sections (MERFISH animal 1). Registry, label provenance and the
+* **Data (24 sections, 4 technologies):** 12 human DLPFC sections (10x Visium, spatialLIBD), 3 mouse mPFC
+  sections (STARmap), 5 mouse hypothalamus sections (MERFISH animal 1), 1 human breast cancer section (10x Visium,
+  Block A Section 1) and 3 mouse embryo sections (Stereo-seq MOSTA, bin50; `scripts/download_new_datasets.py`,
+  `scripts/prepare_new_datasets.py`). Registry, label provenance and the
   frozen development/test split: `configs/datasets.yaml`.
 * **Experiments:** accuracy (ARI, NMI and other metrics) with each method's official clustering and with one
   matched clustering for all; seed-to-seed variability (seeds 0–2); the *clustering initialisation* experiment
-  (20 single-start Gaussian mixture fits on each fixed embedding); R mclust sensitivity to row order, 1 % noise
-  and its random initialisation subset; time and memory; cluster-aware statistics (hierarchical bootstrap,
+  (20 single-start Gaussian mixture fits on each fixed embedding); R mclust sensitivity to its random seed
+  (random initialisation subset) and to 1 % noise; sensitivity to the number of domains K; time and memory; cluster-aware statistics (hierarchical bootstrap,
   equivalence margin, rank intervals).
 
 ## Repository layout
