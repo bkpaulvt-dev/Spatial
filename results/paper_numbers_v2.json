@@ -1354,13 +1354,13 @@
    "n": 3.0
   },
   "stereo/spatial_mgcn": {
-   "mean_range": 0.023,
-   "max_range": 0.023,
-   "mean_single": 0.283,
-   "mean_oracle": 0.293,
-   "mean_best_ll": 0.288,
-   "median_rho": 0.236,
-   "n": 1.0
+   "mean_range": 0.042,
+   "max_range": 0.06,
+   "mean_single": 0.28,
+   "mean_oracle": 0.302,
+   "mean_best_ll": 0.286,
+   "median_rho": 0.454,
+   "n": 2.0
   },
   "stereo/stagate": {
    "mean_range": 0.085,
@@ -1376,7 +1376,7 @@
   "mean_range": 0.165,
   "max_range": 0.6,
   "oracle_minus_single": 0.072,
-  "n_embeddings": 331
+  "n_embeddings": 332
  },
  "mclust": {
   "dlpfc/anisost/jitter1pct": {
@@ -1900,7 +1900,7 @@
    "max_range": 0.292
   },
   "spatial_mgcn": {
-   "mean_range": 0.111,
+   "mean_range": 0.109,
    "max_range": 0.212
   },
   "pca_gmm": {

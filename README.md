@@ -151,6 +151,15 @@ SpaceFlow ≈ 16 h, STAGATE ≈ 15 h; training-free baselines < 0.5 h each). Pea
 most methods, but up to 12.5 GB for BayesSpace, 9.2 GB for DeepST and 7.2 GB for NichePCA, so these run one at a
 time. Runtime and memory comparisons are specific to this machine.
 
+The breast cancer and Stereo-seq runs (`make benchmark-new`) ran one job at a time with a per-job cap of 12 GB resident
+memory (`SPATIALBENCH_MAX_RSS_GB`, enforced by `spatialbench/resources.py`; a job above the cap, or leaving less than
+0.8 GB free, is stopped and recorded as out of memory). On the 18,408-bin Stereo-seq section BASS, DeepST, Spatial-MGCN
+and NichePCA (default workflow) exceeded it; CCST took about 5.5 h per run. One R mclust fit on that section uses about
+5 GB, so run at most two `mclust_seed.R` workers at a time on a 16 GB machine; workers can share one output file (each
+embedding is claimed with a lock directory `<out>.lock_*`; delete stale lock directories after a crash).
+Embeddings of these runs are exported with `scripts/export_runner_emb.py`; the coarse-class breast cancer analysis is
+`scripts/brca_coarse.py`; `scripts/make_submission.sh` copies the figures under their printed numbers for upload.
+
 ## Neutrality
 
 The authors developed AnisoST, one of the baselines; it is reported as a baseline, not as a proposed method,

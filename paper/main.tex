@@ -84,7 +84,8 @@ most differences between methods, and that released code can use the labels for 
 \centering
 \includegraphics[width=\linewidth]{nar_fig1_pipeline_v2.pdf}
 \caption{Study design. (\textbf{A}) Examples of the data: human DLPFC on a 10x Visium capture area (section 151673) and mouse sections profiled by
-STARmap (mPFC, section BZ5) and MERFISH (hypothalamus, Bregma $-0.14$); colours are the expert annotation, used only for scoring.
+STARmap (mPFC, section BZ5), MERFISH (hypothalamus, Bregma $-0.14$), human breast cancer on 10x Visium and a mouse embryo
+profiled by Stereo-seq (E9.5); numbers give the sections per dataset; colours are the annotation, used only for scoring.
 (\textbf{B}) Each spot or cell carries an expression profile; the training-free baselines use the six-nearest-neighbour graph,
 and other methods build their own graph as documented. The true number of domains is given to every method.
 (\textbf{C}) \nMethodsPub{} published methods and three training-free baselines in three families (family colours are used in
@@ -134,7 +135,8 @@ listed in Supplementary Table~\STmethods.
 \begin{itemize}
 \item \textbf{Deep graph encoders.} HiSTaR \citep{yu2025histar} (PyTorch port of the official code with the published
 defaults: cross-level weight 0.3, 200+200 epochs), GraphST \citep{long2023graphst} (official package and tutorial: 600 epochs,
-20-PC projection, R mclust; with and without its label refinement), SpaGCN \citep{hu2021spagcn} (tutorial without histology,
+20-PC projection, R mclust; with and without its label refinement; on Stereo-seq its documented setting for Stereo-seq data,
+\texttt{datatype='Stereo'}), SpaGCN \citep{hu2021spagcn} (tutorial without histology,
 Louvain resolution search to the true number of domains), STAGATE \citep{dong2022stagate}, SEDR \citep{xu2024sedr},
 SpaceFlow \citep{ren2022spaceflow}, CCST \citep{li2022ccst}, Spatial-MGCN \citep{wang2023spatialmgcn} and DeepST
 \citep{xu2022deepst}. Spatial-MGCN's released test script reports the epoch with the highest ARI against the annotation;
@@ -227,7 +229,9 @@ cancer and \nAheadStereo{} of \nCmpStereo{} on Stereo-seq. Averaged over compara
 \dBrain{} ARI on the three brain datasets and \dOther{} on the other two. On these two datasets the methods were close to each
 other (\figref{fig:accuracy}A), and PCA without any smoothing was also ahead of linear diffusion (\meanPcaBrca{} against
 \meanLinBrca{} on breast cancer, \meanPcaStereo{} against \meanLinStereo{} on Stereo-seq): smoothing with the settings fixed on
-DLPFC did not help on these tissues, and no method stood out. In our runs \listOom{} exceeded the \memCap{} GB memory cap on the
+DLPFC did not help on these tissues, and no method stood out. The breast cancer annotation has 20 numbered regions of four classes; scored against the four
+classes with $K=4$, every method reached a low ARI (\brcaCoarseLo--\brcaCoarseHi) and the order changed (\brcaCoarseTop{} first,
+linear diffusion \brcaCoarseLin, rank \brcaCoarseLinRank{} of \brcaCoarseN; Supplementary Table~\STbrca). In our runs \listOom{} exceeded the \memCap{} GB memory cap on the
 largest Stereo-seq section (18,408 bins) and have no result there; they are compared on the remaining sections. Example partitions are shown in \figref{fig:maps}.
 
 Every method was given the annotated number of domains $K$. Changing $K$ by one changed ARI by \kOneAvg{} on average (the
@@ -386,7 +390,11 @@ reach with its authors' own tuning (we could not reproduce HiSTaR's per-section 
 the means were seen, and the comparisons with it are exploratory. Four methods were run with one seed in the published pipelines
 and BayesSpace on Visium only (Supplementary Table~\STcov), so seed variance on the first three datasets is unavailable for them.
 \nOom{} methods exceeded the \memCap{} GB memory cap on the largest Stereo-seq section; with more memory or a GPU they may run, so
-this is a statement about resource use, not about accuracy. The initialisation and R
+this is a statement about resource use, not about accuracy. NichePCA failed there with its default workflow, which
+aggregates all genes before PCA; its package also offers other orders of these steps. Settings were the same on every dataset by
+design; dataset-specific tutorial settings (for example SEDR's Stereo-seq graph or Spatial-MGCN's configuration for this breast
+cancer section) were not used, and neighbourhood radii were expressed in spot or bin spacings, which on Stereo-seq bin50 data
+covers a smaller physical area than on Visium. The initialisation and R
 mclust experiments use one seed-0 embedding per section and method and do not include training-seed variance. Three of the five
 datasets are brain tissue, and the non-brain data comprise one breast cancer section and three embryo sections of one study;
 Slide-seq, Xenium and Visium HD data and sections with more than about 20,000 spots are not covered, and no simulated data were used.

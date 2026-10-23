@@ -21,6 +21,7 @@ keywords:
   - mclust
 abstract: >-
   Code, configuration and per-run results of a benchmark of 16 spatial domain identification
-  methods (13 published methods and three training-free baselines) on 20 tissue sections from
-  10x Visium (human DLPFC), STARmap (mouse mPFC) and MERFISH (mouse hypothalamus), including
+  methods (13 published methods and three training-free baselines) on 24 tissue sections from
+  10x Visium (human DLPFC, human breast cancer), STARmap (mouse mPFC), MERFISH (mouse hypothalamus)
+  and Stereo-seq (mouse embryo, MOSTA), including
   experiments on the sensitivity of results to the clustering initialisation.

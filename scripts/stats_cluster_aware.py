@@ -36,7 +36,7 @@ if SOURCE == "runner":
 OWN_KEY = {"anisost": "anisost_single_gmm"}
 NO_EMB = ("spagcn", "bass", "bayesspace")
 ru = []
-for r in rd("benchmark_runs.jsonl").to_dict("records") if os.path.exists(R("benchmark_runs.jsonl")) else []:
+for r in ({x["id"]: x for x in rd("benchmark_runs.jsonl").to_dict("records")}.values() if os.path.exists(R("benchmark_runs.jsonl")) else []):   # newest record per run
     if r.get("status") != "ok" or r["dataset"] not in RUNNER_ONLY: continue
     base = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"])
     if r["method"] not in ("linear_diffusion", "pca_gmm", "anisost"):   # own (3-start) fits of the baselines: baselines_3start.jsonl   # own clustering of these two: baselines_3start.jsonl

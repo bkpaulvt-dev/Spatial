@@ -5,7 +5,7 @@
   "creators": [
     {"name": "Paul, Bikash Kumar", "affiliation": "Virginia Tech"}
   ],
-  "description": "<p>Code, configuration, environment specification and per-run results for a benchmark of spatial domain identification methods: 13 published methods (HiSTaR, GraphST, BANKSY, SpaGCN, STAGATE, SEDR, SpaceFlow, NichePCA, CCST, Spatial-MGCN, DeepST, BASS, BayesSpace) and training-free baselines (linear diffusion, AnisoST, PCA) on 20 sections from 10x Visium (human DLPFC), STARmap (mouse mPFC) and MERFISH (mouse hypothalamus), with experiments on the sensitivity of accuracy to the clustering initialisation (Gaussian mixture and R mclust). Raw data are not redistributed; scripts download them from the original sources and verify SHA-256 checksums.</p>",
+  "description": "<p>Code, configuration, environment specification and per-run results for a benchmark of spatial domain identification methods: 13 published methods (HiSTaR, GraphST, BANKSY, SpaGCN, STAGATE, SEDR, SpaceFlow, NichePCA, CCST, Spatial-MGCN, DeepST, BASS, BayesSpace) and training-free baselines (linear diffusion, AnisoST, PCA) on 24 sections from 10x Visium (human DLPFC and breast cancer), STARmap (mouse mPFC), MERFISH (mouse hypothalamus) and Stereo-seq (mouse embryo), with experiments on the sensitivity of accuracy to the clustering initialisation (Gaussian mixture and R mclust). Raw data are not redistributed; scripts download them from the original sources and verify SHA-256 checksums.</p>",
   "license": "MIT",
   "access_right": "open",
   "keywords": ["spatial transcriptomics", "spatial domain identification", "benchmark", "reproducibility", "clustering", "Gaussian mixture model", "mclust", "10x Visium", "STARmap", "MERFISH"],

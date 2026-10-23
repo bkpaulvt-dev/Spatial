@@ -48,7 +48,8 @@ def main():
     ap.add_argument("--sections", nargs="+"); ap.add_argument("--seeds", nargs="+", type=int, default=[0, 1, 2])
     ap.add_argument("--splits", nargs="+", default=["dev", "test"]); ap.add_argument("--workers", type=int, default=1)
     ap.add_argument("--threads", type=int, default=1); ap.add_argument("--timeout", type=int, default=6 * 3600)
-    ap.add_argument("--retry-errors", action="store_true"); ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--retry-errors", action="store_true")
+    ap.add_argument("--force", action="store_true", help="rerun the selected jobs even if recorded (the newest record of an id is used)"); ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--shard", default="0/1", help="i/n: run only jobs with index %% n == i of the sorted job list, "
                     "so a benchmark can be split across machines (merge the .jsonl files afterwards)")
     ap.add_argument("--out", default=OUT, help="result file (use a different file per machine)")
@@ -56,7 +57,7 @@ def main():
     done = set()
     if os.path.exists(a.out):
         for r in map(json.loads, open(a.out)):
-            if r["status"] == "ok" or not a.retry_errors:
+            if (r["status"] == "ok" or not a.retry_errors) and not a.force:
                 done.add(r["id"])
     jobs = [(ds, sec, m, s) for (ds, sec, sp_) in sections() for m in a.methods for s in a.seeds
             if sp_ in a.splits and (not a.datasets or ds in a.datasets) and (not a.sections or sec in a.sections)

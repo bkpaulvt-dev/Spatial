@@ -85,7 +85,8 @@ def graphst(a, k, seed, ds):
     if b.n_vars <= 3000:                       # targeted panel: keep every gene, GraphST's remaining preprocessing
         b.var["highly_variable"] = True
         sc.pp.normalize_total(b, target_sum=1e4); sc.pp.log1p(b); sc.pp.scale(b, zero_center=False, max_value=10)
-    m = GraphST.GraphST(b, device=torch.device("cpu"), random_seed=41 + seed)
+    # Stereo-seq: GraphST's documented setting for Stereo-seq/Slide-seq (sparse kNN graph instead of dense n x n matrices)
+    m = GraphST.GraphST(b, device=torch.device("cpu"), random_seed=41 + seed, datatype="Stereo" if ds == "stereo" else "10X")
     b = m.train()
     clustering(b, k, radius=50, method="mclust", refinement=False)
     Z = np.asarray(b.obsm["emb_pca"])

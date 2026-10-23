@@ -57,40 +57,42 @@ def flow_arrow(x0, x1, y=H / 2):
 
 # ---------------------------------------------------------------- column 1: inputs
 T(36.0, 92.0, "Benchmark", 14, INK, "bold", ha="center")
-for i, (ds, s, lab, ms) in enumerate((("dlpfc", "151673", "Visium", 1.1), ("starmap", "20180417_BZ5_control", "STARmap", 0.9),
-                                       ("merfish", "-0.14", "MERFISH", 0.45))):
+for i, (ds, s, lab, ms) in enumerate((("dlpfc", "151673", "DLPFC", 0.5), ("starmap", "20180417_BZ5_control", "STARmap", 0.45),
+                                       ("merfish", "-0.14", "MERFISH", 0.2), ("brca", "block_a_1", "Breast", 0.45),
+                                       ("stereo", "E9.5_E1S1", "Embryo", 0.15))):
     C, code, _ = cache(ds, s)
-    tissue(C, code, 3.0 + i * 22.5, 50.0, 20.0, ms)
-    T(13.0 + i * 22.5, 45.0, lab, 10.5, INK2, ha="center")
-T(36.0, 33.0, "20 sections", 13, INK, ha="center")
-T(36.0, 25.5, "3 technologies", 13, INK, ha="center")
+    code = np.where(code >= 0, code % 8, code)          # palette of 8 colours (illustration only)
+    tissue(C, code, 2.0 + i * 13.6, 52.0, 12.0, ms)
+    T(8.0 + i * 13.6, 47.5 - 3.6 * (i % 2), lab, 9.5, INK2, ha="center")
+T(36.0, 33.0, "24 sections", 13, INK, ha="center")
+T(36.0, 25.5, "4 technologies, 3 tissues", 13, INK, ha="center")
 T(36.0, 18.0, "16 methods", 13, INK, ha="center")
 flow_arrow(72.5, 81.0)
 
 # ---------------------------------------------------------------- column 2a: mini forest plot (matched clustering)
 cs = json.load(open(os.path.join(ROOT, "results", "stats_cluster_aware.json")))
 comp = {k.split("/", 1)[1]: v for k, v in cs["comparisons"].items() if k.startswith("robust/")}
-rows = [("linear_diffusion", "Linear diffusion", BLUE), ("bass", "BASS", AQUA), ("banksy_l0.8", "BANKSY λ = 0.8", AQUA),
+rows = [("bass", "BASS", AQUA), ("banksy_l0.8", "BANKSY λ = 0.8", AQUA), ("stagate", "STAGATE", ORANGE),
         ("histar", "HiSTaR", ORANGE), ("graphst", "GraphST", ORANGE)]
-T(133.0, 95.0, "Training-free smoothing is among the best", 13, INK, "bold", ha="center")
-fx0, fx1 = 120.0, 176.0              # x extent of the forest
-xr = (-0.25, 0.08)                   # method minus linear diffusion (ARI)
+T(133.0, 95.0, "Smoothing baseline: ahead on brain, not elsewhere", 13, INK, "bold", ha="center")
+fx0, fx1 = 120.0, 176.0              # x extent
+xr = (-0.12, 0.30)                   # linear diffusion minus method (ARI), as in Figure 2B
 X = lambda v: fx0 + (v - xr[0]) / (xr[1] - xr[0]) * (fx1 - fx0)
-ytop, dy = 86.5, 6.4
-ax.add_patch(Rectangle((X(-0.03), ytop - 4 * dy - 3.2), X(0.03) - X(-0.03), 4 * dy + 6.4, fc="#ecebe7", ec="none", zorder=1))
+ytop, dy = 84.5, 6.4
 ax.plot([X(0), X(0)], [ytop - 4 * dy - 3.2, ytop + 3.2], color=INK2, lw=0.9, zorder=2)
 for i, (m, lab, col) in enumerate(rows):
     yy = ytop - i * dy
     T(fx0 - 3.0, yy, lab, 11, INK, ha="right")
-    if m == "linear_diffusion":
-        ax.plot(X(0), yy, "D", ms=7, color=col, zorder=4)
-        T(X(0) + 3.0, yy, "reference", 10.5, INK2, style="italic"); continue
-    v = comp[m]; lo, hi = -v["ci95"][1], -v["ci95"][0]; d = -v["delta"]
-    ax.plot([X(lo), X(hi)], [yy, yy], color=col, lw=2.4, solid_capstyle="butt", zorder=3)
-    filled = v["ci95"][0] > 0
-    ax.plot(X(d), yy, "o", ms=8, mfc=col if filled else "white", mec=col, mew=1.8, zorder=4)
-T(X(-0.25), ytop - 4 * dy - 6.6, "← worse", 10, INK2, ha="left")
-T(X(0.08), ytop - 4 * dy - 6.6, "better →", 10, INK2, ha="right")
+    pdv = comp[m]["per_dataset"]
+    brain = np.mean([pdv[x] for x in ("dlpfc", "starmap", "merfish") if x in pdv])
+    other = np.mean([pdv[x] for x in ("brca", "stereo") if x in pdv])
+    ax.plot([X(other), X(brain)], [yy, yy], color="#cfcec8", lw=2.0, zorder=2)
+    ax.plot(X(brain), yy, "o", ms=8.5, color=col, zorder=4)
+    ax.plot(X(other), yy, "o", ms=8.5, mfc="white", mec=col, mew=1.8, zorder=4)
+T(X(0) - 1.5, ytop - 4 * dy - 6.6, "← method ahead", 10, INK2, ha="right")
+T(X(0) + 1.5, ytop - 4 * dy - 6.6, "baseline ahead →", 10, INK2, ha="left")
+ax.plot(fx0 + 2, ytop + 6.6, "o", ms=7, color=INK2); T(fx0 + 4.5, ytop + 6.6, "brain", 10, INK2)
+ax.plot(fx0 + 22, ytop + 6.6, "o", ms=7, mfc="white", mec=INK2, mew=1.5); T(fx0 + 24.5, ytop + 6.6, "breast and embryo", 10, INK2)
 
 # ---------------------------------------------------------------- column 2b: one embedding, two random starts
 T(133.0, 44.5, "Same embedding, different random start", 13, INK, "bold", ha="center")
@@ -127,7 +129,7 @@ flow_arrow(184.0, 192.5)
 
 # ---------------------------------------------------------------- column 3: take-home checklist
 T(222.0, 92.0, "Take-home", 14, INK, "bold", ha="center")
-items = ["Report the clustering\nprotocol and its variance", "Never select runs\nwith labels", "Include training-free\nbaselines"]
+items = ["Report the clustering\nprotocol and its variance", "Never select runs\nwith labels", "Include baselines and\nseveral tissues"]
 for i, s in enumerate(items):
     yy = 74.0 - i * 23.0
     ax.add_patch(FancyBboxPatch((197.0, yy - 3.2), 6.4, 6.4, boxstyle="round,pad=0,rounding_size=0.8", fc="white", ec=INK, lw=1.2, zorder=3))

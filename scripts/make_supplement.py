@@ -42,7 +42,7 @@ nm_rob = nm[["dataset", "method", "slice", "seed", "ARI_robust", "NMI_robust"]].
     .assign(method=lambda x: x.method + "+robust").dropna(subset=["ARI"])
 # breast cancer and Stereo-seq: standardised runner only (own and matched clustering; same keys as the pipeline results)
 ru = []
-for r in (map(json.loads, open(R("benchmark_runs.jsonl"))) if os.path.exists(R("benchmark_runs.jsonl")) else []):
+for r in ({x["id"]: x for x in map(json.loads, open(R("benchmark_runs.jsonl")))}.values() if os.path.exists(R("benchmark_runs.jsonl")) else []):
     if r.get("status") != "ok" or r["dataset"] not in ("brca", "stereo"): continue
     b_ = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"])
     if r["method"] not in ("linear_diffusion", "pca_gmm", "anisost"):   # own (3-start) fits of the baselines: baselines_3start.jsonl
@@ -219,6 +219,13 @@ if os.path.exists(R("k_sensitivity_summary.csv")):
     rows = [[LAB.get(m, m)] + [f3(r[c]) for c in ("a2m", "a1m", "a0", "a1p", "a2p", "abic")] for m, r in gm.sort_values("a0", ascending=False).iterrows()]
     write("ksens.tex", ["Method", "$K-2$", "$K-1$", "True $K$", "$K+1$", "$K+2$", "BIC choice"], rows, "lrrrrrr", "\\footnotesize")
     items.append(("table", "STk", "Sensitivity to the number of domains: mean ARI over all sections when the seed-0 embedding is clustered with matched clustering (20-start tied Gaussian mixture) for $K$ from two below to two above the annotated number, and for the $K$ in that range with the lowest BIC (label-free choice; it was almost always the largest $K$ allowed).", "ksens.tex"))
+
+# ------------------------------------------------------------------ S: breast cancer at the coarse classes
+if os.path.exists(R("brca_coarse.json")):
+    bc = json.load(open(R("brca_coarse.json")))
+    rows = [[LAB.get(m, m), f3(r["ARI_k20"]), f3(r["ARI_k4"])] for m, r in sorted(bc.items(), key=lambda kv: -kv[1]["ARI_k4"])]
+    write("brca_coarse.tex", ["Method", "20 regions, $K=20$", "4 classes, $K=4$"], rows, "lrr", "\\footnotesize")
+    items.append(("table", "STbrca", "Breast cancer scored against the 20 annotated regions (as in the main analysis) and against the 4 coarse classes they belong to (healthy, tumour, invasive, surrounding tumour). Seed-0 embedding, matched clustering (20-start tied Gaussian mixture) with $K$ set to the number of regions or classes. Methods that cluster internally are not included.", "brca_coarse.tex"))
 
 # ------------------------------------------------------------------ S: HiSTaR reproduction
 p1 = json.load(open(R("paper_numbers.json")))

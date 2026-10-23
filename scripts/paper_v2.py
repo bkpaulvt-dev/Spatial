@@ -42,7 +42,7 @@ nm_rob = nm[["dataset", "method", "slice", "seed", "ARI_robust", "NMI_robust", "
 # Visium breast cancer and Stereo-seq were run only through the standardised runner (scripts/bench_run.py):
 # its own-clustering and matched-clustering results get the same keys as the pipeline results (as in stats_cluster_aware.py)
 ru = []
-for r in (map(json.loads, open(R("benchmark_runs.jsonl"))) if os.path.exists(R("benchmark_runs.jsonl")) else []):
+for r in ({x["id"]: x for x in map(json.loads, open(R("benchmark_runs.jsonl")))}.values() if os.path.exists(R("benchmark_runs.jsonl")) else []):
     if r.get("status") != "ok" or r["dataset"] not in ("brca", "stereo"): continue
     base_ = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"], time=r["resources"].get("wall_s"))
     if r["method"] not in ("linear_diffusion", "pca_gmm", "anisost"):   # own (3-start) fits of the baselines: baselines_3start.jsonl
@@ -388,6 +388,13 @@ if os.path.exists(R("k_sensitivity.jsonl")):
     mac("kLinBicRank", str(int(list(top.index).index("linear_diffusion") + 1)))
     above = [MN2.get(m, m) for m in gm.abic.sort_values(ascending=False).index[:list(gm.abic.sort_values(ascending=False).index).index("linear_diffusion")]]
     mac("kAboveLinBic", " and ".join(above) if len(above) <= 2 else ", ".join(above[:-1]) + " and " + above[-1])
+# breast cancer at the 4 coarse classes (scripts/brca_coarse.py)
+if os.path.exists(R("brca_coarse.json")):
+    bc = json.load(open(R("brca_coarse.json"))); v4 = {m: r["ARI_k4"] for m, r in bc.items()}
+    mac("brcaCoarseLo", min(v4.values()), 2); mac("brcaCoarseHi", max(v4.values()), 2); mac("brcaCoarseLin", v4["linear_diffusion"], 2)
+    top = sorted(v4, key=v4.get, reverse=True)
+    mac("brcaCoarseTop", " and ".join(MN2.get(m, m) for m in top[:2])); mac("brcaCoarseLinRank", str(top.index("linear_diffusion") + 1))
+    mac("brcaCoarseN", str(len(v4)))
 # Spatial-MGCN label-selected epoch
 sm = nm[nm.method == "spatial_mgcn"].assign(g=lambda x: x.ARI_label_selected_epoch - x.ARI)
 mac("mgcnLeak", float(sm.g.mean()), 3)
