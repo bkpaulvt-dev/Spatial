@@ -19,7 +19,8 @@ python scripts/bench_queue.py --datasets brca stereo --sections block_a_1 E9.5_E
 python scripts/bench_queue.py --datasets stereo --sections E10.5_E1S1 --seeds 0 --workers 1
 python scripts/baselines_3start.py
 python scripts/bench_queue.py --datasets brca stereo --sections block_a_1 E9.5_E1S1 E10.5_E2S1 --seeds 1 2 --workers 1 --methods $ALL15
-python scripts/bench_queue.py --datasets stereo --sections E10.5_E1S1 --seeds 1 2 --workers 1 --methods $ALL15
+# CCST takes ~5.5 h per run on this section and was cut off twice by platform restarts: it keeps seeds 0 and 1 here
+python scripts/bench_queue.py --datasets stereo --sections E10.5_E1S1 --seeds 1 2 --workers 1 --methods $(echo $ALL15 | sed "s/ ccst//")
 # runs that failed for a fixed reason (e.g. Spatial-MGCN NaN on Stereo-seq) are retried once; out-of-memory stays recorded
 python scripts/bench_queue.py --datasets brca stereo --seeds 0 --workers 1 --methods spatial_mgcn --retry-errors --sections E9.5_E1S1
 wait
