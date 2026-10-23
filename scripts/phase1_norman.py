@@ -20,8 +20,10 @@ from cipher.data import PerturbData  # noqa: E402
 from cipher.model import CIPHER  # noqa: E402
 
 CONFIGS = {
-    "cipher_direct": {"basal": False, "adversary": False, "direct": True},
-    "cipher_nodirect": {"basal": False, "adversary": False},
+    "cipher_basal_dz8": {"basal": True, "control_basal": True, "adversary": False, "direct": True, "lr": 0.01, "d_z": 8},
+    "cipher_basal_dz16": {"basal": True, "control_basal": True, "adversary": False, "direct": True, "lr": 0.01, "d_z": 16},
+    "cipher_basal_dz32": {"basal": True, "control_basal": True, "adversary": False, "direct": True, "lr": 0.01, "d_z": 32},
+    "cipher_direct": {"basal": False, "adversary": False, "direct": True, "lr": 0.01},
 }
 
 

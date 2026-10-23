@@ -1,0 +1,230 @@
+[fold 0 seed 0] cipher_basal_dz8
+   val mse_de20 0.2589  (351s)
+[fold 0 seed 0] cipher_basal_dz16
+   val mse_de20 0.3241  (336s)
+[fold 0 seed 0] cipher_basal_dz32
+   val mse_de20 0.2689  (308s)
+[fold 0 seed 0] cipher_direct
+   val mse_de20 0.1487  (149s)
+[fold 0 seed 0] selected cipher_direct
+[fold 0 seed 1] cipher_basal_dz8
+   val mse_de20 0.3244  (302s)
+[fold 0 seed 1] cipher_basal_dz16
+   val mse_de20 0.3158  (328s)
+[fold 0 seed 1] cipher_basal_dz32
+   val mse_de20 0.3703  (325s)
+[fold 0 seed 1] cipher_direct
+   val mse_de20 0.1283  (159s)
+[fold 0 seed 1] selected cipher_direct
+[fold 0 seed 2] cipher_basal_dz8
+   val mse_de20 0.2645  (333s)
+[fold 0 seed 2] cipher_basal_dz16
+   val mse_de20 0.2902  (330s)
+[fold 0 seed 2] cipher_basal_dz32
+   val mse_de20 0.2858  (340s)
+[fold 0 seed 2] cipher_direct
+   val mse_de20 0.1529  (180s)
+[fold 0 seed 2] selected cipher_direct
+[fold 0 seed 3] cipher_basal_dz8
+   val mse_de20 0.3219  (301s)
+[fold 0 seed 3] cipher_basal_dz16
+   val mse_de20 0.3357  (311s)
+[fold 0 seed 3] cipher_basal_dz32
+   val mse_de20 0.3471  (313s)
+[fold 0 seed 3] cipher_direct
+   val mse_de20 0.1570  (152s)
+[fold 0 seed 3] selected cipher_direct
+[fold 0 seed 4] cipher_basal_dz8
+   val mse_de20 0.3287  (328s)
+[fold 0 seed 4] cipher_basal_dz16
+   val mse_de20 0.3142  (317s)
+[fold 0 seed 4] cipher_basal_dz32
+   val mse_de20 0.3366  (304s)
+[fold 0 seed 4] cipher_direct
+   val mse_de20 0.1385  (156s)
+[fold 0 seed 4] selected cipher_direct
+[fold 0] done
+[fold 1 seed 0] cipher_basal_dz8
+   val mse_de20 0.2044  (298s)
+[fold 1 seed 0] cipher_basal_dz16
+   val mse_de20 0.2591  (298s)
+[fold 1 seed 0] cipher_basal_dz32
+   val mse_de20 0.2646  (303s)
+[fold 1 seed 0] cipher_direct
+   val mse_de20 0.1485  (222s)
+[fold 1 seed 0] selected cipher_direct
+[fold 1 seed 1] cipher_basal_dz8
+   val mse_de20 0.2414  (357s)
+[fold 1 seed 1] cipher_basal_dz16
+   val mse_de20 0.2672  (355s)
+[fold 1 seed 1] cipher_basal_dz32
+   val mse_de20 0.2631  (357s)
+[fold 1 seed 1] cipher_direct
+   val mse_de20 0.1734  (222s)
+[fold 1 seed 1] selected cipher_direct
+[fold 1 seed 2] cipher_basal_dz8
+   val mse_de20 0.2344  (356s)
+[fold 1 seed 2] cipher_basal_dz16
+   val mse_de20 0.2870  (356s)
+[fold 1 seed 2] cipher_basal_dz32
+   val mse_de20 0.2463  (357s)
+[fold 1 seed 2] cipher_direct
+   val mse_de20 0.1630  (223s)
+[fold 1 seed 2] selected cipher_direct
+[fold 1 seed 3] cipher_basal_dz8
+   val mse_de20 0.2888  (356s)
+[fold 1 seed 3] cipher_basal_dz16
+   val mse_de20 0.2660  (358s)
+[fold 1 seed 3] cipher_basal_dz32
+   val mse_de20 0.2650  (358s)
+[fold 1 seed 3] cipher_direct
+   val mse_de20 0.1561  (223s)
+[fold 1 seed 3] selected cipher_direct
+[fold 1 seed 4] cipher_basal_dz8
+   val mse_de20 0.2413  (356s)
+[fold 1 seed 4] cipher_basal_dz16
+   val mse_de20 0.2655  (357s)
+[fold 1 seed 4] cipher_basal_dz32
+   val mse_de20 0.2857  (371s)
+[fold 1 seed 4] cipher_direct
+   val mse_de20 0.1423  (186s)
+[fold 1 seed 4] selected cipher_direct
+[fold 1] done
+[fold 2 seed 0] cipher_basal_dz8
+   val mse_de20 0.2967  (383s)
+[fold 2 seed 0] cipher_basal_dz16
+   val mse_de20 0.2764  (396s)
+[fold 2 seed 0] cipher_basal_dz32
+   val mse_de20 0.3161  (499s)
+[fold 2 seed 0] cipher_direct
+   val mse_de20 0.1491  (273s)
+[fold 2 seed 0] selected cipher_direct
+[fold 2 seed 1] cipher_basal_dz8
+   val mse_de20 0.3352  (534s)
+[fold 2 seed 1] cipher_basal_dz16
+   val mse_de20 0.3335  (496s)
+[fold 2 seed 1] cipher_basal_dz32
+   val mse_de20 0.3463  (542s)
+[fold 2 seed 1] cipher_direct
+   val mse_de20 0.1648  (277s)
+[fold 2 seed 1] selected cipher_direct
+[fold 2 seed 2] cipher_basal_dz8
+   val mse_de20 0.2603  (512s)
+[fold 2 seed 2] cipher_basal_dz16
+   val mse_de20 0.2458  (448s)
+[fold 2 seed 2] cipher_basal_dz32
+   val mse_de20 0.2720  (522s)
+[fold 2 seed 2] cipher_direct
+   val mse_de20 0.1550  (270s)
+[fold 2 seed 2] selected cipher_direct
+[fold 2 seed 3] cipher_basal_dz8
+   val mse_de20 0.2895  (506s)
+[fold 2 seed 3] cipher_basal_dz16
+   val mse_de20 0.3171  (529s)
+[fold 2 seed 3] cipher_basal_dz32
+   val mse_de20 0.3438  (499s)
+[fold 2 seed 3] cipher_direct
+   val mse_de20 0.1642  (275s)
+[fold 2 seed 3] selected cipher_direct
+[fold 2 seed 4] cipher_basal_dz8
+   val mse_de20 0.2897  (515s)
+[fold 2 seed 4] cipher_basal_dz16
+   val mse_de20 0.2953  (504s)
+[fold 2 seed 4] cipher_basal_dz32
+   val mse_de20 0.3094  (465s)
+[fold 2 seed 4] cipher_direct
+   val mse_de20 0.1568  (287s)
+[fold 2 seed 4] selected cipher_direct
+[fold 2] done
+[fold 3 seed 0] cipher_basal_dz8
+   val mse_de20 0.5599  (417s)
+[fold 3 seed 0] cipher_basal_dz16
+   val mse_de20 0.4426  (408s)
+[fold 3 seed 0] cipher_basal_dz32
+   val mse_de20 0.5367  (369s)
+[fold 3 seed 0] cipher_direct
+   val mse_de20 0.1847  (222s)
+[fold 3 seed 0] selected cipher_direct
+[fold 3 seed 1] cipher_basal_dz8
+   val mse_de20 0.6021  (365s)
+[fold 3 seed 1] cipher_basal_dz16
+   val mse_de20 0.5153  (338s)
+[fold 3 seed 1] cipher_basal_dz32
+   val mse_de20 0.5082  (322s)
+[fold 3 seed 1] cipher_direct
+   val mse_de20 0.2137  (210s)
+[fold 3 seed 1] selected cipher_direct
+[fold 3 seed 2] cipher_basal_dz8
+   val mse_de20 0.5067  (346s)
+[fold 3 seed 2] cipher_basal_dz16
+   val mse_de20 0.4242  (306s)
+[fold 3 seed 2] cipher_basal_dz32
+   val mse_de20 0.4790  (311s)
+[fold 3 seed 2] cipher_direct
+   val mse_de20 0.1912  (188s)
+[fold 3 seed 2] selected cipher_direct
+[fold 3 seed 3] cipher_basal_dz8
+   val mse_de20 0.5619  (315s)
+[fold 3 seed 3] cipher_basal_dz16
+   val mse_de20 0.4551  (301s)
+[fold 3 seed 3] cipher_basal_dz32
+   val mse_de20 0.4850  (308s)
+[fold 3 seed 3] cipher_direct
+   val mse_de20 0.1803  (176s)
+[fold 3 seed 3] selected cipher_direct
+[fold 3 seed 4] cipher_basal_dz8
+   val mse_de20 0.4895  (287s)
+[fold 3 seed 4] cipher_basal_dz16
+   val mse_de20 0.4677  (291s)
+[fold 3 seed 4] cipher_basal_dz32
+   val mse_de20 0.5379  (300s)
+[fold 3 seed 4] cipher_direct
+   val mse_de20 0.1706  (144s)
+[fold 3 seed 4] selected cipher_direct
+[fold 3] done
+[fold 4 seed 0] cipher_basal_dz8
+   val mse_de20 0.4427  (303s)
+[fold 4 seed 0] cipher_basal_dz16
+   val mse_de20 0.4352  (324s)
+[fold 4 seed 0] cipher_basal_dz32
+   val mse_de20 0.4433  (330s)
+[fold 4 seed 0] cipher_direct
+   val mse_de20 0.1762  (201s)
+[fold 4 seed 0] selected cipher_direct
+[fold 4 seed 1] cipher_basal_dz8
+   val mse_de20 0.5473  (321s)
+[fold 4 seed 1] cipher_basal_dz16
+   val mse_de20 0.5477  (317s)
+[fold 4 seed 1] cipher_basal_dz32
+   val mse_de20 0.5119  (324s)
+[fold 4 seed 1] cipher_direct
+   val mse_de20 0.1925  (198s)
+[fold 4 seed 1] selected cipher_direct
+[fold 4 seed 2] cipher_basal_dz8
+   val mse_de20 0.4810  (330s)
+[fold 4 seed 2] cipher_basal_dz16
+   val mse_de20 0.5112  (338s)
+[fold 4 seed 2] cipher_basal_dz32
+   val mse_de20 0.5265  (334s)
+[fold 4 seed 2] cipher_direct
+   val mse_de20 0.1777  (204s)
+[fold 4 seed 2] selected cipher_direct
+[fold 4 seed 3] cipher_basal_dz8
+   val mse_de20 0.5010  (340s)
+[fold 4 seed 3] cipher_basal_dz16
+   val mse_de20 0.4136  (328s)
+[fold 4 seed 3] cipher_basal_dz32
+   val mse_de20 0.4390  (311s)
+[fold 4 seed 3] cipher_direct
+   val mse_de20 0.2088  (194s)
+[fold 4 seed 3] selected cipher_direct
+[fold 4 seed 4] cipher_basal_dz8
+   val mse_de20 0.4918  (312s)
+[fold 4 seed 4] cipher_basal_dz16
+   val mse_de20 0.4544  (311s)
+[fold 4 seed 4] cipher_basal_dz32
+   val mse_de20 0.5199  (315s)
+[fold 4 seed 4] cipher_direct
+   val mse_de20 0.1918  (193s)
+[fold 4 seed 4] selected cipher_direct
+[fold 4] done
