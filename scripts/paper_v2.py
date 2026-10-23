@@ -21,8 +21,10 @@ plt.rcParams.update({"font.size": 8.5, "axes.edgecolor": INK2, "axes.labelcolor"
                      "ytick.color": INK2, "axes.spines.top": False, "axes.spines.right": False, "axes.grid": True,
                      "grid.color": GRID, "grid.linewidth": 0.6, "axes.axisbelow": True, "savefig.dpi": 300,
                      "savefig.bbox": "tight", "font.family": "DejaVu Sans"})
-DS = ["dlpfc", "starmap", "merfish"]
-DSN = {"dlpfc": "DLPFC (Visium)", "starmap": "STARmap mPFC", "merfish": "MERFISH hypothalamus"}
+DS = ["dlpfc", "starmap", "merfish", "brca", "stereo"]
+DS0 = ["dlpfc", "starmap", "merfish"]          # datasets of the published-pipeline runs (and the v2_* diagnostic figures)
+DSN = {"dlpfc": "DLPFC (Visium)", "starmap": "STARmap mPFC", "merfish": "MERFISH hypothalamus",
+       "brca": "Breast cancer (Visium)", "stereo": "Stereo-seq embryo"}
 out = {}
 
 # ------------------------------------------------------------------ benchmark table
@@ -37,7 +39,19 @@ nm = nm[nm.status == "ok"].drop_duplicates(["method", "dataset", "slice", "seed"
 nm_std = nm[["dataset", "method", "slice", "seed", "ARI", "NMI", "time"]]
 nm_rob = nm[["dataset", "method", "slice", "seed", "ARI_robust", "NMI_robust", "time"]].rename(
     columns={"ARI_robust": "ARI", "NMI_robust": "NMI"}).assign(method=lambda x: x.method + "+robust").dropna(subset=["ARI"])
-d = pd.concat([a, b, e, g, b3, nm_std, nm_rob], ignore_index=True)
+# Visium breast cancer and Stereo-seq were run only through the standardised runner (scripts/bench_run.py):
+# its own-clustering and matched-clustering results get the same keys as the pipeline results (as in stats_cluster_aware.py)
+ru = []
+for r in (map(json.loads, open(R("benchmark_runs.jsonl"))) if os.path.exists(R("benchmark_runs.jsonl")) else []):
+    if r.get("status") != "ok" or r["dataset"] not in ("brca", "stereo"): continue
+    base_ = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"], time=r["resources"].get("wall_s"))
+    if r["method"] not in ("linear_diffusion", "pca_gmm"):
+        ru.append(dict(base_, method={"anisost": "anisost_single_gmm"}.get(r["method"], r["method"]),
+                       ARI=r["metrics"]["ARI"], NMI=r["metrics"]["NMI"]))
+    if r["method"] not in ("spagcn", "bass", "bayesspace") and isinstance(r.get("metrics_matched"), dict):
+        m_ = r["method"] if r["method"] in ("linear_diffusion", "pca_gmm", "anisost") else r["method"] + "+robust"
+        ru.append(dict(base_, method=m_, ARI=r["metrics_matched"]["ARI"], NMI=r["metrics_matched"]["NMI"]))
+d = pd.concat([a, b, e, g, b3, nm_std, nm_rob, pd.DataFrame(ru)], ignore_index=True)
 d["slice"] = d["slice"].astype(str)
 d = d[[c for c in ["dataset", "method", "slice", "seed", "ARI", "NMI", "time"] if c in d]]
 d.loc[d.method == "histar_rerun", "method"] = "histar"
@@ -143,14 +157,14 @@ if mf:
 json.dump(out, open(R("paper_numbers_v2.json"), "w"), indent=1)
 
 # ------------------------------------------------------------------ figures
-slices = {ds: sorted(LT[LT.dataset == ds].slice.unique(), key=lambda s: float(s) if ds == "merfish" else s) for ds in DS}
+slices = {ds: sorted(LT[LT.dataset == ds].slice.unique(), key=lambda s: float(s) if ds == "merfish" else s) for ds in DS0}
 methods = [m for m in ["histar", "graphst", "anisost"] if m in LT.method.unique()]
 MN = {"histar": "HiSTaR", "graphst": "GraphST", "anisost": "AnisoST"}
 mb = base.reset_index() if mf else None
 fig, axs = plt.subplots(len(methods), 3, figsize=(7.4, 1.9 * len(methods) + 0.4), sharey=True,
-                        gridspec_kw={"width_ratios": [len(slices[x]) + 1 for x in DS]}, squeeze=False)
+                        gridspec_kw={"width_ratios": [len(slices[x]) + 1 for x in DS0]}, squeeze=False)
 for i, m in enumerate(methods):
-    for jx, ds in enumerate(DS):
+    for jx, ds in enumerate(DS0):
         ax = axs[i, jx]
         for r in L:
             if r["method"] != m or r.get("dataset", "dlpfc") != ds: continue
@@ -175,7 +189,7 @@ fig.savefig(f"{FIG}/v2_fig1_lottery.png"); plt.close(fig)
 
 if mf:
     fig, axs = plt.subplots(1, 3, figsize=(7.4, 2.4), sharey=True)
-    for ax, ds in zip(axs, DS):
+    for ax, ds in zip(axs, DS0):
         for k_, m in enumerate(methods):
             for off, kind, c in [(-0.15, "jitter1pct", BLUE), (0.15, "permute", ORANGE)]:
                 q = pert[(pert.dataset == ds) & (pert.method == m) & (pert.kind == kind)]
@@ -191,7 +205,7 @@ if mf:
     fig.legend(handles=h, ncol=2, frameon=False, loc="upper center", bbox_to_anchor=(0.5, 1.06), fontsize=7.5)
     fig.savefig(f"{FIG}/v2_fig2_mclust.png"); plt.close(fig)
 
-fig, axs = plt.subplots(1, 3, figsize=(7.4, 4.8), sharex=False)
+fig, axs = plt.subplots(1, len(DS), figsize=(9.5, 4.8), sharex=False)
 for ax, ds in zip(axs, DS):
     rows = [r for r in ROWS if not (np.isnan(mean(ds, r[2])) and np.isnan(mean(ds, r[1])))]
     for i, (lab, m0, m1) in enumerate(rows):
@@ -234,7 +248,7 @@ MCN = {"linear_diffusion": "Lin", "anisost": "Aniso", "pca_gmm": "Pca", "histar"
        "graphst_refined": "GraphstRef", "banksy_l0.8": "BanksyHi", "banksy_l0.2": "BanksyLo", "spagcn": "Spagcn",
        "stagate": "Stagate", "sedr": "Sedr", "spaceflow": "Spaceflow", "nichepca": "Nichepca", "ccst": "Ccst",
        "spatial_mgcn": "Mgcn", "deepst": "Deepst", "bass": "Bass", "bayesspace": "Bayesspace"}
-DSM = {"dlpfc": "Dlpfc", "starmap": "Starmap", "merfish": "Merfish"}
+DSM = {"dlpfc": "Dlpfc", "starmap": "Starmap", "merfish": "Merfish", "brca": "Brca", "stereo": "Stereo"}
 for ds in DS:
     for m, nme in MCN.items():
         v = out["means"][ds].get(m)
@@ -244,7 +258,7 @@ for ds in DS:
             if rb is not None and not np.isnan(rb): mac(f"robust{nme}{DSM[ds]}", rb)
 # macro-average over the three datasets (equal weight per dataset)
 for m, nme in MCN.items():
-    vs = [out["means"][ds].get(m) for ds in DS]
+    vs = [out["means"][ds].get(m) for ds in DS0]
     if all(v is not None and not np.isnan(v) for v in vs): mac(f"overall{nme}", float(np.mean(vs)))
 # pooled linear-diffusion comparisons
 pn = {"histar": "Histar", "histar+robust": "HistarRob", "graphst": "Graphst", "graphst+robust": "GraphstRob",
@@ -282,7 +296,7 @@ bm = LT.groupby("method")["range"].mean()
 mac("lotLo", float(bm.min()), 2); mac("lotHi", float(bm.max()), 2)
 mac("lotLoName", MN2[bm.idxmin()]); mac("lotHiName", MN2[bm.idxmax()])
 wr = LT.loc[LT["range"].idxmax()]
-mac("lotWorstMethod", MN2[wr.method]); mac("lotWorstSection", f"{ {'dlpfc': 'DLPFC', 'starmap': 'STARmap', 'merfish': 'MERFISH'}[wr.dataset]} section {wr.slice}")
+mac("lotWorstMethod", MN2[wr.method]); mac("lotWorstSection", f"{ {'dlpfc': 'DLPFC', 'starmap': 'STARmap', 'merfish': 'MERFISH', 'brca': 'breast cancer', 'stereo': 'Stereo-seq'}[wr.dataset]} section {wr.slice}")
 for m in MN2:
     if m in bm.index:
         mac(f"lotMean{MCN.get(m, m)}", float(bm[m]), 2); mac(f"lotMax{MCN.get(m, m)}", float(LT[LT.method == m]["range"].max()), 2)
@@ -304,7 +318,7 @@ if mf:
         q = agg.reset_index(); q = q[q.kind == kind]
         mac(f"mc{kn}Mean", float(q.rng.mean()), 2); mac(f"mc{kn}Max", float(q.rng.max()), 2)
         mac(f"mc{kn}Frac", str(round(100 * float(q.changed.mean()))))
-        for ds in DS:
+        for ds in DS0:
             qd = q[q.dataset == ds]; mac(f"mc{kn}Mean{DSM[ds]}", float(qd.rng.mean()), 2)
         # share of embeddings whose range exceeds 0.1
         mac(f"mc{kn}Gt", str(round(100 * float((q.rng > 0.1).mean()))))
@@ -363,7 +377,7 @@ if os.path.exists(R("k_sensitivity.jsonl")):
 # Spatial-MGCN label-selected epoch
 sm = nm[nm.method == "spatial_mgcn"].assign(g=lambda x: x.ARI_label_selected_epoch - x.ARI)
 mac("mgcnLeak", float(sm.g.mean()), 3)
-for ds in DS:
+for ds in DS0:
     mac(f"mgcnLeak{DSM[ds]}", float(sm[sm.dataset == ds].g.mean()), 2)
     mac(f"mgcnOracle{DSM[ds]}", float(sm[sm.dataset == ds].ARI_label_selected_epoch.mean()), 3)
     mac(f"mgcnFinal{DSM[ds]}", float(sm[sm.dataset == ds].ARI.mean()), 3)
@@ -377,6 +391,13 @@ rsm = RS.groupby("method").agg(t=("t", "median"), mem=("mem", "max"), kwh=("kwh"
 for m, r_ in rsm.iterrows():
     nme = MCN.get(m, m)
     mac(f"timeMed{nme}", f"{r_.t:.0f}"); mac(f"memMax{nme}", f"{r_.mem:.1f}")
+# runs stopped at the per-job memory cap (spatialbench/resources.py; SPATIALBENCH_MAX_RSS_GB, 12 GB)
+OOM = sorted({x["method"] for x in ur if x["status"] != "ok" and "out of memory" in str(x.get("error", ""))})
+OL = {"bass": "BASS", "graphst": "GraphST", "nichepca": "NichePCA", "spatial_mgcn": "Spatial-MGCN", "deepst": "DeepST",
+      "stagate": "STAGATE", "sedr": "SEDR", "ccst": "CCST", "histar": "HiSTaR", "spaceflow": "SpaceFlow", "spagcn": "SpaGCN"}
+_ol = [OL.get(m, m) for m in OOM]
+mac("listOom", "none" if not _ol else _ol[0] if len(_ol) == 1 else ", ".join(_ol[:-1]) + " and " + _ol[-1]); mac("nOom", str(len(OOM)))
+mac("memCap", os.environ.get("SPATIALBENCH_MAX_RSS_GB", "12"))
 tm = nm.groupby("method").time.median()
 for m, v in tm.items(): mac(f"timePilot{MCN.get(m, m)}", f"{v:.0f}")
 out["resources"] = {"unified": {m: {"median_s": round(float(r_.t), 1), "max_mem_gb": round(float(r_.mem), 2), "kwh_total": float(r_.kwh)} for m, r_ in rsm.iterrows()},
@@ -422,19 +443,43 @@ if os.path.exists(SJ):
         mac(f"n{pre}Tot", str(len(vs)))
         mac(f"n{pre}BetterTest", str(sum(v["test_only"]["ci95"][0] > 0 for v in vs)))
     mac("statBoot", str(cs["n_boot"])); mac("statMargin", f"{cs['margin']:.2f}"); mac("statClusters", str(len(cs["clusters"])))
+    # method lists by verdict (text names them, so they must follow the data)
+    TL = {"histar": "HiSTaR", "graphst": "GraphST", "banksy_l0.8": "BANKSY $\\lambda=0.8$", "banksy_l0.2": "BANKSY $\\lambda=0.2$",
+          "spagcn": "SpaGCN", "stagate": "STAGATE", "sedr": "SEDR", "spaceflow": "SpaceFlow", "nichepca": "NichePCA", "ccst": "CCST",
+          "spatial_mgcn": "Spatial-MGCN", "deepst": "DeepST", "bass": "BASS", "anisost": "AnisoST", "pca_gmm": "PCA",
+          "bayesspace": "BayesSpace"}
+    def joinl(xs): return "none" if not xs else xs[0] if len(xs) == 1 else ", ".join(xs[:-1]) + " and " + xs[-1]
+    for proto, pre in (("standard", "Std"), ("robust", "Rob")):
+        for cat, nm_ in (("baseline_better", "Better"), ("unresolved", "Unres")):
+            ks = sorted([k.split("/", 1)[1] for k, v in cs["comparisons"].items() if v["protocol"] == proto and v["category"] == cat],
+                        key=lambda m: cs["comparisons"][f"{proto}/{m}"]["delta"])
+            mac(f"list{pre}{nm_}", joinl([TL[m] for m in ks]))
+    # per-dataset: how many comparators have a higher matched-clustering mean than linear diffusion
+    for ds in ("dlpfc", "starmap", "merfish", "brca", "stereo"):
+        vals = [v["per_dataset"].get(ds) for v in cs["comparisons"].values() if v["protocol"] == "robust"]
+        vals = [x for x in vals if x is not None]
+        mac(f"nAhead{DSM[ds]}", str(sum(x < 0 for x in vals))); mac(f"nCmp{DSM[ds]}", str(len(vals)))
+    # mean delta over comparators: brain groups vs the two non-brain datasets
+    rv = [v for v in cs["comparisons"].values() if v["protocol"] == "robust"]
+    mac("dBrain", float(np.mean([np.mean([v["per_dataset"][x] for x in ("dlpfc", "starmap", "merfish") if x in v["per_dataset"]]) for v in rv])), 3)
+    mac("dOther", float(np.mean([np.mean([v["per_dataset"][x] for x in ("brca", "stereo") if x in v["per_dataset"]])
+                                 for v in rv if any(x in v["per_dataset"] for x in ("brca", "stereo"))])), 3)
     rk = cs["ranking"]
-    mac("pBestLin", f"{rk['Linear diffusion']['p_best']:.2f}"); mac("pBestBass", f"{rk['BASS']['p_best']:.2f}")
+    mac("pBestLin", f"{rk['Linear diffusion']['p_best']:.2f}")
+    rk2 = sorted([(v["p_best"], k) for k, v in rk.items() if k != "Linear diffusion"], reverse=True)
+    mac("pBestSecond", rk2[0][1].replace("λ", "$\\lambda$")); mac("pBestSecondVal", f"{rk2[0][0]:.2f}")
+    mac("rankExcluded", joinl([TL[m] for m in TL if TL[m].replace("$\\lambda$", "λ").replace("$\\lambda=", "λ=").replace("$", "") not in rk and m != "bayesspace"]))
     mac("rankLoLin", str(rk["Linear diffusion"]["rank95"][0])); mac("rankHiLin", str(rk["Linear diffusion"]["rank95"][1]))
     mac("rankMethods", str(cs["ranking_methods"]))
     ro = cs["ranking_own"]
-    mac("pBestLinOwn", f"{ro['Linear diffusion']['p_best']:.2f}"); mac("pBestBassOwn", f"{ro['BASS']['p_best']:.2f}")
+    mac("pBestLinOwn", f"{ro['Linear diffusion']['p_best']:.2f}")
     VERD = {"baseline_better": "baseline higher", "unresolved": "unresolved", "equivalent": "equivalent", "baseline_worse": "baseline lower"}
     for proto, fn in (("standard", "table_stats.tex"), ("robust", "table_stats_robust.tex")):
-        L_ = ["\\begin{tabular}{lrrrrl}", "\\toprule", "Method & $\\Delta$ ARI (95\\% CI) & DLPFC & STARmap & MERFISH & Verdict \\\\", "\\midrule"]
+        L_ = ["\\begin{tabular}{lrrrrrrl}", "\\toprule", "Method & $\\Delta$ ARI (95\\% CI) & DLPFC & STARmap & MERFISH & Breast & Stereo-seq & Verdict \\\\", "\\midrule"]
         vs = sorted([v for v in cs["comparisons"].values() if v["protocol"] == proto], key=lambda v: -v["delta"])
         for v in vs:
             pdv = v["per_dataset"]; f3 = lambda x: "--" if x is None else f"{x:+.2f}"
-            L_.append(f"{v['method']} & {v['delta']:+.3f} ({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f}) & {f3(pdv.get('dlpfc'))} & {f3(pdv.get('starmap'))} & {f3(pdv.get('merfish'))} & {VERD[v['category']]} \\\\")
+            L_.append(f"{v['method']} & {v['delta']:+.3f} ({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f}) & {f3(pdv.get('dlpfc'))} & {f3(pdv.get('starmap'))} & {f3(pdv.get('merfish'))} & {f3(pdv.get('brca'))} & {f3(pdv.get('stereo'))} & {VERD[v['category']]} \\\\")
         L_ += ["\\bottomrule", "\\end{tabular}"]
         open(R(fn), "w").write("\n".join(L_).replace("\u03bb", "$\\lambda$").replace("λ", "$\\lambda$") + "\n")
 # counts

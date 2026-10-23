@@ -52,11 +52,19 @@ FAMILY = {"linear_diffusion": 0, "anisost": 0, "pca_gmm": 0,
 INTERNAL = ("spagcn", "bass", "bayesspace")  # cluster internally: identical under both protocols
 FCOL = [BLUE, ORANGE, AQUA]
 FNAME = ["Training-free baselines", "Deep graph encoders", "Statistical and neighbourhood methods"]
-DSN = {"dlpfc": "DLPFC", "starmap": "STARmap", "merfish": "MERFISH"}
-NSEC = {"dlpfc": 12, "starmap": 3, "merfish": 5}
+DSN = {"dlpfc": "DLPFC", "starmap": "STARmap", "merfish": "MERFISH", "brca": "Breast", "stereo": "Stereo-seq"}
+NSEC = {"dlpfc": 12, "starmap": 3, "merfish": 5, "brca": 1, "stereo": 3}
+ND = len(DSN)
 # dataset encoding: shape + neutral grey
 DMK = {"dlpfc": dict(marker="o", mfc="#3a3a3a", mec="#3a3a3a"), "starmap": dict(marker="^", mfc="#8a8a8a", mec="#8a8a8a"),
-       "merfish": dict(marker="s", mfc="white", mec="#6a6a6a")}
+       "merfish": dict(marker="s", mfc="white", mec="#6a6a6a"), "brca": dict(marker="D", mfc="#bdbdbd", mec="#5a5a5a"),
+       "stereo": dict(marker="v", mfc="white", mec="#3a3a3a")}
+# methods stopped at the per-job memory cap on the largest Stereo-seq section: their Stereo-seq mean covers the other sections
+_runs = {}
+if os.path.exists(R("benchmark_runs.jsonl")):
+    for l in open(R("benchmark_runs.jsonl")):
+        r_ = json.loads(l); _runs[r_["id"]] = r_
+OOM = {r_["method"] for r_ in _runs.values() if r_.get("status") != "ok" and "out of memory" in str(r_.get("error", ""))}
 
 cs = json.load(open(R("stats_cluster_aware.json")))
 comp_m = {k.split("/", 1)[1]: v for k, v in cs["comparisons"].items() if k.startswith("robust/")}
@@ -84,32 +92,33 @@ def dataset_handles(ms=4.5):
 
 # ---------------------------------------------------------------- Figure 2: accuracy under matched clustering
 def fig_accuracy():
-    ms = [m for m in LAB if m in mean_m and len(mean_m[m]) == 3]
+    ms = [m for m in LAB if m in mean_m and len(mean_m[m]) == ND]
     ms.sort(key=lambda m: -np.mean([mean_m[m][d] for d in DSN]))
-    ms.append("bayesspace")  # DLPFC only
+    ms.append("bayesspace")  # Visium only (DLPFC and breast cancer)
     n = len(ms); y = np.arange(n)[::-1]
-    fig = plt.figure(figsize=(WIDTH, 10.6 * CM))
-    gs = fig.add_gridspec(1, 3, width_ratios=[0.95, 1.3, 0.95], wspace=0.08, left=0.135, right=0.985, top=0.89, bottom=0.235)
+    fig = plt.figure(figsize=(WIDTH, 11.4 * CM))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.45, 1.15, 0.85], wspace=0.08, left=0.135, right=0.985, top=0.885, bottom=0.27)
     ax0, ax1, ax2 = [fig.add_subplot(gs[0, i]) for i in range(3)]
     # A: heatmap of mean ARI (matched clustering)
     A = np.array([[mean_m[m].get(d, np.nan) for d in DSN] for m in ms], float)
-    im = ax0.imshow(np.ma.masked_invalid(A), cmap=SEQ, vmin=0, vmax=0.8, aspect="auto", extent=[-0.5, 2.5, -0.5, n - 0.5])
+    im = ax0.imshow(np.ma.masked_invalid(A), cmap=SEQ, vmin=0, vmax=0.8, aspect="auto", extent=[-0.5, ND - 0.5, -0.5, n - 0.5])
     for i, m in enumerate(ms):
         for j, d in enumerate(DSN):
             v = A[i, j]
             if np.isnan(v):
                 ax0.text(j, n - 1 - i, "–", ha="center", va="center", fontsize=7, color=INK2)
             else:
-                ax0.text(j, n - 1 - i, f"{v:.2f}", ha="center", va="center", fontsize=7, color="white" if v > 0.45 else INK)
-    ax0.set_xticks(range(3), list(DSN.values())); ax0.xaxis.tick_top(); ax0.tick_params(length=0)
+                star = "*" if (d == "stereo" and m in OOM) else ""
+                ax0.text(j, n - 1 - i, f"{v:.2f}{star}", ha="center", va="center", fontsize=7, color="white" if v > 0.45 else INK)
+    ax0.set_xticks(range(ND), [DSN[d].replace("Stereo-seq", "Stereo") for d in DSN]); ax0.xaxis.tick_top(); ax0.tick_params(length=0)
     ax0.set_yticks(y, [LAB[m] for m in ms]); ax0.tick_params(axis="y", pad=9)
     for s in ax0.spines.values(): s.set_visible(False)
     for yy, m in zip(y, ms):
         ax0.plot(-0.62, yy, "o", color=FCOL[FAMILY[m]], ms=4.3, clip_on=False, zorder=5)
-    ax0.set_xlim(-0.5, 2.5); ax0.set_ylim(-0.5, n - 0.5)
-    ax0.set_title("Mean ARI,\nmatched clustering", pad=16)
+    ax0.set_xlim(-0.5, ND - 0.5); ax0.set_ylim(-0.5, n - 0.5)
+    ax0.set_title("Mean ARI, matched clustering", pad=16)
     p0 = ax0.get_position()
-    cax = fig.add_axes([p0.x0 + 0.1 * p0.width, 0.095, 0.8 * p0.width, 0.018])
+    cax = fig.add_axes([p0.x0 + 0.1 * p0.width, 0.075, 0.8 * p0.width, 0.018])
     cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[0, 0.2, 0.4, 0.6, 0.8])
     cb.outline.set_linewidth(0.4); cb.ax.tick_params(labelsize=7, length=2)
     cb.set_label("Mean ARI", fontsize=7, labelpad=1)
@@ -124,7 +133,7 @@ def fig_accuracy():
         filled = lo > 0
         ax1.plot(v["delta"], yy, "o", ms=4.8, mfc=col if filled else "white", mec=col, mew=1.1, zorder=3)
         if m == "bayesspace":
-            ax1.text(hi + 0.012, yy, "(DLPFC only)", ha="left", va="center", fontsize=7, color=INK2)
+            ax1.text(hi + 0.012, yy, "(Visium only)", ha="left", va="center", fontsize=7, color=INK2)
     ax1.set_yticks(y, []); ax1.tick_params(axis="y", length=0)
     ax1.set_ylim(-0.5, n - 0.5)
     ax1.set_xlim(-0.1, 0.45); ax1.set_xticks([-0.1, 0, 0.1, 0.2, 0.3, 0.4])
@@ -134,29 +143,33 @@ def fig_accuracy():
     h = [Line2D([], [], marker="o", ls="", mfc=INK2, mec=INK2, ms=4.5, label="interval above zero"),
          Line2D([], [], marker="o", ls="", mfc="white", mec=INK2, ms=4.5, label="unresolved"),
          Patch(color="#e9e9e6", label="±0.03 equivalence margin")]
-    ax1.legend(handles=h, frameon=False, loc="upper right", handletextpad=0.3, borderaxespad=0.1, bbox_to_anchor=(1.0, 1.0))
+    p2_ = ax2.get_position()
+    fig.legend(handles=h, loc="lower left", ncol=1, frameon=False, bbox_to_anchor=(p2_.x0 - 0.035, 0.0),
+               handletextpad=0.3, labelspacing=0.3)
     # C: rank intervals (matched clustering)
+    NR = cs["ranking_methods"]; XP = NR + 3.6
     for yy, m in zip(y, ms):
         key = RANKKEY.get(m, LAB[m])
         if key not in rank:
-            ax2.text(8.5, yy, "not ranked (DLPFC only)", ha="center", va="center", fontsize=7, color=INK2, style="italic"); continue
+            why = "Visium only" if m == "bayesspace" else "memory cap"
+            ax2.text((NR + 1) / 2, yy, f"not ranked: {why}", ha="center", va="center", fontsize=7, color=INK2, style="italic"); continue
         rk = rank[key]; col = FCOL[FAMILY[m]]
         ax2.plot(rk["rank95"], [yy, yy], color=col, lw=1.3, solid_capstyle="butt")
         ax2.plot(rk["median_rank"], yy, "o", ms=4.8, color=col)
         if rk["p_best"] >= 0.01:
-            ax2.text(19.8, yy, f"{rk['p_best']:.2f}", ha="right", va="center", fontsize=7, color=INK)
+            ax2.text(XP, yy, f"{rk['p_best']:.2f}", ha="right", va="center", fontsize=7, color=INK)
     ax2.set_yticks(y, []); ax2.tick_params(axis="y", length=0); ax2.set_ylim(-0.5, n - 0.5)
-    ax2.set_xlim(0.3, 20); ax2.set_xticks([1, 4, 8, 12, 16])
-    ax2.spines["bottom"].set_bounds(0.3, 16.7)
+    ax2.set_xlim(0.3, XP + 0.2); ax2.set_xticks([1, *range(4, NR - 1, 3), NR])
+    ax2.spines["bottom"].set_bounds(0.3, NR + 0.7)
     ax2.set_xlabel("Rank (1 = best)\nP(best) shown when ≥ 0.01"); ax2.grid(axis="x", color=GRID, lw=0.5); ax2.set_axisbelow(True)
     ax2.set_title("Rank, median and\n95% interval", pad=5)
-    ax2.text(19.8, n - 0.45, "P(best)", ha="right", va="bottom", fontsize=7, color=INK2)
+    ax2.text(XP, n - 0.45, "P(best)", ha="right", va="bottom", fontsize=7, color=INK2)
     # letters
     for ax, s, dx in ((ax0, "A", -0.12), (ax1, "B", -0.02), (ax2, "C", -0.02)):
         p = ax.get_position(); letter(fig, p.x0 + dx if s != "A" else 0.005, 0.995, s)
     p1 = ax1.get_position()
-    fig.legend(handles=family_handles(), loc="lower left", ncol=2, frameon=False, bbox_to_anchor=(p1.x0 - 0.02, 0.0),
-               handletextpad=0.2, columnspacing=1.4, labelspacing=0.3)
+    fig.legend(handles=family_handles(), loc="lower left", ncol=1, frameon=False, bbox_to_anchor=(p1.x0 - 0.02, 0.0),
+               handletextpad=0.2, labelspacing=0.3)
     save(fig, "nar_fig2_accuracy")
 
 
@@ -196,10 +209,10 @@ def fig_robustness():
     MS = load_mclust_seed()
     SR = ranges(MS, "seed", 2); FJ = ranges(MS, "full_jit", 2)
     rg = np.random.default_rng(1)
-    fig = plt.figure(figsize=(WIDTH, 9.0 * CM))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.12, 1.12, 0.78], wspace=0.07, left=0.125, right=0.985, top=0.835, bottom=0.235)
+    fig = plt.figure(figsize=(WIDTH, 10.4 * CM))
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 1.1], wspace=0.07, left=0.125, right=0.985, top=0.80, bottom=0.27)
     axs = [fig.add_subplot(gs[0, i]) for i in range(3)]
-    jit = {"dlpfc": -0.2, "starmap": 0.0, "merfish": 0.2}
+    jit = {"dlpfc": -0.24, "starmap": -0.12, "merfish": 0.0, "brca": 0.12, "stereo": 0.24}
 
     def dots(ax, df, col, dy=0.0, sz=3.6):
         for m in order:
@@ -247,17 +260,20 @@ def fig_robustness():
     # C: Spearman rho heatmap
     H = np.array([[LT[(LT.method == m) & (LT.dataset == d)].rho.median() for d in DSN] for m in order[::-1]])
     ax = axs[2]
-    im = ax.imshow(H, cmap=DIV, vmin=-1, vmax=1, aspect="auto", extent=[-0.5, 2.5, -0.5, n - 0.5], origin="lower")
+    im = ax.imshow(np.ma.masked_invalid(H), cmap=DIV, vmin=-1, vmax=1, aspect="auto", extent=[-0.5, ND - 0.5, -0.5, n - 0.5], origin="lower")
     for i in range(n):
-        for j in range(3):
+        for j in range(ND):
             v = H[i, j]
-            ax.text(j, i, f"{v:+.2f}".replace("-", "−"), ha="center", va="center", fontsize=7, color="white" if abs(v) > 0.6 else INK)
-    ax.set_xticks(range(3), [f"{DSN[d]}\nn = {NSEC[d]}" for d in DSN]); ax.xaxis.tick_top()
+            if np.isnan(v):
+                ax.text(j, i, "–", ha="center", va="center", fontsize=7, color=INK2); continue
+            ax.text(j, i, f"{v:+.1f}".replace("-", "−"), ha="center", va="center", fontsize=7, color="white" if abs(v) > 0.6 else INK)
+    SPLIT = {"starmap": "STAR-\nmap", "merfish": "MER-\nFISH", "stereo": "Stereo-\nseq", "dlpfc": "DLPFC\n", "brca": "Breast\n"}
+    ax.set_xticks(range(ND), [f"{SPLIT[d]}\nn = {NSEC[d]}" for d in DSN]); ax.xaxis.tick_top()
     ax.set_yticks(range(n), []); ax.set_ylim(-0.6, n - 0.4); ax.tick_params(length=0)
     for s in ax.spines.values(): s.set_visible(False)
-    ax.set_title("Log-likelihood vs ARI,\nmedian Spearman ρ", pad=27)
+    ax.set_title("Log-likelihood vs ARI,\nmedian Spearman ρ", pad=36)
     p2 = ax.get_position()
-    cax = fig.add_axes([p2.x0 + 0.08 * p2.width, 0.115, 0.84 * p2.width, 0.02])
+    cax = fig.add_axes([p2.x0 + 0.08 * p2.width, 0.12, 0.84 * p2.width, 0.02])
     cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[-1, -0.5, 0, 0.5, 1])
     cb.ax.set_xticklabels(["−1", "−0.5", "0", "0.5", "1"]); cb.outline.set_linewidth(0.4); cb.ax.tick_params(labelsize=7, length=2)
     cb.set_label("Spearman ρ", fontsize=7, labelpad=1)
@@ -268,7 +284,7 @@ def fig_robustness():
     h = dataset_handles() + [Line2D([], [], color=INK, lw=1.8, marker="o", mfc="white", mec=INK, ms=4, label="median and IQR"),
                              Line2D([], [], marker="x", ls="", color=INK, ms=4, mew=0.8, label="R mclust, full-data initialisation + 1% noise (5 runs)")]
     p0 = axs[0].get_position()
-    fig.legend(handles=h, loc="lower left", ncol=2, frameon=False, bbox_to_anchor=(p0.x0 - 0.115, 0.0), handletextpad=0.4, handlelength=1.8,
+    fig.legend(handles=h, loc="lower left", ncol=3, frameon=False, bbox_to_anchor=(p0.x0 - 0.115, 0.0), handletextpad=0.4, handlelength=1.8,
                columnspacing=1.2, labelspacing=0.35)
     save(fig, "nar_fig3_robustness")
     return LT
@@ -276,19 +292,19 @@ def fig_robustness():
 
 # ---------------------------------------------------------------- Figure 4: default vs matched clustering
 def fig_protocol():
-    ms = [m for m in LAB if m in mean_m and m in mean_d and len(mean_m[m]) == 3 and len(mean_d[m]) == 3 and m not in INTERNAL]
+    ms = [m for m in LAB if m in mean_m and m in mean_d and len(mean_m[m]) == ND and len(mean_d[m]) == ND and m not in INTERNAL]
     ms.sort(key=lambda m: -np.mean([mean_m[m][d] for d in DSN]))
     n = len(ms); y = np.arange(n)[::-1]
-    fig, axs = plt.subplots(1, 3, figsize=(WIDTH, 8.6 * CM), sharey=True,
-                            gridspec_kw={"wspace": 0.08, "left": 0.135, "right": 0.985, "top": 0.9, "bottom": 0.255})
+    fig, axs = plt.subplots(1, ND, figsize=(WIDTH, 8.6 * CM), sharey=True,
+                            gridspec_kw={"wspace": 0.1, "left": 0.135, "right": 0.985, "top": 0.9, "bottom": 0.255})
     for ax, ds in zip(axs, DSN):
         for yy, m in zip(y, ms):
             a, b = mean_d[m][ds], mean_m[m][ds]
             ax.plot([a, b], [yy, yy], color=FCOL[FAMILY[m]], lw=2.0, solid_capstyle="butt", zorder=2)
             ax.plot(a, yy, "o", ms=4.8, mfc="white", mec=INK, mew=0.9, zorder=3)
             ax.plot(b, yy, "o", ms=4.0, mfc=INK, mec=INK, zorder=4)
-        ax.set_xlim(0.05, 0.8); ax.set_xticks([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
-        ax.set_xticklabels(["0.1", "", "0.3", "", "0.5", "", "0.7", ""])
+        ax.set_xlim(0.0, 0.8); ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8])
+        ax.set_xticklabels(["", "0.2", "", "0.6", ""])
         ax.grid(axis="x", color=GRID, lw=0.5); ax.set_axisbelow(True); ax.set_xlabel("Mean ARI")
         ax.set_title(f"{DSN[ds]} (n = {NSEC[ds]})", pad=4)
     axs[0].set_yticks(y, [LAB[m] for m in ms]); axs[0].set_ylim(-0.6, n - 0.4)
@@ -296,8 +312,8 @@ def fig_protocol():
     for yy, m in zip(y, ms):
         axs[0].plot(-0.035, yy, "o", color=FCOL[FAMILY[m]], ms=4.3, clip_on=False, zorder=5, transform=axs[0].get_yaxis_transform())
     letter(fig, 0.005, 0.995, "A")
-    for a, s in ((axs[1], "B"), (axs[2], "C")):
-        letter(fig, a.get_position().x0 - 0.015, 0.995, s)
+    for a, s in zip(axs[1:], "BCDE"):
+        letter(fig, a.get_position().x0 - 0.012, 0.995, s)
     h = [Line2D([], [], marker="o", ls="", mfc="white", mec=INK, ms=4.8, label="Default clustering (method's own pipeline)"),
          Line2D([], [], marker="o", ls="", mfc=INK, mec=INK, ms=4.2, label="Matched clustering (20-start Gaussian mixture)")]
     fig.legend(handles=h, loc="lower left", ncol=2, frameon=False, bbox_to_anchor=(0.12, 0.055), columnspacing=1.6, handletextpad=0.3)

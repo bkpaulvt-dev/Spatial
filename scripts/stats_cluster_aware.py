@@ -25,7 +25,23 @@ nm = nm[nm.status == "ok"].drop_duplicates(["method", "dataset", "slice", "seed"
 nm_std = nm[["dataset", "method", "slice", "seed", "ARI"]]
 nm_rob = nm[["dataset", "method", "slice", "seed", "ARI_robust"]].rename(columns={"ARI_robust": "ARI"}) \
     .assign(method=lambda x: x.method + "+robust").dropna(subset=["ARI"])
-d = pd.concat([a, b, e, g, b3, nm_std, nm_rob], ignore_index=True)
+# Datasets added later (Visium breast cancer, Stereo-seq) were run only through the standardised runner
+# (scripts/bench_run.py), which records each method's own clustering ("metrics") and the matched clustering
+# ("metrics_matched"). Named here with the same keys as the pipeline results (see STD / ROB below).
+RUNNER_ONLY = ("brca", "stereo")
+OWN_KEY = {"anisost": "anisost_single_gmm"}
+NO_EMB = ("spagcn", "bass", "bayesspace")
+ru = []
+for r in rd("benchmark_runs.jsonl").to_dict("records") if os.path.exists(R("benchmark_runs.jsonl")) else []:
+    if r.get("status") != "ok" or r["dataset"] not in RUNNER_ONLY: continue
+    base = dict(dataset=r["dataset"], slice=str(r["section"]), seed=r["seed"])
+    if r["method"] not in ("linear_diffusion", "pca_gmm"):   # own clustering of these two: baselines_3start.jsonl
+        ru.append(dict(base, method=OWN_KEY.get(r["method"], r["method"]), ARI=r["metrics"]["ARI"]))
+    if r["method"] not in NO_EMB and isinstance(r.get("metrics_matched"), dict):
+        m = r["method"] if r["method"] in ("linear_diffusion", "pca_gmm", "anisost") else r["method"] + "+robust"
+        ru.append(dict(base, method=m, ARI=r["metrics_matched"]["ARI"]))
+ru = pd.DataFrame(ru)
+d = pd.concat([a, b, e, g, b3, nm_std, nm_rob, ru], ignore_index=True)
 d["slice"] = d["slice"].astype(str)
 d.loc[d.method == "histar_rerun", "method"] = "histar"
 P = d.groupby(["dataset", "method", "slice"]).ARI.mean()
