@@ -47,17 +47,22 @@ rows = []
 for m in METHODS:
     n = nsec(m)
     acc_p = {(d, s) for (mm, d, s, sd) in paper if mm == m}
-    seeds_p = sorted({sd for (mm, d, s, sd) in paper if mm == m})
     acc_u = {(d, s) for (mm, d, s, sd) in uni if mm == m}
-    seeds_u = sorted({sd for (mm, d, s, sd) in uni if mm == m})
+    def seed_rng(src):   # seeds per section with a result: "min-max" over sections
+        c = {}
+        for (mm, d, s, sd) in src:
+            if mm == m: c[(d, s)] = c.get((d, s), 0) + 1
+        if not c: return "0"
+        lo, hi = min(c.values()), max(c.values())
+        return str(lo) if lo == hi else f"{lo}-{hi}"
     rows.append({
         "method": m,
-        "ARI, paper pipeline (sections / seeds)": f"{len(acc_p)}/{n} / {len(seeds_p)}",
-        "standardised runner + metric panel + resources (sections / seeds)": f"{len(acc_u)}/{n} / {len(seeds_u)}",
-        "lottery (20 starts)": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in lot if k[0] == m})}/{n}",
-        "R mclust perturbation": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in mc if k[0] == m})}/{n}",
+        "Published pipeline (sections / seeds per section)": f"{len(acc_p)}/{n} / {seed_rng(paper)}",
+        "Runner (sections / seeds per section)": f"{len(acc_u)}/{n} / {seed_rng(uni)}",
+        "Initialisation (20 starts)": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in lot if k[0] == m})}/{n}",
+        "R mclust noise/order (first 3 datasets)": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in mc if k[0] == m})}/{NSEC['dlpfc'] + NSEC['starmap'] + NSEC['merfish']}",
         "R mclust seeds": "n/a (no embedding)" if m in NO_EMB else f"{len({k for k in mcs if k[0] == m})}/{n}",
-        "invariance tests (sections)": f"{len({k.rsplit('/', 1)[0] for k in invm if k.endswith('/' + m)})}/{n}",
+        "Invariance (sections)": f"{len({k.rsplit('/', 1)[0] for k in invm if k.endswith('/' + m)})}/{n}",
     })
 df = pd.DataFrame(rows); df.to_csv(R("coverage_matrix.csv"), index=False)
 open(R("coverage_matrix.md"), "w").write(df.to_markdown(index=False) + "\n")

@@ -13,7 +13,7 @@ rng = lambda *xs: f"{min(xs):.2f}--{max(xs):.2f}"
 claims = [
  ("HiSTaR median DLPFC", "median ARI over the twelve DLPFC sections of " + f(v1["bench_histar"]["median_slice"])),
  ("HiSTaR mean DLPFC", "(mean " + f(v1["bench_histar"]["mean"])),
- ("HiSTaR CI", f"CI over sections {f(v1['bench_histar']['ci_lo'])}--{f(v1['bench_histar']['ci_hi'])}"),
+ ("HiSTaR CI", f"interval over sections {f(v1['bench_histar']['ci_lo'])}--{f(v1['bench_histar']['ci_hi'])}"),
  ("HiSTaR deterministic", "(" + f(v1["bench_histar_deterministic"]["mean"])),
  ("HiSTaR + R mclust DLPFC", "placeholder"),   # replaced below
  # HiSTaR seed SD: now the macros \\sdHistarDlpfc and \\sdHistarStarmap (scripts/paper_v2.py)

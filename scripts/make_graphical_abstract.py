@@ -74,7 +74,7 @@ cs = json.load(open(os.path.join(ROOT, "results", "stats_cluster_aware.json")))
 comp = {k.split("/", 1)[1]: v for k, v in cs["comparisons"].items() if k.startswith("robust/")}
 rows = [("bass", "BASS", AQUA), ("banksy_l0.8", "BANKSY λ = 0.8", AQUA), ("stagate", "STAGATE", ORANGE),
         ("histar", "HiSTaR", ORANGE), ("graphst", "GraphST", ORANGE)]
-T(133.0, 95.0, "Smoothing baseline: ahead on brain, not elsewhere", 13, INK, "bold", ha="center")
+T(133.0, 95.0, "Smoothing: ahead on brain, not on breast or embryo", 13, INK, "bold", ha="center")
 fx0, fx1 = 120.0, 176.0              # x extent
 xr = (-0.12, 0.30)                   # linear diffusion minus method (ARI), as in Figure 2B
 X = lambda v: fx0 + (v - xr[0]) / (xr[1] - xr[0]) * (fx1 - fx0)

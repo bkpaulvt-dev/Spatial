@@ -33,7 +33,7 @@ TXT2 = "#4a4a4a"  # secondary text: darker than before for contrast
 
 
 def T(x, y, s, size=6.5, color=INK, weight="normal", ha="left", va="center", style="normal", **kw):
-    size = max(size, 6.5)  # nothing below 6.5 pt at final size (figure is printed at 100%)
+    size = max(size, 7.0)  # nothing below 7 pt at final size (figure is printed at 100%)
     if color in (MUTE, INK2): color = TXT2
     return ax.text(x, y, s, fontsize=size, color=color, fontweight=weight, ha=ha, va=va, style=style, **kw)
 
@@ -134,12 +134,12 @@ tissue(Cb, cb, 28.0, 31.0, 10.0, 0.26, pal=MANY)
 T(27.0, 49.0, "10x Visium", 7, INK, "bold"); T(27.0, 46.4, "breast", 7, INK2); T(27.0, 43.8, "cancer, 1", 7, INK2)
 # MERFISH
 icon("Mouse.svg", 1.0, 29.6, 4.4, w=8.0)
-T(9.6, 31.6, "MERFISH", 7, INK, "bold"); T(9.6, 28.7, "mouse hypothal., 5", 7, INK2)
+T(9.6, 31.6, "MERFISH", 7, INK, "bold"); T(9.6, 28.7, "mouse hypothalamus, 5", 7, INK2)
 Cm, cm, _ = cache("merfish", "-0.14")
 Pm = tissue(Cm, cm, 3.0, 11.0, 15.5, 0.3)
 # Stereo-seq mouse embryo (right of MERFISH)
 Ce, ce, _ = cache("stereo", "E9.5_E1S1")
-tissue(Ce, ce, 26.5, 6.0, 11.5, 0.08, pal=MANY)
+tissue(Ce, ce, 27.0, 7.5, 10.5, 0.07, pal=MANY)
 T(25.5, 24.0, "Stereo-seq", 7, INK, "bold"); T(25.5, 21.4, "mouse", 7, INK2); T(25.5, 18.8, "embryo, 3", 7, INK2)
 
 # ------------------------------------------------------------------ 2 spots and graph
@@ -194,7 +194,7 @@ ax.scatter(Qd[:, 0], Qd[:, 1], s=3.2, c=[plt.cm.Blues(0.15 + 0.8 * v) for v in v
 for j, nm in enumerate(["Linear diffusion", "AnisoST", "PCA"]):
     T(91.0, 37.4 - j * 2.9, nm, 7, INK2)
 T(93.5, 15.0, "Official code with published settings", 7, MUTE, ha="center", style="italic")
-T(93.5, 12.2, "Output is an embedding or domain labels", 7, MUTE, ha="center", style="italic")
+T(92.0, 12.2, "Output: embedding or domain labels", 7, MUTE, ha="center", style="italic")
 
 # ------------------------------------------------------------------ 4 clustering
 z = np.load(os.path.join(ROOT, "results", "runs", "dlpfc__151673__linear_diffusion__s0.npz"))
@@ -265,11 +265,11 @@ pm = np.array([mp.get(v, -1) for v in pred])
 tissue(Ct, ct, 146.0, 76.0, 12.5, 0.3)
 tissue(Ct, np.where(keep, pm, -1), 160.5, 76.0, 12.5, 0.3)
 T(152.2, 74.2, "Annotation", 7, MUTE, ha="center"); T(166.7, 74.2, "Prediction", 7, MUTE, ha="center")
-T(159.0, 82.2, "vs", 6.0, INK2, ha="center")
-for j, (t1, t2) in enumerate((("Agreement", "ARI, NMI and AMI"), ("Domain and spatial quality", "macro-F1, CHAOS and PAS"), ("Cost", "run time and memory"))):
-    T(145.6, 68.2 - j * 6.3, t1, 6.8, INK); T(145.6, 65.4 - j * 6.3, t2, 7, MUTE)
+T(159.0, 82.2, "vs", 7, INK2, ha="center")
+for j, (t1, t2) in enumerate((("Agreement", "ARI, NMI and AMI"), ("Domain and spatial quality", "macro-F1, CHAOS, PAS"), ("Cost", "run time and memory"))):
+    T(145.0, 68.2 - j * 6.3, t1, 7, INK); T(145.0, 65.4 - j * 6.3, t2, 7, MUTE)
 tx, ty = 159.5, 44.5
-T(tx, 47.6, "Bootstrap over donors", 6.8, INK, ha="center"); T(tx, 44.8, "and datasets", 6.8, INK, ha="center")
+T(tx, 47.6, "Bootstrap over donors", 7, INK, ha="center"); T(tx, 44.8, "and datasets", 7, INK, ha="center")
 ax.add_patch(Circle((tx, ty - 3.2), 0.9, fc=INK2, zorder=3))
 for i, xx in enumerate([tx - 8.0, tx - 4.0, tx, tx + 4.0, tx + 8.0]):
     ax.plot([tx, xx], [ty - 3.2, ty - 7.6], color=MUTE, lw=0.5, zorder=2)

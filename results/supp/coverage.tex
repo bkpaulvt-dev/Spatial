@@ -1,23 +1,23 @@
 \scriptsize
-\begin{tabular}{lp{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}p{2.6cm}}
+\begin{tabular}{l>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}>{\raggedright\arraybackslash}p{2.6cm}}
 \toprule
-Method & ARI, paper pipeline (sections / seeds) & Standardised runner + metric panel + resources (sections / seeds) & Lottery (20 starts) & R mclust perturbation & R mclust seeds & Invariance tests (sections) \\
+method & Published pipeline (sections / seeds per section) & Runner (sections / seeds per section) & Initialisation (20 starts) & R mclust noise/order (first 3 datasets) & R mclust seeds & Invariance (sections) \\
 \midrule
-Linear diffusion & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & 2/24 \\
-AnisoST & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & 2/24 \\
-PCA & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & 2/24 \\
-BANKSY $\lambda$=0.2 & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & not run \\
-BANKSY $\lambda$=0.8 & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & not run \\
-HiSTaR & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & not run \\
-GraphST & 20/24 / 3 & 23/24 / 3 & 23/24 & 20/24 & 23/24 & not run \\
+Linear diffusion & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & 2/24 \\
+AnisoST & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & 2/24 \\
+PCA & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & 2/24 \\
+BANKSY $\lambda$=0.2 & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & not run \\
+BANKSY $\lambda$=0.8 & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & not run \\
+HiSTaR & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & not run \\
+GraphST & 20/24 / 1-3 & 23/24 / 3 & 23/24 & 20/20 & 23/24 & not run \\
 SpaGCN & 20/24 / 3 & 24/24 / 3 & n/a (no embedding) & n/a (no embedding) & n/a (no embedding) & not run \\
-STAGATE & 20/24 / 1 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & not run \\
-SEDR & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & not run \\
-SpaceFlow & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & not run \\
-NichePCA & 20/24 / 3 & 23/24 / 3 & 23/24 & 20/24 & 23/24 & not run \\
-CCST & 20/24 / 1 & 24/24 / 3 & 24/24 & 20/24 & 24/24 & not run \\
-Spatial-MGCN & 20/24 / 1 & 23/24 / 3 & 23/24 & 20/24 & 23/24 & not run \\
-DeepST & 20/24 / 3 & 23/24 / 3 & 23/24 & 20/24 & 23/24 & not run \\
+STAGATE & 20/24 / 1 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & not run \\
+SEDR & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & not run \\
+SpaceFlow & 20/24 / 3 & 24/24 / 3 & 24/24 & 20/20 & 24/24 & not run \\
+NichePCA & 20/24 / 3 & 23/24 / 3 & 23/24 & 20/20 & 23/24 & not run \\
+CCST & 20/24 / 1 & 24/24 / 2-3 & 24/24 & 20/20 & 24/24 & not run \\
+Spatial-MGCN & 20/24 / 1 & 23/24 / 3 & 23/24 & 20/20 & 23/24 & not run \\
+DeepST & 20/24 / 3 & 23/24 / 1-3 & 23/24 & 20/20 & 23/24 & not run \\
 BASS & 20/24 / 1 & 23/24 / 3 & n/a (no embedding) & n/a (no embedding) & n/a (no embedding) & not run \\
 BayesSpace & 12/13 / 1 & 13/13 / 1 & n/a (no embedding) & n/a (no embedding) & n/a (no embedding) & not run \\
 \bottomrule

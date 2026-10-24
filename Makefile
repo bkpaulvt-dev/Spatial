@@ -6,9 +6,10 @@
 #                     data/CHECKSUMS.sha256 (Stereo-seq files are ~1-2 GB each)
 #   make benchmark    LONG: the full benchmark (16 methods, 17 configurations) (~150 CPU-hours, single thread, <= 13 GB RAM per job)
 #   make benchmark-new LONG: breast cancer and Stereo-seq in the standardised runner, one job at a time with a 12 GB cap
+#                     (the cap is set only for this target; the first three datasets were run without it)
 #   make robustness   LONG: clustering-initialisation (lottery), K sensitivity and R mclust experiments (~1-2 days)
 # Memory: one R mclust fit on the 18,408-bin Stereo-seq section uses ~5 GB; run at most two mclust jobs at a time on a
-# 16 GB machine. The runner's cap is set with SPATIALBENCH_MAX_RSS_GB (default here 12).
+# 16 GB machine. The runner's cap is set with SPATIALBENCH_MAX_RSS_GB (benchmark-new only).
 #   make all          = numbers supplement figures paper check (does NOT rerun the benchmark)
 #
 # Everything runs on CPU with one thread per job (OMP_NUM_THREADS=1), as for the paper.
@@ -20,7 +21,6 @@ WORKERS ?= 1
 export OMP_NUM_THREADS := 1
 export MKL_NUM_THREADS := 1
 export OPENBLAS_NUM_THREADS := 1
-export SPATIALBENCH_MAX_RSS_GB ?= 12
 
 BASS_ANALYSIS_COMMIT := 81dfe7353093823eed68f403d9c4033031b73de4
 BASS_ANALYSIS := data/ext/BASS-Analysis
@@ -81,7 +81,7 @@ benchmark:
 
 # breast cancer and Stereo-seq (added later; runner only), every method, one job at a time under the memory cap
 benchmark-new:
-	$(PYTHON) scripts/bench_queue.py --datasets brca stereo --seeds 0 1 2 --workers 1
+	SPATIALBENCH_MAX_RSS_GB=12 $(PYTHON) scripts/bench_queue.py --datasets brca stereo --seeds 0 1 2 --workers 1
 	$(PYTHON) scripts/baselines_3start.py
 
 # Earlier per-family pipelines whose result files the paper also reads (HiSTaR/HiCAST, AnisoST, BANKSY/SpaGCN,
@@ -141,6 +141,8 @@ MCLUST_SEED_G4 := __(ccst|spatial_mgcn|deepst)__k
 MCLUST_SEED_G5 := (brca__block_a_1|stereo__E9.5_E1S1|stereo__E10.5_E2S1)__
 MCLUST_SEED_G6 := stereo__E10.5_E1S1__
 mclust-seed: mclust-seed-g1 mclust-seed-g2 mclust-seed-g3 mclust-seed-g4 mclust-seed-g5 mclust-seed-g6
+mclust-seed-g6:   # 18,408 bins: ~30 min per full-data fit, so without the noise repetitions except where already run
+	MCLUST_NO_JIT=1 $(RSCRIPT) scripts/mclust_seed.R $(EMBCSV) results/mclust_seed_g6.csv '$(MCLUST_SEED_G6)'
 mclust-seed-g%:
 	$(RSCRIPT) scripts/mclust_seed.R $(EMBCSV) results/mclust_seed_g$*.csv '$(MCLUST_SEED_G$*)'
 
@@ -148,8 +150,10 @@ mclust-seed-g%:
 stats:
 	$(PYTHON) scripts/stats_cluster_aware.py
 	STATS_SOURCE=runner $(PYTHON) scripts/stats_cluster_aware.py
+	STATS_EXCLUDE=starmap,stereo $(PYTHON) scripts/stats_cluster_aware.py
 
 numbers: stats
+	$(PYTHON) scripts/brca_coarse.py
 	$(PYTHON) scripts/paper_numbers.py
 	$(PYTHON) scripts/paper_v2.py
 	$(PYTHON) scripts/coverage_matrix.py
@@ -160,6 +164,7 @@ supplement: numbers
 figures: numbers
 	$(PYTHON) scripts/make_figures_nar.py
 	$(PYTHON) scripts/make_fig1_pipeline_v2.py
+	$(PYTHON) scripts/make_graphical_abstract.py
 	$(PYTHON) scripts/make_figures.py
 
 paper:

@@ -24,7 +24,7 @@ f3 = lambda x, d=3: "--" if x is None or (isinstance(x, float) and np.isnan(x)) 
 
 def write(name, header, rows, colspec, size="\\small", note=None):
     L = [size, f"\\begin{{tabular}}{{{colspec}}}", "\\toprule", " & ".join(header) + " \\\\", "\\midrule"]
-    MINUS = lambda c: re.sub(r"(?<![\w$\\])-(?=\d|\.\d)", "$-$", str(c))
+    MINUS = lambda c: re.sub(r"(?<![\w$\\-])-(?=\d|\.\d)", "$-$", re.sub(r"(?<![\d.])-(0\.0+)(?!\d*[1-9])", r"\1", str(c)))
     L += ["\\midrule" if r == ["MIDRULE"] else " & ".join(MINUS(c) for c in r) + " \\\\" for r in rows]
     L += ["\\bottomrule", "\\end{tabular}"]
     if note: L.append(f"\\par\\vspace{{2pt}}{{\\footnotesize {note}}}")
@@ -77,10 +77,13 @@ for k, v in my.items():
               "linear_diffusion": "3-start Gaussian mixture (scikit-learn, tied)", "anisost": "3-start Gaussian mixture (scikit-learn, tied)",
               "pca_gmm": "3-start Gaussian mixture (scikit-learn, tied)"}
     nice = lambda t: esc(str(t).replace("package_default", "package default").replace("our_rule", "fixed rule").replace("_", " "))
+    CLEAN = lambda t: (str(t).replace("lambda_sim", "cross-level weight").replace(" NOT ", " not ").replace("(LEAKAGE", "(label leakage")
+                       .replace("graphst vs graphst_refined", "GraphST with and without refinement").replace("'deterministic'", "deterministic")
+                       .replace("same as linear_diffusion", "same as linear diffusion"))
     rows.append([esc(LAB.get(k, k)), nice(v.get("kind", "")), "\\raggedright " + esc(code.get("source", "")).replace("/", "/\\allowbreak{}"), esc(code.get("commit", "")),
-                 nice(v.get("settings_source", "")), esc(DEFCLU.get(k, clu.get("official", clu.get("ours_standard", "")))), "\\parbox[t]{5.2cm}{\\raggedright " + esc(dev) + "}"])
+                 nice(v.get("settings_source", "")), esc(DEFCLU.get(k, clu.get("official", clu.get("ours_standard", "")))), esc(CLEAN(dev))])
 write("methods.tex", ["Method", "Type", "Code", "Commit", "Settings", "Default clustering", "Deviations from the tutorial"], rows,
-      "p{1.6cm}p{2.0cm}p{3.0cm}p{1.2cm}p{1.2cm}p{2.2cm}p{5.2cm}", "\\scriptsize")
+      "".join(">{\\raggedright\\arraybackslash}p{%s}" % w for w in ("1.8cm", "2.2cm", "3.0cm", "1.2cm", "1.4cm", "2.4cm", "5.2cm")), "\\scriptsize")
 items.append(("table", "STmethods", "Benchmarked methods: code source, version, settings source, clustering and every deviation from the published tutorial (from configs/methods.yaml).", "methods.tex"))
 
 # ------------------------------------------------------------------ S: mean ARI and NMI per dataset, both protocols
@@ -103,12 +106,12 @@ mean_table("NMI", "nmi.tex", "STnmi", "As Supplementary Table~\\STari{} for norm
 
 # ------------------------------------------------------------------ S: cluster-aware statistics
 cs = json.load(open(R("stats_cluster_aware.json")))
-for proto, fname, macro, title in (("standard", "stats_std.tex", "STstats", "Difference in mean ARI between linear diffusion and each method, both with their default clustering; equal-weight mean of group means; 95\\% interval from a hierarchical bootstrap over seven groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq); per-dataset columns give the mean difference within each dataset. Test only: the same estimate without the development sections. Verdict: baseline higher if the interval is above zero; unresolved otherwise; no comparison met the equivalence criterion (90\\% interval within $\\pm$0.03)."),
+for proto, fname, macro, title in (("standard", "stats_std.tex", "STstats", "Difference in mean ARI between linear diffusion and each method, both with their default clustering; equal-weight mean of group means; 95\\% interval from a hierarchical bootstrap over seven groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq); per-dataset columns give the mean difference within each dataset. Without dev. sections: the same estimate without the six development sections. Verdict: baseline higher if the interval is above zero; unresolved otherwise; no comparison met the equivalence criterion (90\\% interval within $\\pm$0.03)."),
                                    ("robust", "stats_rob.tex", "STstatsrob", "Primary analysis: as Supplementary Table~\\STstats{} with matched clustering (the same 20-start best-likelihood Gaussian mixture on every embedding; SpaGCN, BASS and BayesSpace use their internal clustering).")):
     vs = sorted([v for v in cs["comparisons"].values() if v["protocol"] == proto], key=lambda v: -v["delta"])
     rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})", *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DS],
              f"{v['test_only']['delta']:+.3f}", f"({v['test_only']['ci95'][0]:+.3f}, {v['test_only']['ci95'][1]:+.3f})", v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
-    write(fname, ["Method", "$\\Delta$", "95\\% CI", "Bonferroni CI", *[DSN[x] for x in DS], "Test only", "95\\% CI", "Verdict"], rows, "lrrr" + "r" * len(DS) + "rrl", "\\scriptsize")
+    write(fname, ["Method", "$\\Delta$", "95\\% interval", "Bonferroni interval", *[DSN[x] for x in DS], hd("Without", "dev. sections"), "95\\% interval", "Verdict"], rows, "lrrr" + "r" * len(DS) + "rrl", "\\scriptsize")
     items.append(("table", macro, title, fname))
 if os.path.exists(R("stats_cluster_aware_runner.json")):
     cr = json.load(open(R("stats_cluster_aware_runner.json")))
@@ -119,8 +122,20 @@ if os.path.exists(R("stats_cluster_aware_runner.json")):
     rows += [["MIDRULE"], ["\\emph{Bootstrap rank}", "P(rank 1)", "median", "95\\% interval"] + [""] * (len(DS) + 1)]
     rows += [[esc(k), f3(v["p_best"], 2), f"{v['median_rank']:.0f}", f"{v['rank95'][0]}--{v['rank95'][1]}"] + [""] * (len(DS) + 1)
              for k, v in sorted(cr["ranking"].items(), key=lambda kv: kv[1]["median_rank"])]
-    write("stats_runner.tex", ["Method", "$\\Delta$", "95\\% CI", "Bonferroni CI", *[DSN[x] for x in DS], "Verdict"], rows, "lrrr" + "r" * len(DS) + "l", "\\scriptsize")
+    write("stats_runner.tex", ["Method", "$\\Delta$", "95\\% interval", "Bonferroni interval", *[DSN[x] for x in DS], "Verdict"], rows, "lrrr" + "r" * len(DS) + "l", "\\scriptsize")
     items.append(("table", "STstatsrunner", "Sensitivity analysis: as Supplementary Table~\\STstatsrob{} (matched clustering) but with every dataset taken from the standardised runner (one execution environment, shared preprocessing), and the corresponding bootstrap ranks on the sections completed by every method.", "stats_runner.tex"))
+if os.path.exists(R("stats_cluster_aware_expert.json")):
+    ce = json.load(open(R("stats_cluster_aware_expert.json")))
+    vs = sorted([v for v in ce["comparisons"].values() if v["protocol"] == "robust"], key=lambda v: -v["delta"])
+    DSX = [x for x in DS if x not in ("starmap", "stereo")]
+    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})",
+             *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DSX],
+             v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
+    rows += [["MIDRULE"], ["\\emph{Bootstrap rank}", "P(rank 1)", "median", "95\\% interval"] + [""] * (len(DSX) + 1)]
+    rows += [[esc(k), f3(v["p_best"], 2), f"{v['median_rank']:.0f}", f"{v['rank95'][0]}--{v['rank95'][1]}"] + [""] * (len(DSX) + 1)
+             for k, v in sorted(ce["ranking"].items(), key=lambda kv: kv[1]["median_rank"])]
+    write("stats_expert.tex", ["Method", "$\\Delta$", "95\\% interval", "Bonferroni interval", *[DSN[x] for x in DSX], "Verdict"], rows, "lrrr" + "r" * len(DSX) + "l", "\\scriptsize")
+    items.append(("table", "STstatsexpert", "Sensitivity analysis: as Supplementary Table~\\STstatsrob{} (matched clustering) restricted to the datasets with an expert annotation (DLPFC, MERFISH, breast cancer; STARmap, whose annotation provenance is unknown, and Stereo-seq, whose annotation was derived partly by clustering, are left out), with the corresponding bootstrap ranks.", "stats_expert.tex"))
 rk = cs["ranking"]; ro = cs["ranking_own"]
 rows = [[esc(k), f3(v["p_best"], 2), f"{v['median_rank']:.0f}", f"{v['rank95'][0]}--{v['rank95'][1]}",
          f3(ro[k]["p_best"], 2), f"{ro[k]['median_rank']:.0f}", f"{ro[k]['rank95'][0]}--{ro[k]['rank95'][1]}"] for k, v in sorted(rk.items(), key=lambda kv: kv[1]["median_rank"])]
@@ -190,7 +205,7 @@ dsm = U.groupby(["method", "dataset"])[cols].mean().groupby("method").mean()
 cnt = U.groupby("method").size()
 rows = [[LAB.get(m, m)] + [f3(r[c], 3 if c not in ("n_missed_domains",) else 2) for c in cols] + [str(cnt[m])] for m, r in dsm.sort_values("ARI", ascending=False).iterrows()]
 write("metrics.tex", ["Method", "ARI", "NMI", "Macro-F1", "Missed domains", "Small-domain recall", "CHAOS$\\downarrow$", "PAS$\\downarrow$", "Boundary F1", "Runs"], rows, "lrrrrrrrrr", "\\scriptsize")
-items.append(("table", "STmetrics", "Metric panel from the standardised runner (shared preprocessing for all methods; mean over the five datasets of the per-dataset means). Values differ slightly from Supplementary Table~\\STari{} because the preprocessing is shared. Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: last column (successful runs; up to 72 = 24 sections $\\times$ 3 seeds).", "metrics.tex"))
+items.append(("table", "STmetrics", "Metric panel from the standardised runner (shared preprocessing for all methods; mean over the five datasets of the per-dataset means). For DLPFC, STARmap and MERFISH the values differ from Supplementary Table~\\STari{} (published pipelines) as listed in Supplementary Table~\\STagree; for breast cancer and Stereo-seq they are the same runs. DeepST: one seed on DLPFC, STARmap and MERFISH and on Stereo-seq E10.5 E2S1 (memory). Missed domains: annotated domains with no matched cluster; small-domain recall: recall of domains below 5\\% of spots; CHAOS and PAS: spatial fragmentation (lower is better). Runs: last column (successful runs; up to 72 = 24 sections $\\times$ 3 seeds).", "metrics.tex"))
 rs = U.groupby("method").agg(t=("t", "median"), mem=("mem", "max"), kwh=("kwh", "sum"))
 rows = [[LAB.get(m, m), f"{r.t:.0f}", f"{r.mem:.1f}", f"{1000 * r.kwh / cnt[m]:.2f}"] for m, r in rs.sort_values("t").iterrows()]
 write("resources.tex", ["Method", "Median time per job (s)", "Peak memory (GB)", "Energy per job (Wh, estimate)"], rows, "lrrr", "\\footnotesize")
@@ -232,10 +247,10 @@ p1 = json.load(open(R("paper_numbers.json")))
 h = p1["bench_histar"]; hd = p1["bench_histar_deterministic"]
 mc = M[(M.kind == "base") & (M.dataset == "dlpfc") & (M.method == "histar")].ARI.mean()
 rows = [["Reported (HiSTaR article)", "0.65 (median)", "--", "--", "HiSTaR article"],
-        ["Official code, 3-start GMM (3 seeds)", f3(h["median_slice"]), f3(h["mean"]), f"{f3(h['ci_lo'])}--{f3(h['ci_hi'])}", "this study"],
+        ["PyTorch port of the official code, 3-start GMM (3 seeds)", f3(h["median_slice"]), f3(h["mean"]), f"{f3(h['ci_lo'])}--{f3(h['ci_hi'])}", "this study"],
         ["Masking at inference removed", f3(hd["median_slice"]), f3(hd["mean"]), f"{f3(hd['ci_lo'])}--{f3(hd['ci_hi'])}", "this study"],
         ["R mclust as in the official pipeline (seed 0)", "--", f3(mc), "--", "this study"]]
-write("histar.tex", ["Setting", "Median ARI", "Mean ARI", "95\\% CI of mean", "Source"], rows, "lrrrl", "\\footnotesize")
+write("histar.tex", ["Setting", "Median ARI", "Mean ARI", "95\\% interval of mean", "Source"], rows, "lrrrl", "\\footnotesize")
 items.append(("table", "SThistar", "Reproduction of HiSTaR on the twelve DLPFC sections.", "histar.tex"))
 
 # ------------------------------------------------------------------ S: label-selected epoch
@@ -252,7 +267,7 @@ items.append(("table", "STepoch", "Mean ARI of the final training epoch (used in
 au = pd.read_csv(R("leakage_scan/summary.csv"))
 rows = [[esc(r.repo)] + [str(int(getattr(r, c))) for c in ("L1", "L2", "L3", "L4", "L5")] for r in au.itertuples()]
 write("audit.tex", ["Repository", "L1", "L2", "L3", "L4", "L5"], rows, "lrrrrr", "\\footnotesize")
-items.append(("table", "STaudit", "Automated screening of released code for patterns of label use (number of candidate lines per category; L1 result chosen by agreement with labels, L2 number of domains from labels, L3 unannotated spots removed, L4 settings keyed by section, L5 loops combined with a label metric). Candidate lines are not findings: each was read manually; the 14 repositories are the benchmarked methods with released code plus SPARK, SpatialPCA and conST, which were screened but not benchmarked, and only the label-selected epoch in Spatial-MGCN's test scripts was confirmed as L1 (Supplementary Note~\\SNaudit).", "audit.tex"))
+items.append(("table", "STaudit", "Automated screening of released code for patterns of label use (number of candidate lines per category; L1 result chosen by agreement with labels, L2 number of domains from labels, L3 unannotated spots removed, L4 settings keyed by section, L5 loops combined with a label metric). Candidate lines are not findings: each was read manually; the 14 repositories are 11 of the benchmarked methods (all except HiSTaR, whose code was ported and read in full, and NichePCA, a library) plus SPARK, SpatialPCA and conST, which were screened but not benchmarked, and only the label-selected epoch in Spatial-MGCN's test scripts was confirmed as L1 (Supplementary Note~\\SNaudit).", "audit.tex"))
 
 # ------------------------------------------------------------------ S: invariance pilot
 inv = json.load(open(R("invariance_pilot.json")))
@@ -265,17 +280,18 @@ items.append(("table", "STinv", "Pilot invariance test (three training-free meth
 # ------------------------------------------------------------------ S: coverage
 cov = pd.read_csv(R("coverage_matrix.csv"))
 rows = [[esc(LAB.get(r[0], r[0]))] + [esc(re.sub(r"^0/\d+", "not run", str(x))) for x in r[1:]] for r in cov.itertuples(index=False)]
-write("coverage.tex", [esc(c[:1].upper() + c[1:]).replace("lottery", "initialisation experiment") for c in cov.columns], rows, "l" + "p{2.6cm}" * (len(cov.columns) - 1), "\\scriptsize")
+write("coverage.tex", [esc(c) for c in cov.columns], rows, "l" + ">{\\raggedright\\arraybackslash}p{2.6cm}" * (len(cov.columns) - 1), "\\scriptsize")
 items.append(("table", "STcov", "Which method was run in which experiment (sections completed / expected; seeds). n/a: the experiment needs an embedding and the method clusters internally.", "coverage.tex"))
 
 # ------------------------------------------------------------------ supplementary figures and notes
-figs = [("SFlottery", "v2_fig1_lottery.png", "Initialisation experiment for three representative methods (HiSTaR, GraphST and AnisoST), per section: ARI of 20 single-start fits of one fixed embedding (grey), the best-likelihood fit (blue) and R mclust with default settings (open circle)."),
+figs = [("SFlottery", "v2_fig1_lottery.png", "Initialisation experiment for three representative methods (HiSTaR, GraphST and AnisoST), per section: ARI of 20 single-start fits of one fixed embedding (grey), the best-likelihood fit (blue) and R mclust with default settings (open circle); DLPFC, STARmap and MERFISH (all datasets: Figure 4A of the main text)."),
         ("SFsens", "fig3_sensitivity.png", "Sensitivity of linear diffusion (diffusion steps $T$, neighbours $k$, number of PCs, step size $\\alpha$) and of AnisoST (edge-scale quantile $q$) on the 12 DLPFC sections, one hyper-parameter at a time (open circle: default; dashed line: HiSTaR mean ARI)."),
+        ("SFmapsnew", "nar_figS_maps_new.png", "Domains on the breast cancer section and on Stereo-seq section E9.5 E1S1 (seed 0, default clustering in the standardised runner; GraphST with its Stereo-seq setting on Stereo-seq): annotation and five methods; predicted clusters matched to the annotated domains with the Hungarian algorithm for display only; ARI in parentheses. The 20 breast cancer regions and the Stereo-seq tissues are shown with a 20-colour palette, so a colour can repeat across distant domains."),
         ("SFboundary", "fig4_boundary.png", "Accuracy on spots at layer boundaries and in layer interiors on the 12 DLPFC sections, linear diffusion versus AnisoST (labelled Anisotropic); one line per section; Wilcoxon signed-rank test, $n=12$ sections.")]
 notes = {"SNdata": ("Data and preprocessing", "DLPFC count matrices from spatialLIBD and layer annotations from the SEDR analyses repository; STARmap and MERFISH matrices and annotations from the BASS analyses. Breast cancer: 10x Genomics Space Ranger 1.1.0 dataset V1\\_Breast\\_Cancer\\_Block\\_A\\_Section\\_1 with the 20-region annotation (column fine\\_annot\\_type) of the SEDR analyses repository (data/BRCA1/metadata.tsv). Stereo-seq: MOSTA atlas files E9.5\\_E1S1, E10.5\\_E2S1 and E10.5\\_E1S1 (bin50, CNGB STOmics DB STDS0000058), raw counts and the published tissue annotation (obs annotation); bins without counts were removed. The two later datasets were added after the analysis of the first three was complete and run with unchanged settings in the standardised runner (three seeds per method; two for CCST on E10.5\\_E1S1; DeepST seeds 1 and 2 exceeded the memory cap on E10.5\\_E2S1). Genes in fewer than 50 spots or with fewer than 10 counts were removed for the whole-transcriptome data (Visium, Stereo-seq); 2000 highly variable genes were selected on the counts (Seurat v3 flavour) or all panel genes kept (STARmap, MERFISH), then counts were normalised to the library size, log-transformed, scaled and reduced by PCA (200 components for whole-transcriptome data, 50 for panels). Sections, splits and label provenance are listed in configs/datasets.yaml; per-section statistics are in Supplementary Table~\\STqc."),
-         "SNmethods": ("Methods and settings", "Every method was run from its official code with the settings of its tutorial or paper (Supplementary Table~\\STmethods). The true number of domains was given to every method. Neighbourhood radii given in pixels were converted to multiples of the spot or cell spacing so that they transfer across technologies. Methods that output an embedding were additionally clustered with matched clustering: a 20-start tied-covariance Gaussian mixture keeping the best likelihood, the same for every method."),
+         "SNmethods": ("Methods and settings", "Every method was run from its official code (HiSTaR: a PyTorch port of it, given the shared principal components) with the settings of its tutorial or paper (Supplementary Table~\\STmethods). The true number of domains was given to every method. Neighbourhood radii given in pixels were converted to multiples of the spot or cell spacing so that they transfer across technologies. Methods that output an embedding were additionally clustered with matched clustering: a 20-start tied-covariance Gaussian mixture keeping the best likelihood, the same for every method."),
          "SNmetrics": ("Metrics", "Agreement: ARI, NMI, AMI. Per-domain: clusters matched to domains with the Hungarian algorithm; macro-F1, missed domains, recall of domains below 5\\% of spots. Spatial: CHAOS (mean distance to the nearest same-cluster neighbour), PAS (fraction of spots whose cluster differs from most of their ten neighbours), Moran's I of the labels, boundary F1. Label-free: silhouette, Davies--Bouldin, Calinski--Harabasz. Definitions and code: spatialbench/metrics.py (unit tests in tests/)."),
-         "SNstats": ("Statistics", "Sections are nested in groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq). Differences to the reference are equal-weight means of group means with 95\\% percentile intervals from a hierarchical bootstrap (5000 resamples: groups, then sections within groups). Equivalence: 90\\% interval within $\\pm$0.03 ARI, about the seed-to-seed standard deviation. No correction for multiple comparisons is applied. Ranks and the probability of ranking first come from the same resamples. The reference method was chosen after seeing the means, so these comparisons are exploratory. Code: \\texttt{scripts/stats\\_cluster\\_aware.py}."),
+         "SNstats": ("Statistics", "Sections are nested in groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq). Differences to the reference are equal-weight means of group means with 95\\% percentile intervals from a hierarchical bootstrap (5000 resamples: groups, then sections within groups). Equivalence: 90\\% interval within $\\pm$0.03 ARI, about the seed-to-seed standard deviation. Intervals are uncorrected; Bonferroni-corrected intervals over the 16 comparisons (two-sided level 1 - 0.05/16) are given as a check. Ranks and the probability of ranking first come from the same resamples. The reference method was chosen after seeing the means, so these comparisons are exploratory. Code: \\texttt{scripts/stats\\_cluster\\_aware.py}."),
          "SNaudit": ("Audit of released code", "Repositories were screened with \\texttt{scripts/audit\\_leakage.py} for five patterns of label use (Supplementary Table~\\STaudit), and every candidate line was read by one author. The taxonomy and all judgements, including false alarms, are in \\texttt{docs/LEAKAGE\\_AUDIT.md}. The audit describes what the released code does; it does not establish how published results were obtained."),
          "SNcompute": ("Computing environment", "All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB of memory, Python 3.13, R 4.3.3 and mclust 6.0.1. Memory-heavy methods (DeepST, BayesSpace, NichePCA) were run one job at a time. For the breast cancer and Stereo-seq runs every job ran alone with a cap of 12 GB resident memory (process tree, sampled once per second); a job above the cap, or leaving less than 0.8 GB of system memory, was stopped and recorded as out of memory.")}
 
@@ -301,7 +317,7 @@ for i, (macro, fn, cap) in enumerate(figs, 1):
 doc = r"""% Supplementary Information. Generated by scripts/make_supplement.py; do not edit by hand.
 \documentclass[10pt]{article}
 \usepackage[a4paper,margin=2cm,landscape]{geometry}
-\usepackage{booktabs,graphicx,caption,xcolor,amssymb,float}
+\usepackage{booktabs,graphicx,caption,xcolor,amssymb,float,array}
 \usepackage[T1]{fontenc}
 \usepackage{helvet}\renewcommand{\familydefault}{\sfdefault}
 \usepackage{courier}\usepackage[hidelinks]{hyperref}

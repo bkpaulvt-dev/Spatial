@@ -21,7 +21,7 @@ methods:
     settings_source: tutorial
     settings: {epochs: 600, hvg: "3000 (Visium) / all genes (targeted panels)", embedding_pcs: 20, refinement_radius: 50}
     clustering: {official: "R mclust EEE on 20 PCs of the embedding"}
-    deviations: ["reported with and without the tutorial's label refinement (graphst vs graphst_refined)"]
+    deviations: ["reported with and without the tutorial's label refinement (graphst vs graphst_refined)", "Stereo-seq: datatype='Stereo' (the package's documented setting for Stereo-seq)"]
   banksy:
     publication: "Singhal et al., Nat Genet 2024;56:431"
     kind: neighbourhood-augmented features (non-deep)
@@ -54,7 +54,7 @@ methods:
     settings_source: tutorial
     settings: {norm_target_sum: 1e6, hvg: 2000, pcs: 200, graph_k: 12, training: "DEC (N=1)"}
     clustering: {official: "R mclust EEE (seed 2023)"}
-    deviations: ["mclust called as SEDR.mclust_R does, without its line that hard-codes the authors' R_HOME (breaks R's LAPACK in a running session)"]
+    deviations: ["mclust called as SEDR.mclust_R does, without its line that hard-codes the authors' R_HOME (breaks R's LAPACK in a running session)", "the same 12-NN graph on every dataset (the Stereo-seq tutorial uses another graph)"]
   spaceflow:
     publication: "Ren et al., Nat Commun 2022;13:4076"
     kind: deep graph infomax with spatial regularisation
@@ -70,7 +70,7 @@ methods:
     settings_source: package_default
     settings: {knn: 6, pcs: 30, clustering: "Leiden with resolution search to K"}
     clustering: {official: "Leiden"}
-    deviations: []
+    deviations: ["default workflow (aggregation of all genes before PCA) on every dataset; exceeded the 12 GB cap on the 18,408-bin Stereo-seq section"]
   ccst:
     publication: "Li et al., Nat Comput Sci 2022 (CCST; volume and pages to verify)"
     kind: deep graph infomax (4 GCN layers)
@@ -86,7 +86,7 @@ methods:
     settings_source: tutorial
     settings: {lr: 0.001, weight_decay: 5e-4, k: 14, radius: "4.1 spot spacings (560 px)", hidden: [128, 64], alpha_beta_gamma: [1, 10, 0.1], epochs: 201}
     clustering: {official: "k-means each epoch; epoch chosen by ARI against the annotation (LEAKAGE, see docs/LEAKAGE_AUDIT.md)", ours: "final epoch (label-free); label-selected value recorded separately"}
-    deviations: ["unannotated spots kept (the released script deletes them before training)", "label-free epoch rule"]
+    deviations: ["unannotated spots kept (the released script deletes them before training)", "label-free epoch rule", "default settings on every dataset (the repository configuration for this breast cancer section was not used)"]
   deepst:
     publication: "Xu et al., Nucleic Acids Res 2022;50:e131"
     kind: deep graph + augmentation (no histology)

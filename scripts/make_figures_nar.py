@@ -115,8 +115,11 @@ def fig_accuracy():
     for s in ax0.spines.values(): s.set_visible(False)
     for yy, m in zip(y, ms):
         ax0.plot(-0.62, yy, "o", color=FCOL[FAMILY[m]], ms=4.3, clip_on=False, zorder=5)
+    ax0.axvline(2.5, color="white", lw=2.2, zorder=4)                       # brain | other tissues
+    ax0.text(1.0, n - 0.5 + 1.55, "Brain", ha="center", va="bottom", fontsize=7, color=INK2)
+    ax0.text(3.5, n - 0.5 + 1.55, "Other tissues", ha="center", va="bottom", fontsize=7, color=INK2)
     ax0.set_xlim(-0.5, ND - 0.5); ax0.set_ylim(-0.5, n - 0.5)
-    ax0.set_title("Mean ARI, matched clustering", pad=16)
+    ax0.set_title("Mean ARI, matched clustering", pad=31)
     p0 = ax0.get_position()
     cax = fig.add_axes([p0.x0 + 0.1 * p0.width, 0.075, 0.8 * p0.width, 0.018])
     cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[0, 0.2, 0.4, 0.6, 0.8])
@@ -129,6 +132,10 @@ def fig_accuracy():
         if m == "linear_diffusion":
             ax1.text(0.0, yy, "reference", ha="center", va="center", fontsize=7, color=INK2, style="italic"); continue
         v = comp_m[m]; lo, hi = v["ci95"]; col = FCOL[FAMILY[m]]
+        pdv = v["per_dataset"]
+        br = [pdv[x] for x in ("dlpfc", "starmap", "merfish") if x in pdv]; ot = [pdv[x] for x in ("brca", "stereo") if x in pdv]
+        if br: ax1.plot(np.mean(br), yy + 0.32, "^", ms=3.4, mfc="#8a8a8a", mec="#8a8a8a", zorder=2)
+        if ot: ax1.plot(np.mean(ot), yy + 0.32, "^", ms=3.4, mfc="white", mec="#8a8a8a", mew=0.7, zorder=2)
         ax1.plot([lo, hi], [yy, yy], color=col, lw=1.3, solid_capstyle="butt", zorder=2)
         filled = lo > 0
         ax1.plot(v["delta"], yy, "o", ms=4.8, mfc=col if filled else "white", mec=col, mew=1.1, zorder=3)
@@ -142,9 +149,11 @@ def fig_accuracy():
     ax1.set_title("Linear diffusion minus method\n(95% bootstrap interval)", pad=5)
     h = [Line2D([], [], marker="o", ls="", mfc=INK2, mec=INK2, ms=4.5, label="interval above zero"),
          Line2D([], [], marker="o", ls="", mfc="white", mec=INK2, ms=4.5, label="unresolved"),
-         Patch(color="#e9e9e6", label="±0.03 equivalence margin")]
+         Patch(color="#e9e9e6", label="±0.03 equivalence margin"),
+         Line2D([], [], marker="^", ls="", mfc="#8a8a8a", mec="#8a8a8a", ms=4, label="brain (mean)"),
+         Line2D([], [], marker="^", ls="", mfc="white", mec="#8a8a8a", ms=4, label="other tissues (mean)")]
     p2_ = ax2.get_position()
-    fig.legend(handles=h, loc="lower left", ncol=1, frameon=False, bbox_to_anchor=(p2_.x0 - 0.01, 0.0),
+    fig.legend(handles=h, loc="lower left", ncol=1, frameon=False, bbox_to_anchor=(p2_.x0 - 0.03, 0.0),
                handletextpad=0.3, labelspacing=0.3)
     # C: rank intervals (matched clustering)
     NR = cs["ranking_methods"]; XP = NR + 3.6
@@ -268,7 +277,8 @@ def fig_robustness():
             v = H[i, j]
             if np.isnan(v):
                 ax.text(j, i, "–", ha="center", va="center", fontsize=7, color=INK2); continue
-            ax.text(j, i, f"{v:+.1f}".replace("-", "−"), ha="center", va="center", fontsize=7, color="white" if abs(v) > 0.6 else INK)
+            lab = "0.0" if abs(v) < 0.05 else f"{v:+.1f}".replace("-", "−")
+            ax.text(j, i, lab, ha="center", va="center", fontsize=7, color="white" if abs(v) > 0.6 else INK)
     SPLIT = {"starmap": "STAR-\nmap", "merfish": "MER-\nFISH", "stereo": "Stereo-\nseq", "dlpfc": "DLPFC\n", "brca": "Breast\n"}
     ax.set_xticks(range(ND), [f"{SPLIT[d]}\nn = {NSEC[d]}" for d in DSN]); ax.xaxis.tick_top()
     ax.set_yticks(range(n), []); ax.set_ylim(-0.6, n - 0.4); ax.tick_params(length=0)
@@ -363,8 +373,41 @@ def fig_maps(section="151673"):
     save(fig, "nar_fig5_maps")
 
 
+# ---------------------------------------------------------------- Supplementary figure: maps for breast cancer and Stereo-seq
+def fig_maps_new():
+    from sklearn.metrics import adjusted_rand_score
+    PAL = [matplotlib.colors.to_hex(c) for c in plt.get_cmap("tab20").colors]
+    meths = ["linear_diffusion", "bass", "banksy_l0.8", "spagcn", "graphst"]
+    rows_ = [("brca", "block_a_1", "Breast cancer (10x Visium), Block A Section 1", 3.0, True),
+             ("stereo", "E9.5_E1S1", "Mouse embryo (Stereo-seq), E9.5 E1S1", 0.9, False)]
+    fig, axs = plt.subplots(2, 6, figsize=(WIDTH, 7.6 * CM),
+                            gridspec_kw={"wspace": 0.03, "hspace": 0.32, "left": 0.005, "right": 0.995, "top": 0.88, "bottom": 0.02})
+    for r, (ds, sec, title, sz, flip) in enumerate(rows_):
+        z = np.load(os.path.join(ROOT, "results", "cache", f"{ds}_{sec}.npz"), allow_pickle=True)
+        C, y = z["coords"].astype(float), z["labels"]
+        keep = np.array([isinstance(v, str) for v in y])
+        names = sorted({v for v in y if isinstance(v, str)}); K = len(names)
+        t = np.array([names.index(v) if isinstance(v, str) else -1 for v in y])
+        yy_ = -C[:, 1] if flip else C[:, 1]
+
+        def draw(ax, lab, ttl):
+            ax.scatter(C[:, 0], yy_, c=[PAL[v % 20] if v >= 0 else "#e4e3df" for v in lab], s=sz, lw=0, rasterized=True)
+            ax.set_aspect("equal"); ax.axis("off"); ax.set_title(ttl, fontsize=7, pad=1.5)
+        draw(axs[r, 0], t, "Annotation")
+        for ax, m in zip(axs[r, 1:], meths):
+            f = os.path.join(ROOT, "results", "runs", f"{ds}__{sec}__{m}__s0.npz")
+            if not os.path.exists(f): ax.axis("off"); continue
+            p = np.load(f)["labels"]
+            pu = np.unique(p[keep]); M = np.array([[np.sum((p == c) & (t == k)) for k in range(K)] for c in pu])
+            r_, c_ = linear_sum_assignment(-M); mp = {pu[i]: c_[j] for j, i in enumerate(r_)}
+            mm = np.array([mp.get(v, -1) for v in p])
+            draw(ax, np.where(keep, mm, -1), f"{LAB[m]} ({adjusted_rand_score(t[keep], p[keep]):.2f})")
+        fig.text(0.5, 0.965 if r == 0 else 0.47, title, ha="center", va="top", fontsize=8)
+    save(fig, "nar_figS_maps_new")
+
+
 if __name__ == "__main__":
     import sys
-    todo = sys.argv[1:] or ["accuracy", "robustness", "protocol", "maps"]
+    todo = sys.argv[1:] or ["accuracy", "robustness", "protocol", "maps", "maps_new"]
     for name in todo: globals()[f"fig_{name}"]()
     print("figures written:", sorted(os.path.basename(f) for f in glob.glob(os.path.join(OUT, "nar_fig*.pdf"))))

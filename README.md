@@ -161,6 +161,13 @@ embedding is claimed with a lock directory `<out>.lock_*`; delete stale lock dir
 Embeddings of these runs are exported with `scripts/export_runner_emb.py`; the coarse-class breast cancer analysis is
 `scripts/brca_coarse.py`; `scripts/make_submission.sh` copies the figures under their printed numbers for upload.
 
+The final results were completed with four queue scripts, kept as a record of exactly what ran: `scripts/run_pending.sh`
+(new datasets in the runner, R mclust groups 5-6), `scripts/run_deepst_seeds.sh` (DeepST seeds 1-2 on the new data),
+`scripts/rerun_graphst_stereo.sh` (GraphST on Stereo-seq with `datatype='Stereo'`; it removes the analyses of the earlier
+GraphST Stereo-seq embeddings from `clustering_lottery.jsonl`, `k_sensitivity.jsonl` and `mclust_seed_g*.csv` and recomputes
+them) and `scripts/finish_queue.sh` (the last R mclust fits). The Makefile targets `benchmark-new`, `robustness` and
+`mclust-seed` reproduce the same results from scratch.
+
 ## Neutrality
 
 The authors developed AnisoST, one of the baselines; it is reported as a baseline, not as a proposed method,

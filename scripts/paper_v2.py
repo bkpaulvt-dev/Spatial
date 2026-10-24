@@ -364,7 +364,9 @@ if msf:
     mac("mcsStarmapMaxN", str(int(sd_[sd_.dataset == "starmap"].n.max())) if (sd_.dataset == "starmap").any() else "--")
     mac("mcsJitMean", float(sd_.jrng.mean()), 2); mac("mcsJitMax", float(sd_.jrng.max()), 2)
     mac("mcsFullMinusSeed", float((sd_.full - sd_["mean"]).mean()), 3)
-    mac("mcsFullOutside", str(round(100 * float(((sd_.full < sd_["min"] - 1e-9) | (sd_.full > sd_["max"] + 1e-9)).mean()))))
+    bg = sd_[sd_.n > 2000]   # embeddings with a random initialisation subset (smaller ones are initialised on all observations)
+    mac("mcsFullOutside", str(round(100 * float(((bg.full < bg["min"] - 1e-9) | (bg.full > bg["max"] + 1e-9)).mean()))))
+    mac("mcsJitN", str(int(sd_.jrng.notna().sum())))
 # sensitivity to the number of domains K (scripts/k_sensitivity.py)
 if os.path.exists(R("k_sensitivity.jsonl")):
     KR = []
@@ -405,6 +407,10 @@ for ds in DS0:
     mac(f"mgcnOracle{DSM[ds]}", float(sm[sm.dataset == ds].ARI_label_selected_epoch.mean()), 3)
     mac(f"mgcnFinal{DSM[ds]}", float(sm[sm.dataset == ds].ARI.mean()), 3)
 mac("mgcnLeakN", str(len(sm)))
+# breast cancer (runner records the label-selected epoch in 'extra')
+_bl = [x["extra"]["ARI_label_selected_epoch"] - x["metrics"]["ARI"] for x in {y["id"]: y for y in map(json.loads, open(R("benchmark_runs.jsonl")))}.values()
+       if x["method"] == "spatial_mgcn" and x["dataset"] == "brca" and x.get("status") == "ok" and "ARI_label_selected_epoch" in x.get("extra", {})]
+if _bl: mac("mgcnLeakBrca", float(np.mean(_bl)), 2); mac("mgcnLeakBrcaN", str(len(_bl)))
 # runtime / memory from the unified runner
 ur = [json.loads(l) for l in open(R("benchmark_runs.jsonl"))]
 ur = {x["id"]: x for x in ur}.values()
@@ -486,6 +492,9 @@ if os.path.exists(SJ):
     # mean delta over comparators: brain groups vs the two non-brain datasets
     rv = [v for v in cs["comparisons"].values() if v["protocol"] == "robust"]
     mac("dBrain", float(np.mean([np.mean([v["per_dataset"][x] for x in ("dlpfc", "starmap", "merfish") if x in v["per_dataset"]]) for v in rv])), 3)
+    _dother = float(np.mean([np.mean([v["per_dataset"][x] for x in ("brca", "stereo") if x in v["per_dataset"]])
+                              for v in rv if any(x in v["per_dataset"] for x in ("brca", "stereo"))]))
+    mac("dOtherAbs", abs(_dother), 3)
     mac("dOther", float(np.mean([np.mean([v["per_dataset"][x] for x in ("brca", "stereo") if x in v["per_dataset"]])
                                  for v in rv if any(x in v["per_dataset"] for x in ("brca", "stereo"))])), 3)
     rk = cs["ranking"]
@@ -499,13 +508,33 @@ if os.path.exists(SJ):
     # Bonferroni over the 16 comparisons (matched clustering)
     bonf = sorted([k.split("/", 1)[1] for k, v in cs["comparisons"].items() if v["protocol"] == "robust" and v["ci_bonf"][0] > 0],
                   key=lambda m: cs["comparisons"][f"robust/{m}"]["delta"])
+    # NMI vs ARI ranking agreement (matched clustering, equal-weight mean over datasets)
+    _ari = {m: np.mean([v for v in cs["means_robust"].get(m, {}).values()]) for m in cs["means_robust"]}
+    ROBKEY = {m: m for m in ("linear_diffusion", "anisost", "pca_gmm", "spagcn", "bass", "bayesspace")}
+    PN = d.groupby(["dataset", "method", "slice"]).NMI.mean() if "NMI" in d else None
+    if PN is not None:
+        _nmi = {}
+        for m in _ari:
+            k_ = ROBKEY.get(m, m + "+robust")
+            vals = [PN.loc[(ds_, k_)].mean() for ds_ in DS if (ds_, k_) in PN.index.droplevel(2)]
+            if vals: _nmi[m] = float(np.mean(vals))
+        com = [m for m in _ari if m in _nmi]
+        mac("rhoNmiAri", float(spearmanr([_ari[m] for m in com], [_nmi[m] for m in com]).statistic), 2)
     mac("nRobBetterBonf", str(len(bonf))); mac("listRobBetterBonf", joinl([TL[m] for m in bonf]))
+    # sensitivity: only datasets with expert annotation (drop STARmap: provenance unknown; Stereo-seq: algorithm-derived)
+    if os.path.exists(R("stats_cluster_aware_expert.json")):
+        ce = json.load(open(R("stats_cluster_aware_expert.json")))
+        ve = [v for v in ce["comparisons"].values() if v["protocol"] == "robust"]
+        mac("nRobBetterExpert", str(sum(v["category"] == "baseline_better" for v in ve)))
+        mac("nRobUnresExpert", str(sum(v["category"] == "unresolved" for v in ve)))
+        mac("pBestLinExpert", f"{ce['ranking']['Linear diffusion']['p_best']:.2f}"); mac("pBestBassExpert", f"{ce['ranking']['BASS']['p_best']:.2f}")
     # sensitivity: every dataset from the standardised runner
     if os.path.exists(R("stats_cluster_aware_runner.json")):
         cr = json.load(open(R("stats_cluster_aware_runner.json")))
         vr = [v for v in cr["comparisons"].values() if v["protocol"] == "robust"]
         mac("nRobBetterRunner", str(sum(v["category"] == "baseline_better" for v in vr)))
         mac("nRobUnresRunner", str(sum(v["category"] == "unresolved" for v in vr)))
+        mac("nRobBetterBonfRunner", str(sum(v["ci_bonf"][0] > 0 for v in vr)))
         mac("pBestLinRunner", f"{cr['ranking']['Linear diffusion']['p_best']:.2f}"); mac("pBestBassRunner", f"{cr['ranking']['BASS']['p_best']:.2f}")
     mac("rankExcluded", joinl([TL[m] for m in TL if TL[m].replace("$\\lambda$", "λ").replace("$\\lambda=", "λ=").replace("$", "") not in rk and m != "bayesspace"]))
     mac("rankLoLin", str(rk["Linear diffusion"]["rank95"][0])); mac("rankHiLin", str(rk["Linear diffusion"]["rank95"][1]))

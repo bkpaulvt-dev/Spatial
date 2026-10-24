@@ -6,8 +6,8 @@ Identifying spatial domains is one of the first analyses of spatial transcriptom
 
 Our main findings are:
 
-1. When every embedding is clustered in the same way, a standard neighbourhood-smoothing baseline that needs no training has a higher mean ARI than about half of the comparators and cannot be separated from the rest. Its lead comes from brain tissue; on breast cancer and embryo sections most methods are slightly ahead of it and close to each other, so method rankings are tissue-dependent.
-2. The clustering step is a larger source of variation than most differences between methods. On a fixed embedding, refitting the same Gaussian mixture from different random starts changes ARI by 0.17 on average and by up to 0.60. The default fit of R mclust, used by several widely used methods, depends on a fixed but arbitrary random seed through its subsampled initialisation.
+1. When every embedding is clustered in the same way, a standard neighbourhood-smoothing baseline that needs no training has a higher mean ARI than half of the comparators and cannot be separated from the rest; it and BASS are the methods most likely to rank first. Its lead comes from brain tissue; on breast cancer and embryo sections most methods are slightly ahead of it and close to each other, so method rankings are tissue-dependent.
+2. The clustering step is a larger source of variation than most differences between methods. On a fixed embedding, refitting the same Gaussian mixture from different random starts changes ARI by 0.16 on average and by up to 0.60. The default fit of R mclust, used by several widely used methods, depends on a fixed but arbitrary random seed through its subsampled initialisation.
 3. Choosing the most likely of many fits helps on cortex but not on MERFISH, breast cancer or embryo data, where likelihood and ARI are unrelated.
 4. HiSTaR's published DLPFC accuracy (median ARI 0.65) was not reproduced with its official code (0.51), and the released code of one method selects its reported epoch using the labels, which inflates its ARI by 0.15.
 

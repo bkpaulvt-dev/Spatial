@@ -59,6 +59,10 @@ for ds, v in cfg.items():
     for s, m in v["sections"].items():
         rows.append(dict(dataset=ds, slice=str(s), cluster=(m.get("donor") if ds == "dlpfc" else ds), split=m["split"]))
 SEC = pd.DataFrame(rows)
+# sensitivity analysis (STATS_EXCLUDE=starmap,stereo): drop datasets whose labels are algorithm-derived or of unknown provenance
+EXCL = [x for x in os.environ.get("STATS_EXCLUDE", "").split(",") if x]
+if EXCL:
+    SEC = SEC[~SEC.dataset.isin(EXCL)].reset_index(drop=True)
 
 REF = "linear_diffusion"
 LABEL = {"histar": "HiSTaR", "graphst": "GraphST", "banksy_l0.8": "BANKSY λ=0.8", "banksy_l0.2": "BANKSY λ=0.2", "spagcn": "SpaGCN",
@@ -162,7 +166,8 @@ def dmeans(key):
     return r_
 out["means_standard"] = {m: dmeans(STD[m]) for m in list(LABEL) + [REF]}
 out["means_robust"] = {m: dmeans(ROB[m]) for m in list(LABEL) + [REF]}
-json.dump(out, open(R("stats_cluster_aware.json" if SOURCE == "pipeline" else "stats_cluster_aware_runner.json"), "w"), indent=1)
+OUTF = "stats_cluster_aware_runner.json" if SOURCE == "runner" else ("stats_cluster_aware_expert.json" if EXCL else "stats_cluster_aware.json")
+json.dump(out, open(R(OUTF), "w"), indent=1)
 
 print(f"reference: linear diffusion; clusters: {out['clusters']}; margin {MARGIN}")
 for proto in ("standard", "robust"):
