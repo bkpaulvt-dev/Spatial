@@ -25,3 +25,4 @@ results/runs/
 paper/*.fdb_latexmk
 paper/*.fls
 *.part
+paper/submission/
