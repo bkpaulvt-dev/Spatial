@@ -5,6 +5,8 @@ Example
 python scripts/benchmark_dlpfc.py --data data/DLPFC --out results/dlpfc.jsonl \
     --methods histar hicast --seeds 0 1 2 --workers 4
 
+Add ``--device cuda`` to train on a GPU (see ``cluster/arc/`` for VT ARC A100 jobs).
+
 ``--config NAME=JSON`` adds a HiCAST variant, e.g.
     --config no_lg='{"local_global": false}'
 Every (method, slice, seed) run appends one JSON line, and finished runs are
@@ -46,7 +48,8 @@ def run_one(job):
     from hicast.histar import HiSTaR
     from hicast.model import HiCAST
 
-    method, cfg, slice_id, seed, data_root, cache = job
+    method, cfg, slice_id, seed, data_root, cache, device = job
+    cfg = {"device": device, **cfg}             # a per-variant device in --config wins
     d = cached_slice(data_root, cache, slice_id)
     k = d.meta["n_clusters"]
     torch.manual_seed(seed)
@@ -59,7 +62,8 @@ def run_one(job):
     Z = model.embed()
     train_time = time.time() - t0
     pred = gmm_eee(Z, k)
-    res = {"method": method, "slice": slice_id, "seed": seed, "time": train_time}
+    res = {"method": method, "slice": slice_id, "seed": seed, "time": train_time,
+           "device": cfg["device"]}
     res.update(evaluate(pred, d.labels))
     ref = evaluate(spatial_refine(pred, d.coords), d.labels)
     res.update({f"{m}_refined": v for m, v in ref.items()})
@@ -76,6 +80,7 @@ def main():
     ap.add_argument("--methods", nargs="*", default=["histar", "hicast"])
     ap.add_argument("--config", nargs="*", default=[], help="NAME=JSON HiCAST/HiSTaR variants")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--device", default="cpu", help="cpu or cuda (e.g. on an ARC A100 node)")
     args = ap.parse_args()
 
     configs = {"histar": {}, "histar_deterministic": {"deterministic_eval": True}, "hicast": {}}
@@ -97,7 +102,7 @@ def main():
             for line in f:
                 r = json.loads(line)
                 done.add((r["method"], r["slice"], r["seed"]))
-    jobs = [(m, configs[m], s, sd, args.data, cache)
+    jobs = [(m, configs[m], s, sd, args.data, cache, args.device)
             for sd in args.seeds for s in args.slices for m in args.methods
             if (m, s, sd) not in done]
     print(f"{len(jobs)} runs to do ({len(done)} already done)", flush=True)
