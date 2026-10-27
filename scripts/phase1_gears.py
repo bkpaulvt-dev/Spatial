@@ -51,6 +51,8 @@ def main():
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--hidden", type=int, default=64)
     ap.add_argument("--device", default="cuda")
+    ap.add_argument("--preddir", default=None,
+                    help="if set, save predicted profiles to <preddir>/fold{k}_preds.npz")
     args = ap.parse_args()
     import torch
     from gears import PertData, GEARS
@@ -90,6 +92,7 @@ def main():
         print(f"[fold {k}] GEARS data ready ({time.time() - t:.0f}s)", flush=True)
 
         rows = []
+        seed_preds_all = {}  # cond -> list of pred arrays across seeds
         for seed in args.seeds:
             t = time.time()
             random.seed(seed); np.random.seed(seed); torch.manual_seed(seed)
@@ -100,6 +103,7 @@ def main():
             pred = m.predict([c.split("+") for c in test_ok])
             for c in test_ok:
                 p = ctrl + (pred["_".join(c.split("+"))] - ctrl_meanlog)
+                seed_preds_all.setdefault(c, []).append(p)
                 a_, b_ = c.split("+")
                 r = metrics(p, prof[c], ctrl, prof[a_], prof[b_], mp)
                 r.update(method="gears", fold=k, seed=seed, cond=c, selected=None, val_mse_de20=None,
@@ -109,6 +113,29 @@ def main():
         with open(os.path.join(args.outdir, f"fold{k}_gears.jsonl"), "w") as f:
             for r in rows:
                 f.write(json.dumps(r) + "\n")
+        if args.preddir:
+            # Merge GEARS predictions into existing fold npz (pred|gears|<cond> keys)
+            npz_path = os.path.join(args.preddir, f"fold{k}_preds.npz")
+            if os.path.exists(npz_path):
+                existing = dict(np.load(npz_path, allow_pickle=True))
+                target_genes = list(existing["genes"])
+            else:
+                existing = {"genes": np.asarray(d.genes), "test": np.asarray(test), "ctrl": ctrl}
+                target_genes = list(d.genes)
+            gears_genes = list(d.genes)
+            # build index map: target_genes[i] -> gears_genes position (or -1)
+            g2i = {g: i for i, g in enumerate(gears_genes)}
+            idx = [g2i.get(g, -1) for g in target_genes]
+            for c in test_ok:
+                avg = np.mean(seed_preds_all[c], axis=0)  # seed-averaged prediction
+                aligned = np.full(len(target_genes), np.nan, dtype=np.float32)
+                for j, gi in enumerate(idx):
+                    if gi >= 0:
+                        aligned[j] = avg[gi]
+                existing[f"pred|gears|{c}"] = aligned
+            os.makedirs(args.preddir, exist_ok=True)
+            np.savez_compressed(npz_path, **existing)
+            print(f"[fold {k}] GEARS preds merged into {npz_path}", flush=True)
 
 
 if __name__ == "__main__":

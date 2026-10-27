@@ -45,8 +45,12 @@ def main(indir="results/phase1_preds", out="results/fig4"):
                 continue
             rows.append({"cond": c, "method": "truth", **gi(dA, dB, dT, mask)})
             for m in methods:
-                dP = z[f"pred|{m}|{c}"] - ctrl
-                rows.append({"cond": c, "method": m, **gi(dA, dB, dP, mask)})
+                key = f"pred|{m}|{c}"
+                if key not in z.files:  # e.g. GEARS drops pairs with genes outside its GO graph
+                    continue
+                dP = z[key] - ctrl
+                # GEARS leaves NaN for genes outside its graph: fit on the genes it predicted
+                rows.append({"cond": c, "method": m, **gi(dA, dB, dP, mask & np.isfinite(dP))})
     r = pd.DataFrame(rows)
     r.to_csv(f"{out}/gi_measures.csv", index=False)
     t = r[r.method == "truth"].set_index("cond")
@@ -57,11 +61,13 @@ def main(indir="results/phase1_preds", out="results/fig4"):
             "neomorphic (poor fit)": (t["fit"] <= t["fit"].quantile(1 / 3), "fit", -1)}
     res = []
     for m, g in r[r.method != "truth"].groupby("method"):
-        g = g.set_index("cond").loc[t.index]
-        row = {"method": m}
+        g = g.set_index("cond")
+        tm = t.loc[g.index]  # score each method on the pairs it predicted
+        row = {"method": m, "n_pairs": len(g)}
         for k in ["magnitude", "equality", "fit"]:
-            row[f"spearman_{k}"] = spearmanr(g[k], t[k]).correlation
+            row[f"spearman_{k}"] = spearmanr(g[k], tm[k]).correlation
         for name, (lab, k, sign) in cats.items():
+            lab = lab.loc[g.index]
             row[f"AUROC {name}"] = roc_auc_score(lab.astype(int), sign * g[k]) if np.std(g[k]) > 1e-9 else 0.5
         res.append(row)
     res = pd.DataFrame(res).set_index("method").round(3)
