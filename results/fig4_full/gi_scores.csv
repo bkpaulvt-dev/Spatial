@@ -1,0 +1,10 @@
+method,n_pairs,spearman_magnitude,spearman_equality,spearman_fit,AUROC synergy (high magnitude),AUROC suppression (low magnitude),AUROC epistasis (low equality),AUROC neomorphic (poor fit)
+additive_lin,131,-0.359,0.093,-0.288,0.34,0.309,0.568,0.359
+additive_log,131,,0.135,,0.5,0.5,0.545,0.5
+cipher_direct_lr3,131,0.378,0.3,0.525,0.708,0.667,0.683,0.684
+cipher_selected,131,0.378,0.3,0.525,0.708,0.667,0.683,0.684
+control,131,,,,0.5,0.5,0.5,0.5
+gears,130,0.619,0.233,0.594,0.849,0.794,0.65,0.764
+mean_perturbation,131,0.342,-0.054,-0.039,0.707,0.609,0.505,0.502
+pergene_interaction,131,0.332,0.26,-0.162,0.675,0.658,0.663,0.427
+scaled_additive,131,0.013,0.116,,0.558,0.478,0.522,0.5
