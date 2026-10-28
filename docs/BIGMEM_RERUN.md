@@ -1,0 +1,37 @@
+# Rerun of the memory-capped jobs on a large-memory machine
+
+Five methods (BASS, GraphST, NichePCA, Spatial-MGCN, DeepST) exceeded the 12 GB per-job cap on Stereo-seq E10.5_E1S1
+(18,408 bins) on the 15 GB benchmark machine, and DeepST seeds 1-2 on E10.5_E2S1. This reruns them on a machine with
+at least 64 GB of free RAM (CPU only; GPUs are not needed and would change the numbers).
+
+## 1. Setup (once)
+```bash
+git clone <repository URL> spatial && cd spatial && git checkout claude/great-cori-opzfx7
+conda env create -f environment/environment.yml -n spatialbench && conda activate spatialbench   # see README "Installation"
+pip install -r environment/requirements-lock.txt     # exact versions
+# R packages (BASS, mclust, ...): see environment/R-packages.txt
+python scripts/download_new_datasets.py              # Stereo-seq E10.5_E1S1 and E10.5_E2S1 (several GB) + checksums
+python scripts/prepare_new_datasets.py
+free -g                                              # the "available" column should be >= 64
+```
+## 2. Run (about 12-24 h; resumable)
+```bash
+nohup sh scripts/rerun_memory_failures.sh > bigmem.log 2>&1 &
+tail -f bigmem.log                                   # ends with BIGMEM_DONE
+```
+Other users share the machine: the script runs 2 jobs at a time (`WORKERS=1` to be gentler) and kills any job above
+30 GB (`CAP_GB`).
+
+## 3. Send the results back
+Copy `results/benchmark_runs_bigmem.jsonl` and the new `results/runs/stereo__E10.5_E1S1__*` and
+`results/runs/stereo__E10.5_E2S1__deepst__*` files (`json` and `npz`) into the repository (or `git add` and push them from
+that machine). The analysis scripts use the newest record per run id, so the new records replace the earlier out-of-memory
+records once appended to `results/benchmark_runs.jsonl`:
+```bash
+cat results/benchmark_runs_bigmem.jsonl >> results/benchmark_runs.jsonl
+python scripts/export_runner_emb.py && python scripts/clustering_lottery.py && python scripts/k_sensitivity.py
+python scripts/stats_cluster_aware.py && python scripts/paper_v2.py   # etc.: make numbers supplement figures paper
+```
+The text that lists the methods stopped at the cap (`\listOom`, the README Compute section, Limitations) then changes
+automatically or needs a one-line edit; the run times of these jobs come from a different CPU and are kept out of the
+timing comparison.
