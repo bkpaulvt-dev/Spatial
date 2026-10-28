@@ -41,10 +41,12 @@ cd "$BASE/Spatial"
 git log --oneline -1
 
 step "2. conda environment (python 3.13 + R 4.3.3 + pinned packages) in $BASE/env"
-if [ ! -x "$BASE/env/bin/python" ]; then
-  # environment/environment.deepmed2.yml = environment.yml with series pins for the R/Bioconductor conda packages, no TeX Live
+if [ ! -x "$BASE/env/bin/R" ] || [ ! -x "$BASE/env/bin/pip" ]; then
+  # environment/environment.deepmed2.yml = environment.yml with series pins for the R/Bioconductor conda packages, no TeX Live,
+  # and without the pip section (installed below, in stages)
+  conda env remove -y -p "$BASE/env" >/dev/null 2>&1 || true
   (cd environment && conda env create -p "$BASE/env" -f environment.deepmed2.yml) || {
-    echo "---- conda could not solve the environment; missing packages:"; exit 1; }
+    echo "---- conda could not solve the environment; see the PackagesNotFoundError block above"; exit 1; }
 fi
 set +u
 source "$(conda info --base)/etc/profile.d/conda.sh"
@@ -53,6 +55,19 @@ python --version; R --version | head -1
 if ! command -v g++ >/dev/null || ! command -v gfortran >/dev/null; then
   echo "compilers missing: installing them into the project environment"
   conda install -y -p "$BASE/env" -c conda-forge compilers
+fi
+
+step "2b. Python packages (pip), in stages"
+if [ ! -f "$BASE/.pip_done" ]; then
+  # (a) torch first: torch_scatter / torch_sparse need it at build time
+  pip install "torch==2.14.1"
+  # (b) everything else at the exact pins of the lock file (torch_scatter / torch_sparse are built in step c)
+  grep -v -E "^(torch_scatter|torch_sparse)==" environment/requirements-lock.txt > "$TMPDIR/requirements-nobuild.txt"
+  pip install -r "$TMPDIR/requirements-nobuild.txt"
+  # (c) torch_scatter / torch_sparse, compiled against the installed torch (no build isolation)
+  pip install --no-build-isolation "torch_scatter==2.1.2" "torch_sparse==0.6.18"
+  python -c "import torch, torch_scatter, torch_sparse, torch_geometric; print('torch', torch.__version__, 'cuda available:', torch.cuda.is_available())"
+  touch "$BASE/.pip_done"
 fi
 
 step "3. R package BASS (needs a compiler)"

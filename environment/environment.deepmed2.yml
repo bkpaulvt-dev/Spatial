@@ -1,7 +1,7 @@
 # Environment for the DeepMed2 rerun. Same as environment.yml except: no TeX Live (only for building the PDFs), and the
 # conda-installed R/Bioconductor packages are pinned to the release series (Bioconductor 3.18 = scran/scater 1.30.x,
 # SingleCellExperiment 1.24.x, SummarizedExperiment 1.32.x) instead of exact patch versions, which are not all on conda.
-# mclust stays at 6.0.1 and all Python packages stay at the exact pins of requirements-lock.txt.
+# mclust stays at 6.0.1 and all Python packages stay at the exact pins of requirements-lock.txt (installed with pip).
 name: spatialbench
 channels:
   - conda-forge
@@ -24,5 +24,6 @@ dependencies:
   - bioconductor-summarizedexperiment=1.32.*
   - bioconductor-scater=1.30.*
   - bioconductor-scran=1.30.*
-  - pip:
-      - -r requirements-lock.txt
+# the Python packages are installed afterwards by scripts/setup_deepmed2.sh in stages (torch first, then the pins of
+# requirements-lock.txt, then torch_scatter/torch_sparse built against that torch), because torch_scatter cannot be built
+# in the same pip run as torch
