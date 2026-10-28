@@ -22,6 +22,7 @@ if [ ! -f "$BASE/.setup_done" ]; then
 fi
 say "stage 1/4: setup done"
 source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
+export R_LIBS_USER="$BASE/Rlib"      # R packages of the project live here, not in ~/R/library
 
 # 2. wait for enough free RAM (the server is shared); up to 6 h
 say "stage 2/4: waiting for >= ${MIN_RAM} GB available RAM"

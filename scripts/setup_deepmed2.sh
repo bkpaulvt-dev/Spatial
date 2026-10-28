@@ -70,6 +70,10 @@ if [ ! -f "$BASE/.pip_done" ]; then
   touch "$BASE/.pip_done"
 fi
 
+# R packages go into the project folder, not into ~/R/library (and packages in ~/R/library are not used)
+export R_LIBS_USER="$BASE/Rlib"; mkdir -p "$R_LIBS_USER"
+conda env config vars set -p "$BASE/env" R_LIBS_USER="$BASE/Rlib" >/dev/null 2>&1 || true
+
 step "3. R package BASS (needs a compiler)"
 Rscript -e 'if (!requireNamespace("BASS", quietly = TRUE)) remotes::install_github("zhengli09/BASS@5c2690fddcdeb12461a69106ff4681777d0a8822", upgrade = "never") else cat("BASS already installed\n")'
 Rscript -e 'library(BASS); library(mclust); cat("BASS and mclust load\n")'
