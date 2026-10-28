@@ -8,7 +8,11 @@ DEV=${1:-cuda}                       # cuda: GraphST and DeepST on GPU index $GP
 export GPU=${GPU:-1}
 MIN_RAM=${MIN_RAM:-64}               # GB available before the rerun may start
 cd "$BASE/Spatial" || exit 1
-say() { echo "$(date '+%F %T') $*" | tee -a "$BASE/status.txt"; }
+# phone notifications (optional): topic from NTFY_TOPIC or $BASE/ntfy_topic (see scripts/run_detached.sh); sends only the status line
+NTFY_TOPIC=${NTFY_TOPIC:-$(cat "$BASE/ntfy_topic" 2>/dev/null)}
+notify() { [ -n "$NTFY_TOPIC" ] && curl -fsS -m 10 -H "Title: SpatialBench DeepMed2" -d "$*" "https://ntfy.sh/$NTFY_TOPIC" >/dev/null 2>&1; return 0; }
+say() { echo "$(date '+%F %T') $*" | tee -a "$BASE/status.txt"; case "$*" in *STOP*|*PIPELINE_DONE*|*"stage"*|*failed*|*"RAM available"*) notify "$*";; esac; }
+trap 'notify "pipeline ended (exit code $?); see status.txt"' EXIT
 say "pipeline start (device=$DEV, pid $$, host $(hostname))"
 
 # 1. setup (creates the environment, installs BASS, downloads the data; resumable)
