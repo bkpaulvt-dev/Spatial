@@ -35,3 +35,14 @@ python scripts/stats_cluster_aware.py && python scripts/paper_v2.py   # etc.: ma
 The text that lists the methods stopped at the cap (`\listOom`, the README Compute section, Limitations) then changes
 automatically or needs a one-line edit; the run times of these jobs come from a different CPU and are kept out of the
 timing comparison.
+
+## Optional: use a GPU for GraphST and DeepST
+```bash
+nvidia-smi                      # driver version must support CUDA 13 (the locked torch build is +cu130; Turing GPUs are supported)
+DEVICE=cuda GPU=1 nohup sh scripts/rerun_memory_failures.sh > bigmem_gpu.log 2>&1 &    # GPU=1 -> the second GPU
+```
+Only GraphST and DeepST use the GPU; BASS, NichePCA and Spatial-MGCN still run on CPU. The memory failures happened in
+CPU-side graph construction before training, so the GPU does not remove the need for large host RAM; it only shortens
+training. GPU results go to `results/benchmark_runs_bigmem_gpu.jsonl` with `"device": "cuda"` in each record, are not
+bit-identical to CPU runs, and must be marked as GPU runs in the paper and left out of the run-time comparison. I recommend
+the CPU variant for consistency and at most the GPU for DeepST/GraphST if the CPU runs prove too slow.

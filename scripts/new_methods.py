@@ -317,7 +317,7 @@ def deepst(a, k, seed, ds):
     a = a.copy()
     with contextlib.redirect_stdout(io.StringIO()), tempfile.TemporaryDirectory() as td:
         dt.utils_func.seed_torch(seed=seed)
-        run = dt.main.run(save_path=td, task="Identify_Domain", pre_epochs=500, epochs=500, use_gpu=False)
+        run = dt.main.run(save_path=td, task="Identify_Domain", pre_epochs=500, epochs=500, use_gpu=os.environ.get("SPATIALBENCH_DEVICE") == "cuda")
         a = run._get_augment(a, spatial_type="BallTree", use_morphological=False)
         g = run._get_graph(a.obsm["spatial"], distType="KDTree")
         data = run._data_process(a, pca_n_comps=min(200, a.n_vars - 1))

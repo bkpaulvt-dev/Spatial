@@ -86,7 +86,8 @@ def graphst(a, k, seed, ds):
         b.var["highly_variable"] = True
         sc.pp.normalize_total(b, target_sum=1e4); sc.pp.log1p(b); sc.pp.scale(b, zero_center=False, max_value=10)
     # Stereo-seq: GraphST's documented setting for Stereo-seq/Slide-seq (sparse kNN graph instead of dense n x n matrices)
-    m = GraphST.GraphST(b, device=torch.device("cpu"), random_seed=41 + seed, datatype="Stereo" if ds == "stereo" else "10X")
+    m = GraphST.GraphST(b, device=torch.device("cuda:0" if os.environ.get("SPATIALBENCH_DEVICE") == "cuda" else "cpu"), random_seed=41 + seed,
+                         datatype="Stereo" if ds == "stereo" else "10X")
     b = m.train()
     clustering(b, k, radius=50, method="mclust", refinement=False)
     Z = np.asarray(b.obsm["emb_pca"])

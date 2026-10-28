@@ -36,7 +36,8 @@ def main():
         coords = np.asarray(a.obsm["spatial"], float)
         valid = M.valid_mask(truth)
         k = int(len(set(truth[valid].astype(str))))
-        rec.update(K=k, n_obs=int(a.n_obs), n_vars=int(a.n_vars))
+        rec.update(K=k, n_obs=int(a.n_obs), n_vars=int(a.n_vars),
+                   device="cuda" if os.environ.get("SPATIALBENCH_DEVICE") == "cuda" else "cpu")
         t0 = time.time()
         res = ADAPTERS[args.method](a, k, args.seed, args.dataset)
         rec["method_s"] = time.time() - t0
