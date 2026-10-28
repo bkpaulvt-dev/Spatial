@@ -42,9 +42,9 @@ git log --oneline -1
 
 step "2. conda environment (python 3.13 + R 4.3.3 + pinned packages) in $BASE/env"
 if [ ! -x "$BASE/env/bin/python" ]; then
-  # same as environment/environment.yml without TeX Live (only needed to build the PDFs)
-  grep -v "texlive-core" environment/environment.yml | grep -v "^name:" > environment/environment.deepmed2.yml
-  (cd environment && conda env create -p "$BASE/env" -f environment.deepmed2.yml)
+  # environment/environment.deepmed2.yml = environment.yml with series pins for the R/Bioconductor conda packages, no TeX Live
+  (cd environment && conda env create -p "$BASE/env" -f environment.deepmed2.yml) || {
+    echo "---- conda could not solve the environment; missing packages:"; exit 1; }
 fi
 set +u
 source "$(conda info --base)/etc/profile.d/conda.sh"
