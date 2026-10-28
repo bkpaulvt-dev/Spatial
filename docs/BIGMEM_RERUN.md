@@ -4,7 +4,8 @@ Five methods (BASS, GraphST, NichePCA, Spatial-MGCN, DeepST) exceeded the 12 GB 
 (18,408 bins) on the 15 GB benchmark machine, and DeepST seeds 1-2 on E10.5_E2S1. This reruns them on a machine with
 at least 64 GB of free RAM (CPU only; GPUs are not needed and would change the numbers).
 
-## 1. Setup (once)
+## 1. Setup (once): `bash scripts/setup_deepmed2.sh 2>&1 | tee setup_deepmed2.log`
+The script puts everything under `/mnt/disk/bikashkumar/SpatialBench` (code, conda environment, data, results); the manual steps it performs are:
 ```bash
 git clone <repository URL> spatial && cd spatial && git checkout claude/great-cori-opzfx7
 conda env create -f environment/environment.yml -n spatialbench && conda activate spatialbench   # see README "Installation"
