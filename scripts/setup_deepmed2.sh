@@ -94,9 +94,9 @@ git -C data/ext/methods/DeepST checkout -q e37997f
 [ -d data/ext/methods/Spatial-MGCN ] || git clone https://github.com/cs-wangbo/Spatial-MGCN data/ext/methods/Spatial-MGCN
 git -C data/ext/methods/Spatial-MGCN checkout -q cf4412d
 
-step "5. Stereo-seq data (MOSTA E9.5_E1S1, E10.5_E2S1, E10.5_E1S1; several GB, resumable) + SHA-256 check"
-python scripts/download_new_datasets.py --datasets stereo
-python scripts/download_new_datasets.py --datasets stereo --verify-only
+step "5. Stereo-seq data (MOSTA E10.5_E2S1 and E10.5_E1S1, the two sections of the rerun; several GB, resumable, in parallel) + SHA-256 check"
+python scripts/download_new_datasets.py --datasets stereo --sections E10.5_E1S1 E10.5_E2S1
+python scripts/download_new_datasets.py --datasets stereo --sections E10.5_E1S1 E10.5_E2S1 --verify-only
 
 step "6. preflight"
 python - <<'PY'

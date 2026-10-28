@@ -14,6 +14,7 @@ Downloads resume from a partial `<file>.part` (HTTP Range); sha256 of every new 
 data/CHECKSUMS.sha256 the first time and verified against it afterwards. Standard library only.
 
     python scripts/download_new_datasets.py                       # both datasets
+    python scripts/download_new_datasets.py --datasets stereo --sections E10.5_E1S1 E10.5_E2S1   # only these two
     python scripts/download_new_datasets.py --datasets brca
     python scripts/download_new_datasets.py --verify-only
 """
@@ -109,15 +110,19 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--datasets", nargs="+", default=list(FILES), choices=list(FILES))
     ap.add_argument("--verify-only", action="store_true")
+    ap.add_argument("--sections", nargs="+", help="only the files whose name contains one of these section names "
+                    "(e.g. E10.5_E1S1 E10.5_E2S1); files are downloaded in parallel")
     args = ap.parse_args()
-    rels = [rel for d in args.datasets for _, rel in FILES[d]]
+    keep = lambda rel: not args.sections or any(s in rel for s in args.sections)
+    todo = [(url, rel) for d in args.datasets for url, rel in FILES[d] if keep(rel)]
+    rels = [rel for _, rel in todo]
     if not args.verify_only:
-        for d in args.datasets:
-            for url, rel in FILES[d]:
-                if os.path.exists(os.path.join(ROOT, rel)):
-                    continue
-                print(f"download {url}", flush=True)
-                fetch_resume(url, os.path.join(ROOT, rel))
+        from concurrent.futures import ThreadPoolExecutor
+        pending = [(url, rel) for url, rel in todo if not os.path.exists(os.path.join(ROOT, rel))]
+        for url, _ in pending:
+            print(f"download {url}", flush=True)
+        with ThreadPoolExecutor(max_workers=max(1, min(3, len(pending)))) as ex:   # one connection per file (the server may throttle each)
+            list(ex.map(lambda ur: fetch_resume(ur[0], os.path.join(ROOT, ur[1])), pending))
     if not verify_or_record(rels):
         raise SystemExit("checksum verification failed (see above)")
     if "brca" in args.datasets:
