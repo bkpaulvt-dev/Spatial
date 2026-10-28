@@ -47,3 +47,14 @@ CPU-side graph construction before training, so the GPU does not remove the need
 training. GPU results go to `results/benchmark_runs_bigmem_gpu.jsonl` with `"device": "cuda"` in each record, are not
 bit-identical to CPU runs, and must be marked as GPU runs in the paper and left out of the run-time comparison. I recommend
 the CPU variant for consistency and at most the GPU for DeepST/GraphST if the CPU runs prove too slow.
+
+## Safe way to run it (survives closing the laptop)
+```bash
+cd /mnt/disk/bikashkumar/SpatialBench/Spatial && git pull
+bash scripts/run_detached.sh cuda      # or: cpu    (starts scripts/deepmed2_pipeline.sh detached with setsid + nohup)
+bash scripts/run_detached.sh status    # progress, running jobs, RAM and GPU memory; also fine from a new SSH session
+```
+The pipeline does setup, waits until 64 GB of RAM is available, runs the jobs (restarting them up to 5 times; finished jobs are
+skipped), and commits and pushes the result records. It does not depend on the SSH connection, on your laptop or on a Claude
+session. After a server reboot, run the same `run_detached.sh` command again; nothing is lost. Progress is in
+`/mnt/disk/bikashkumar/SpatialBench/status.txt`, details in `pipeline.log`, `setup_deepmed2.log` and `rerun.log`.
