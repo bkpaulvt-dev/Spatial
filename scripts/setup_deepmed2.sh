@@ -51,6 +51,10 @@ fi
 set +u
 source "$(conda info --base)/etc/profile.d/conda.sh"
 conda activate "$BASE/env"
+# safety: every python/pip call below must be the project environment's, never the shared base installation
+PY="$BASE/env/bin/python"; PIP="$PY -m pip"
+[ "$(command -v python)" = "$PY" ] || { echo "ABORT: 'python' is $(command -v python), not $PY (activation failed); nothing was installed"; exit 1; }
+$PIP --version | grep -q "$BASE/env" || { echo "ABORT: pip is not the project environment's pip; nothing was installed"; exit 1; }
 python --version; R --version | head -1
 if ! command -v g++ >/dev/null || ! command -v gfortran >/dev/null; then
   echo "compilers missing: installing them into the project environment"
@@ -60,7 +64,7 @@ fi
 step "2b. Python packages (pip), in stages"
 if [ ! -f "$BASE/.pip_done" ]; then
   # (a) torch first: torch_scatter / torch_sparse need it at build time
-  pip install "torch==2.14.1"
+  $PIP install "torch==2.14.1"
   # (b) everything else at the exact pins of the lock file (torch_scatter / torch_sparse are built in step c)
   # louvain (used only by SpaGCN and SpaceFlow, not by the methods of this rerun) is compiled from source and is installed
   # separately below as an optional extra
@@ -68,13 +72,13 @@ if [ ! -f "$BASE/.pip_done" ]; then
   python --version   # the lock file was made with 3.13; the pinned package versions are what matters
   # --no-deps: the lock file is an exact freeze, every dependency is already pinned in it; pip's resolver would refuse it because
   # louvain 0.8.2 declares igraph<0.12 while leidenalg 0.12.0 and igraph 1.0.0 (as installed for the paper) need igraph 1.x
-  pip install --no-deps -r "$TMPDIR/requirements-nobuild.txt"
-  pip check || echo "(pip check lists the declared-metadata conflicts of the original environment; informational)"
+  $PIP install --no-deps -r "$TMPDIR/requirements-nobuild.txt"
+  $PIP check || echo "(pip check lists the declared-metadata conflicts of the original environment; informational)"
   # optional: louvain needs CMake to compile its bundled igraph C core; failure here does not stop the setup
-  (conda install -y -p "$BASE/env" -c conda-forge cmake && pip install --no-deps "louvain==0.8.2") \
+  (conda install -y -p "$BASE/env" -c conda-forge cmake && $PIP install --no-deps "louvain==0.8.2") \
     || echo "(louvain not installed: only SpaGCN/SpaceFlow use it, the rerun does not)"
   # (c) torch_scatter / torch_sparse, compiled against the installed torch (no build isolation)
-  pip install --no-build-isolation "torch_scatter==2.1.2" "torch_sparse==0.6.18"
+  $PIP install --no-build-isolation "torch_scatter==2.1.2" "torch_sparse==0.6.18"
   python -c "import torch, torch_scatter, torch_sparse, torch_geometric; print('torch', torch.__version__, 'cuda available:', torch.cuda.is_available())"
   touch "$BASE/.pip_done"
 fi
