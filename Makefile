@@ -151,6 +151,7 @@ stats:
 	$(PYTHON) scripts/stats_cluster_aware.py
 	STATS_SOURCE=runner $(PYTHON) scripts/stats_cluster_aware.py
 	STATS_EXCLUDE=starmap,stereo $(PYTHON) scripts/stats_cluster_aware.py
+	STATS_EXCLUDE=brca,stereo $(PYTHON) scripts/stats_cluster_aware.py
 
 numbers: stats
 	$(PYTHON) scripts/brca_coarse.py

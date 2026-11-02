@@ -367,6 +367,9 @@ if msf:
     bg = sd_[sd_.n > 2000]   # embeddings with a random initialisation subset (smaller ones are initialised on all observations)
     mac("mcsFullOutside", str(round(100 * float(((bg.full < bg["min"] - 1e-9) | (bg.full > bg["max"] + 1e-9)).mean()))))
     mac("mcsJitN", str(int(sd_.jrng.notna().sum())))
+    _ft = MS[(MS.kind == "full") & (MS.slice == "E10.5_E1S1")].seconds
+    if len(_ft): mac("mcsFullMinBig", f"{_ft.median() / 60:.0f}")
+    mac("mcsJitNBig", str(int(((MS.kind == "full_jit") & (MS.slice == "E10.5_E1S1")).groupby([MS.method]).any().sum())))
 # sensitivity to the number of domains K (scripts/k_sensitivity.py)
 if os.path.exists(R("k_sensitivity.jsonl")):
     KR = []
@@ -430,6 +433,24 @@ OL = {"bass": "BASS", "graphst": "GraphST", "nichepca": "NichePCA", "spatial_mgc
 _ol = [OL.get(m, m) for m in OOM]
 mac("listOom", "none" if not _ol else _ol[0] if len(_ol) == 1 else ", ".join(_ol[:-1]) + " and " + _ol[-1]); mac("nOom", str(len(OOM)))
 mac("memCap", os.environ.get("SPATIALBENCH_MAX_RSS_GB", "12"))
+# threads of the rerun on the second server: CPU time / wall time of the host-tagged runs
+_cr = {}
+for x in ur:
+    if x.get("host") and x["status"] == "ok" and x["resources"].get("cpu_s") and x["resources"].get("wall_s"):
+        _cr.setdefault(x["method"], []).append(x["resources"]["cpu_s"] / x["resources"]["wall_s"])
+for m_, nme_ in (("nichepca", "Nichepca"), ("deepst", "Deepst")):
+    if m_ in _cr: mac(f"cpuRatio{nme_}", f"{np.mean(_cr[m_]):.1f}")
+if _cr: mac("cpuRatioMax", f"{max(max(v) for v in _cr.values()):.1f}")
+# DeepST on E10.5_E2S1: seed 0 from the benchmark machine, seeds 1-2 from the second server
+_d = {x["seed"]: x for x in ur if x["method"] == "deepst" and x["dataset"] == "stereo" and str(x["section"]) == "E10.5_E2S1" and x["status"] == "ok"}
+for sd_ in (0, 1, 2):
+    if sd_ in _d: mac(f"deepstEtwoSeed{sd_}", f"{_d[sd_]['metrics']['ARI']:.2f}")
+# MOSTA 'Cavity' class (scripts/mosta_cavity.py)
+if os.path.exists(R("mosta_cavity.csv")):
+    _c = pd.read_csv(R("mosta_cavity.csv"))
+    mac("cavityFracLo", f"{100 * _c.cavity_frac.min():.0f}"); mac("cavityFracHi", f"{100 * _c.cavity_frac.max():.0f}")
+    _rt = _c.cavity_median_counts / _c.other_median_counts
+    mac("cavityRatioLo", f"{_rt.min():.1f}"); mac("cavityRatioHi", f"{_rt.max():.1f}")
 big = {}
 for x in ur:
     if x["status"] == "ok" and x["dataset"] == "stereo" and str(x["section"]) == "E10.5_E1S1":
@@ -531,6 +552,20 @@ if os.path.exists(SJ):
         com = [m for m in _ari if m in _nmi]
         mac("rhoNmiAri", float(spearmanr([_ari[m] for m in com], [_nmi[m] for m in com]).statistic), 2)
     mac("nRobBetterBonf", str(len(bonf))); mac("listRobBetterBonf", joinl([TL[m] for m in bonf]))
+    border = [m for m in bonf if cs["comparisons"][f"robust/{m}"]["ci_bonf"][0] < 0.01]
+    mac("listBonfBorderline", joinl([TL[m] for m in border])); mac("nBonfBorderline", str(len(border)))
+    # brain-only analysis (the three datasets of the first analysis) and verdict changes of the sensitivity analyses
+    if os.path.exists(R("stats_cluster_aware_brain.json")):
+        cb = json.load(open(R("stats_cluster_aware_brain.json"))); vb = [v for v in cb["comparisons"].values() if v["protocol"] == "robust"]
+        mac("nRobBetterBrain", str(sum(v["category"] == "baseline_better" for v in vb)))
+        mac("nRobUnresBrain", str(sum(v["category"] == "unresolved" for v in vb)))
+        mac("nRobTotBrain", str(len(vb)))
+        mac("pBestLinBrain", f"{cb['ranking']['Linear diffusion']['p_best']:.2f}"); mac("pBestBassBrain", f"{cb['ranking']['BASS']['p_best']:.2f}")
+    if os.path.exists(R("stats_cluster_aware_expert.json")):
+        ce2 = json.load(open(R("stats_cluster_aware_expert.json")))
+        fl = [TL[k.split("/", 1)[1]] for k, v in cs["comparisons"].items() if v["protocol"] == "robust" and k in ce2["comparisons"]
+              and ce2["comparisons"][k]["category"] != v["category"]]
+        mac("listExpertFlip", joinl(fl))
     # sensitivity: only datasets with expert annotation (drop STARmap: provenance unknown; Stereo-seq: algorithm-derived)
     if os.path.exists(R("stats_cluster_aware_expert.json")):
         ce = json.load(open(R("stats_cluster_aware_expert.json")))

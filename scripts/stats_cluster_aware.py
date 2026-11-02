@@ -59,7 +59,8 @@ for ds, v in cfg.items():
     for s, m in v["sections"].items():
         rows.append(dict(dataset=ds, slice=str(s), cluster=(m.get("donor") if ds == "dlpfc" else ds), split=m["split"]))
 SEC = pd.DataFrame(rows)
-# sensitivity analysis (STATS_EXCLUDE=starmap,stereo): drop datasets whose labels are algorithm-derived or of unknown provenance
+# sensitivity analyses: STATS_EXCLUDE=starmap,stereo drops datasets whose labels are algorithm-derived or of unknown provenance;
+# STATS_EXCLUDE=brca,stereo keeps the three datasets of the first analysis (brain only)
 EXCL = [x for x in os.environ.get("STATS_EXCLUDE", "").split(",") if x]
 if EXCL:
     SEC = SEC[~SEC.dataset.isin(EXCL)].reset_index(drop=True)
@@ -111,6 +112,7 @@ for proto, MAP in (("standard", STD), ("robust", ROB)):
         if not s: continue
         delta = {k: ref[k] - s[k] for k in s if k in ref}
         draws, point = hboot(delta, SEC)
+        draws_b, _ = hboot(delta, SEC, nboot=20000)      # separate, larger bootstrap for the Bonferroni tails (0.16 % each)
         dt, pt = hboot(delta, test_sec)
         per = {}
         for ds in cfg:   # every registered dataset (brca and stereo: one cluster each)
@@ -121,7 +123,7 @@ for proto, MAP in (("standard", STD), ("robust", ROB)):
             "ci95": [round(float(x), 3) for x in np.percentile(draws, [2.5, 97.5])],
             "ci90": [round(float(x), 3) for x in np.percentile(draws, [5, 95])],
             # Bonferroni over the 16 comparisons of a protocol: two-sided 1 - 0.05/16 interval
-            "ci_bonf": [round(float(x), 3) for x in np.percentile(draws, [100 * 0.025 / 16, 100 - 100 * 0.025 / 16])],
+            "ci_bonf": [round(float(x), 3) for x in np.percentile(draws_b, [100 * 0.025 / 16, 100 - 100 * 0.025 / 16])],
             "category": classify(draws), "per_dataset": per,
             "test_only": {"delta": round(pt, 3), "ci95": [round(float(x), 3) for x in np.percentile(dt, [2.5, 97.5])]}}
 
@@ -166,7 +168,9 @@ def dmeans(key):
     return r_
 out["means_standard"] = {m: dmeans(STD[m]) for m in list(LABEL) + [REF]}
 out["means_robust"] = {m: dmeans(ROB[m]) for m in list(LABEL) + [REF]}
-OUTF = "stats_cluster_aware_runner.json" if SOURCE == "runner" else ("stats_cluster_aware_expert.json" if EXCL else "stats_cluster_aware.json")
+OUTF = ("stats_cluster_aware_runner.json" if SOURCE == "runner" else
+        "stats_cluster_aware_expert.json" if sorted(EXCL) == ["starmap", "stereo"] else
+        "stats_cluster_aware_brain.json" if sorted(EXCL) == ["brca", "stereo"] else "stats_cluster_aware.json")
 json.dump(out, open(R(OUTF), "w"), indent=1)
 
 print(f"reference: linear diffusion; clusters: {out['clusters']}; margin {MARGIN}")
