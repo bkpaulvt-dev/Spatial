@@ -176,7 +176,7 @@ for i, m in enumerate(methods):
                 q = mb[(mb.dataset == ds) & (mb.method == m) & (mb.slice == r["slice"])]
                 if len(q): ax.scatter(k, q.ARI.iloc[0], s=30, facecolor="none", edgecolor=INK, lw=1.1, zorder=4)
         ax.set_xticks(range(len(slices[ds])), [s.replace("_control", "").replace("2018", "") for s in slices[ds]] if i == len(methods) - 1 else [],
-                      rotation=60, fontsize=6.5)
+                      rotation=60, fontsize=7)
         ax.set_xlim(-0.7, len(slices[ds]) - 0.3)
         if i == 0: ax.set_title(DSN[ds], fontsize=8.5, color=INK)
         if jx == 0: ax.set_ylabel(f"{MN[m]}\nARI")

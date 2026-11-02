@@ -171,7 +171,7 @@ def fig_accuracy():
     ax2.set_xlim(0.3, XP + 0.2); ax2.set_xticks([1, *range(4, NR - 1, 3), NR])
     ax2.spines["bottom"].set_bounds(0.3, NR + 0.7)
     ax2.set_xlabel("Rank (1 = best)\nP(best) shown when ≥ 0.01"); ax2.grid(axis="x", color=GRID, lw=0.5); ax2.set_axisbelow(True)
-    ax2.set_title("Rank, median and\n95% interval", pad=5)
+    ax2.set_title("Rank, median and\n95% interval", pad=14)
     ax2.text(XP, n - 0.45, "P(best)", ha="right", va="bottom", fontsize=7, color=INK2)
     # letters
     for ax, s, dx in ((ax0, "A", -0.12), (ax1, "B", -0.02), (ax2, "C", -0.02)):
