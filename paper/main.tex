@@ -163,7 +163,7 @@ used 12.5 GB). BASS, GraphST, NichePCA, Spatial-MGCN and DeepST exceeded the cap
 DeepST seeds 1 and 2 on E10.5 E2S1; these 17 jobs were rerun with the same code and settings on a second server with 125 GB RAM
 (CPU only, a different processor). Their accuracy and peak memory are reported with the rest; their run times are not compared
 with the others. For GraphST, the call to R mclust was wrapped for the newer software stack of that server; it gave identical labels
-on test embeddings (Supplementary Note~\SNcompute).
+on test embeddings (Supplementary Note~\SNcompute). The reruns gave 20 records for the 17 jobs, because three GraphST jobs failed once before the wrapper was added and were repeated. DeepST on E10.5 E2S1 has seed 0 from the benchmark machine and seeds 1 and 2 from the second server (ARI \deepstEtwoSeed{0}, \deepstEtwoSeed{1}, \deepstEtwoSeed{2}), so host and seed are confounded for that section.
 
 \paragraph{Neutrality.} The authors developed AnisoST, and linear diffusion and PCA are its ablations; the authors did not
 develop any of the published methods. To limit bias, all baseline settings were frozen on the four sections of DLPFC donor 1, every
@@ -320,7 +320,7 @@ the \mcsNBig{} embeddings with more than 2000 spots or cells, changing only the 
 (up to \mcsSeedMax; \figref{fig:robust}B), and the range exceeded 0.1 for \mcsSeedGt\% of them; the STARmap sections, with about
 1050 cells, were initialised on all cells and did not vary. Initialising on all observations makes the fit deterministic, but it remained sensitive to noise far below
 the measurement noise: adding 1\% noise changed ARI by \mcsJitMean{} on average (up to \mcsJitMax; on the 18,408-bin Stereo-seq section, where one
-full-data fit takes about 30 min, only for three embeddings). Among embeddings with more than 2000 observations, the full-data fit
+full-data fit takes about \mcsFullMinBig{} min, only for \mcsJitNBig{} embeddings). Among embeddings with more than 2000 observations, the full-data fit
 fell outside the range of the ten seeded fits for \mcsFullOutside\% (Supplementary Table~\STmclust).
 
 \subsection{Selecting fits by likelihood helps on cortex but not on the other tissues}
@@ -412,7 +412,7 @@ and BayesSpace on Visium only (Supplementary Table~\STcov), so seed variance on 
 Five methods needed more than the \memCap{} GB of the benchmark machine on the largest Stereo-seq section (up to \peakBigMax{} GB) and
 were rerun on a server with 125 GB RAM; those runs used a different CPU, so their run times are not compared with the rest, and the
 memory figures describe these implementations on this section, not the methods in general. NichePCA's default workflow aggregates
-all genes before PCA; its package also offers other orders of these steps. Settings were the same on every dataset by
+all genes before PCA; its package also offers other orders of these steps. The MOSTA annotation includes a ``Cavity'' class that covers \cavityFracLo--\cavityFracHi\% of the bins of the three sections and has a median UMI count per bin of \cavityRatioLo--\cavityRatioHi{} times that of the other bins, so this class partly reflects low count depth. Settings were the same on every dataset by
 design; dataset-specific tutorial settings (for example SEDR's Stereo-seq graph or Spatial-MGCN's configuration for this breast
 cancer section) were not used, and neighbourhood radii were expressed in spot or bin spacings, which on Stereo-seq bin50 data
 covers a smaller physical area than on Visium; on the square bin grid a six-nearest-neighbour graph also has ties among equidistant
