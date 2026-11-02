@@ -543,6 +543,9 @@ if os.path.exists(SJ):
         cr = json.load(open(R("stats_cluster_aware_runner.json")))
         vr = [v for v in cr["comparisons"].values() if v["protocol"] == "robust"]
         mac("nRobBetterRunner", str(sum(v["category"] == "baseline_better" for v in vr)))
+        flips = [TL[k.split("/", 1)[1]] for k, v in cs["comparisons"].items() if v["protocol"] == "robust"
+                 and cr["comparisons"][k]["category"] != v["category"]]
+        mac("listRunnerFlip", joinl(flips)); mac("nRunnerFlip", str(len(flips)))
         mac("nRobUnresRunner", str(sum(v["category"] == "unresolved" for v in vr)))
         mac("nRobBetterBonfRunner", str(sum(v["ci_bonf"][0] > 0 for v in vr)))
         mac("pBestLinRunner", f"{cr['ranking']['Linear diffusion']['p_best']:.2f}"); mac("pBestBassRunner", f"{cr['ranking']['BASS']['p_best']:.2f}")

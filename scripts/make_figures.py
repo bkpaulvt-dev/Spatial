@@ -145,8 +145,9 @@ if os.path.exists(R("anisost_boundary.jsonl")):
         ax.scatter(np.zeros(len(g)), g[(col, "linear")], color=GRAY, s=14, zorder=3)
         ax.scatter(np.ones(len(g)), g[(col, "anisotropic")], color=BLUE, s=14, zorder=3)
         diff = g[(col, "anisotropic")] - g[(col, "linear")]
-        ax.set_title(f"{t}\nΔ = {diff.mean():+.3f}, p = {wilcoxon(diff).pvalue:.3f}", fontsize=8.5, color=INK)
-        ax.set_xticks([0, 1], ["Linear", "Anisotropic"]); ax.set_xlim(-0.3, 1.3); ax.grid(axis="x", visible=False)
+        pv = wilcoxon(diff).pvalue
+        ax.set_title(f"{t}\nΔ = {diff.mean():+.3f}".replace("-", "\u2212") + f", p = {pv:.3f}" if pv < 0.999 else f"{t}\nΔ = {diff.mean():+.3f}".replace("-", "\u2212") + ", p > 0.99", fontsize=8.5, color=INK)
+        ax.set_xticks([0, 1], ["Linear diffusion", "AnisoST"]); ax.set_xlim(-0.3, 1.3); ax.grid(axis="x", visible=False)
     axs[0].set_ylabel("Accuracy (Hungarian-matched)")
     fig.savefig(f"{FIG}/fig4_boundary.png"); plt.close(fig)
 
