@@ -129,7 +129,7 @@ and unannotated spots were excluded from evaluation.
 \subsection{Methods}
 Methods were chosen to cover the main families of spatial domain identification with maintained public code that runs on
 CPU: deep graph encoders, statistical and neighbourhood methods, and Bayesian models. Every method was run with its official
-code and default or tutorial settings on one CPU thread; none was tuned per dataset. Versions, settings and deviations from
+code and default or tutorial settings on one CPU thread (except the reruns on the second server, see below); none was tuned per dataset. Versions, settings and deviations from
 the tutorials (for example the neighbourhood radius, expressed in spot spacings so that it transfers across technologies) are
 listed in Supplementary Table~\STmethods.
 \begin{itemize}
@@ -145,7 +145,7 @@ in the benchmark we report its final epoch (label-free) and give the label-selec
 18 neighbours, $m_{\max}=1$, 20 PCs; $\lambda=0.8$, recommended for domain segmentation, and $\lambda=0.2$, recommended for cell
 typing, included for reference), NichePCA \citep{nichepca2025} (a published training-free method: neighbour aggregation and PCA),
 and the Bayesian models BASS \citep{li2022bass} and BayesSpace \citep{zhao2021bayesspace}, which cluster internally. BayesSpace
-requires a spot lattice and was run on the Visium sections only.
+requires a regular spot lattice (it models neighbours on the Visium array), so it was run on the Visium sections only.
 \item \textbf{Training-free baselines.} \emph{Linear diffusion} is standard neighbourhood smoothing (graph Laplacian
 smoothing): the top 30 PCs are smoothed on the spatial six-nearest-neighbour graph,
 $H^{(t+1)}=(1-\alpha)H^{(t)}+\alpha D^{-1}AH^{(t)}$, $\alpha=0.5$, $T=10$. \emph{AnisoST} uses the same scheme with edge weights
@@ -216,7 +216,7 @@ this held for \nRobBetterTest{} of them without the development sections. The ba
 \nRobUnres{} comparisons were unresolved (\listRobUnres; for example BASS $\Delta$ \robDBass, 95\% interval \robLoBass{} to
 \robHiBass, and BANKSY $\lambda=0.8$ \robDBanksyHi, \robLoBanksyHi{} to \robHiBanksyHi), and no comparator was equivalent to the
 baseline within $\pm\statMargin$ ARI. With a Bonferroni correction only \nRobBetterBonf{} comparisons (\listRobBetterBonf)
-remained above zero. Ranked on all \rankSections{} sections, BASS was first in \pBestBass{} of the
+remained above zero\ifnum\nBonfBorderline>0{} (of these, \listBonfBorderline{} had a lower limit within 0.01 of zero and could change with the resampling seed)\fi. Ranked on all \rankSections{} sections, BASS was first in \pBestBass{} of the
 bootstrap resamples, linear diffusion in \pBestLin{} and \pBestThird{} in \pBestThirdVal; \nTopRank{} methods had rank 1 within
 their 95\% interval (\figref{fig:accuracy}C; Supplementary Table~\STranks). Taking all datasets from the standardised
 runner instead of the published pipelines gave a similar picture, with a different verdict only for \listRunnerFlip{} (\nRobBetterRunner{} comparisons favouring the baseline,
@@ -237,7 +237,7 @@ DLPFC did not help on these tissues, and most methods lay within a narrow range.
 classes with $K=4$, every method with an embedding reached a low ARI (\brcaCoarseLo--\brcaCoarseHi) and the order changed (\brcaCoarseTop{} highest;
 linear diffusion \brcaCoarseLin; Supplementary Table~\STbrca). On the largest Stereo-seq section (18,408 bins) BASS, GraphST,
 NichePCA, Spatial-MGCN and DeepST needed \peakBigMin--\peakBigMax{} GB of RAM (BASS \peakBigBass, NichePCA \peakBigNichepca, GraphST
-\peakBigGraphst, Spatial-MGCN \peakBigMgcn, DeepST \peakBigDeepst{} GB), more than the \memCap{} GB cap of the benchmark machine. Restricting the comparison to the datasets with an expert annotation (dropping STARmap,
+\peakBigGraphst, Spatial-MGCN \peakBigMgcn, DeepST \peakBigDeepst{} GB; measured on the larger server with 20 threads, where DeepST and NichePCA used several cores), reaching or exceeding the \memCap{} GB cap of the benchmark machine on the first attempt. GraphST, Spatial-MGCN and DeepST build dense graphs or matrices over all bins; for NichePCA the demand follows from its default workflow, which also has a sparse option that we did not use. Restricting the comparison to the datasets with an expert annotation (dropping STARmap,
 whose annotation provenance is unknown, and Stereo-seq, whose annotation was derived partly by clustering) gave the same picture:
 \nRobBetterExpert{} comparisons favoured the baseline, \nRobUnresExpert{} were unresolved, and BASS and linear diffusion ranked
 first in \pBestBassExpert{} and \pBestLinExpert{} of the resamples (Supplementary Table~\STstatsexpert). Example partitions are
@@ -372,7 +372,7 @@ Table~\STaudit{} and Supplementary Note~\SNaudit.
 We benchmarked \nMethodsPub{} published methods and three training-free baselines on \nSections{} sections from four
 technologies and three tissue types and separated the learned embedding from the clustering step. When all embeddings were
 clustered in the same way, linear diffusion had a higher mean ARI than \nRobBetter{} of \nRobTot{} comparators and
-could not be separated from the rest; the intervals were too wide to show equivalence with any method, and BASS ranked first more often (\pBestBass{} against \pBestLin). This lead
+could not be separated from the rest; the intervals were too wide to show equivalence with any method, and BASS ranked first more often (\pBestBass{} against \pBestLin) in the primary analysis; the order reversed in the runner sensitivity analysis and the intervals overlap. This lead
 came from the brain datasets: on breast cancer and mouse embryo the baseline was slightly behind most methods, including PCA without
 smoothing, and the methods were close to each other. The clustering step was a larger source of
 variation than most differences between methods: random initialisation of the same mixture model spanned \lotMean{} ARI on a fixed
@@ -383,8 +383,8 @@ released code, including selecting a reported epoch with the labels.
 Why does simple smoothing do so well on brain tissue? On layered tissue such as cortex, domains are large, contiguous regions, and
 averaging each spot with its neighbours removes most of the sampling noise that separates spots of the same layer; much of what a
 graph encoder learns may be this smoothing. In tumour and embryo sections, domains are smaller, interleaved and defined partly by
-cell composition; a possible explanation, which we did not test, is that a fixed amount of smoothing tuned on cortex then blurs
-them. There the methods performed similarly, and smoothing gave no gain over PCA alone. The ranking
+cell composition; two possible explanations, neither tested, are that a fixed amount of smoothing tuned on cortex blurs
+them, and that the annotation itself was derived partly from expression clustering (for the MOSTA ``Cavity'' class and the Stereo-seq tissues), which favours methods similar to that clustering. Neighbourhood-composition methods such as CellCharter \citep{varrone2024cellcharter} and MENDER \citep{yuan2024mender} take a related smoothing-like view. There the methods performed similarly, and smoothing gave no gain over PCA alone. The ranking
 of methods is therefore tissue-dependent, and a benchmark on one tissue, especially DLPFC alone, does not identify a generally best
 method. On single-cell MERFISH data, neighbouring cells often belong to different cell types, and the
 best-fitting mixture can then describe cell types rather than regions, which may explain why likelihood and ARI disagree there. For a
@@ -423,7 +423,7 @@ Slide-seq, Xenium and Visium HD data and sections with more than about 20,000 sp
 The STARmap and MERFISH annotations were distributed with the BASS analyses, and BASS was among the most accurate methods on these
 data. The MOSTA tissue annotation was derived partly from clustering of the expression data and then curated, which may favour
 methods similar to that clustering, and the breast cancer annotation was distributed with the SEDR analyses; we did not verify
-either annotation independently. The number of domains was given to every method; results with a misspecified or label-free $K$ are reported in Supplementary Table~\STk. All runs used one CPU thread, so run times are not
+either annotation independently. The number of domains was given to every method; results with a misspecified or label-free $K$ are reported in Supplementary Table~\STk. All runs used one CPU thread, except the reruns on the 125 GB server, where DeepST and NichePCA used several cores, so run times are not
 representative of GPU use. ARI is the primary metric; other metrics are in Supplementary Table~\STmetrics.
 
 \section*{Data availability}

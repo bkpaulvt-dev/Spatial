@@ -29,12 +29,12 @@ Copy `results/benchmark_runs_bigmem.jsonl` and the new `results/runs/stereo__E10
 that machine). The analysis scripts use the newest record per run id, so the new records replace the earlier out-of-memory
 records once appended to `results/benchmark_runs.jsonl`:
 ```bash
-cat results/benchmark_runs_bigmem.jsonl >> results/benchmark_runs.jsonl
+python scripts/merge_bigmem.py    # appends the records with host="deepmed2" (idempotent); do not use cat >>
 python scripts/export_runner_emb.py && python scripts/clustering_lottery.py && python scripts/k_sensitivity.py
 python scripts/stats_cluster_aware.py && python scripts/paper_v2.py   # etc.: make numbers supplement figures paper
 ```
 The text that lists the methods stopped at the cap (`\listOom`, the README Compute section, Limitations) then changes
-automatically or needs a one-line edit; the run times of these jobs come from a different CPU and are kept out of the
+automatically or needs a one-line edit (all 16 methods now have all 24 sections); the run times of these jobs come from a different CPU and are kept out of the
 timing comparison.
 
 ## Optional: use a GPU for GraphST and DeepST

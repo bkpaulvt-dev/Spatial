@@ -21,7 +21,7 @@ methods:
     settings_source: tutorial
     settings: {epochs: 600, hvg: "3000 (Visium) / all genes (targeted panels)", embedding_pcs: 20, refinement_radius: 50}
     clustering: {official: "R mclust EEE on 20 PCs of the embedding"}
-    deviations: ["reported with and without the tutorial's label refinement (graphst vs graphst_refined)", "Stereo-seq: datatype='Stereo' (the package's documented setting for Stereo-seq)"]
+    deviations: ["reported with and without the tutorial's label refinement (graphst vs graphst_refined)", "Stereo-seq: datatype='Stereo' (the package's documented setting for Stereo-seq)", "on the second server the call to R mclust is wrapped (a function that calls Mclust inside R and returns its classification; labels identical to the original function on two test embeddings; see docs/BIGMEM_RERUN.md)"]
   banksy:
     publication: "Singhal et al., Nat Genet 2024;56:431"
     kind: neighbourhood-augmented features (non-deep)
@@ -70,7 +70,7 @@ methods:
     settings_source: package_default
     settings: {knn: 6, pcs: 30, clustering: "Leiden with resolution search to K"}
     clustering: {official: "Leiden"}
-    deviations: ["default workflow (aggregation of all genes before PCA) on every dataset; exceeded the 12 GB cap on the 18,408-bin Stereo-seq section"]
+    deviations: ["default workflow (aggregation of all genes before PCA) on every dataset; exceeded the 12 GB cap on the 18,408-bin Stereo-seq section (the package also offers a sparse backend, not used)"]
   ccst:
     publication: "Li et al., Nat Comput Sci 2022 (CCST; volume and pages to verify)"
     kind: deep graph infomax (4 GCN layers)
@@ -86,7 +86,7 @@ methods:
     settings_source: tutorial
     settings: {lr: 0.001, weight_decay: 5e-4, k: 14, radius: "4.1 spot spacings (560 px)", hidden: [128, 64], alpha_beta_gamma: [1, 10, 0.1], epochs: 201}
     clustering: {official: "k-means each epoch; epoch chosen by ARI against the annotation (LEAKAGE, see docs/LEAKAGE_AUDIT.md)", ours: "final epoch (label-free); label-selected value recorded separately"}
-    deviations: ["unannotated spots kept (the released script deletes them before training)", "label-free epoch rule", "default settings on every dataset (the repository configuration for this breast cancer section was not used)"]
+    deviations: ["unannotated spots kept (the released script deletes them before training)", "label-free epoch rule", "default settings on every dataset (the repository configuration for this breast cancer section and a bin50-specific setting were not used)", "in the label-selected-epoch diagnostic only, non-finite embedding values are replaced by zero (numpy nan_to_num) before k-means"]
   deepst:
     publication: "Xu et al., Nucleic Acids Res 2022;50:e131"
     kind: deep graph + augmentation (no histology)
@@ -110,7 +110,7 @@ methods:
     settings_source: package_default
     settings: {platform: Visium, pcs: 15, hvg: 2000, init: mclust, model: t, gamma: 3, nrep: 50000, burn_in: 1000}
     clustering: {official: "own MCMC"}
-    deviations: ["Visium only (needs a hexagonal spot lattice)"]
+    deviations: ["Visium only (the model needs a regular spot lattice with a fixed neighbour structure)"]
   linear_diffusion:
     publication: "this work (baseline)"
     kind: training-free
