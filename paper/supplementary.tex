@@ -29,7 +29,7 @@ Sections are nested in groups (three DLPFC donors, STARmap, MERFISH, breast canc
 Repositories were screened with \texttt{scripts/audit\_leakage.py} for five patterns of label use (Supplementary Table~\STaudit), and every candidate line was read by one author. The taxonomy and all judgements, including false alarms, are in \texttt{docs/LEAKAGE\_AUDIT.md}. The audit describes what the released code does; it does not establish how published results were obtained.
 
 \subsection*{Supplementary Note 6. Computing environment}
-All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB of memory, Python 3.13, R 4.3.3 and mclust 6.0.1. Memory-heavy methods (DeepST, BayesSpace, NichePCA) were run one job at a time. For the breast cancer and Stereo-seq runs every job ran alone with a cap of 12 GB resident memory (process tree, sampled once per second); a job above the cap, or leaving less than 0.8 GB of system memory, was stopped and recorded as out of memory.
+All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB of memory, Python 3.13, R 4.3.3 and mclust 6.0.1. Memory-heavy methods (DeepST, BayesSpace, NichePCA) were run one job at a time. The 17 jobs that exceeded the 12 GB cap on Stereo-seq (BASS, GraphST, NichePCA, Spatial-MGCN and DeepST on E10.5\_E1S1, DeepST seeds 1 and 2 on E10.5\_E2S1) were rerun with the same code and settings on a server with 125 GB RAM and 20 threads (Intel Core i9-9820X, CPU only; its two GPUs were not used because the driver was older than the installed PyTorch build supports). GraphST's call to R mclust was wrapped (a function calling \texttt{Mclust} inside R) because the direct call failed in that software stack; on the GraphST embeddings of two sections the wrapped and the original function gave identical labels. Their records carry a host tag, and their run times are not used in the timing tables. For the breast cancer and Stereo-seq runs every job ran alone with a cap of 12 GB resident memory (process tree, sampled once per second); a job above the cap, or leaving less than 0.8 GB of system memory, was stopped and recorded as out of memory.
 
 \clearpage\section*{Supplementary Tables}
 \begin{table}[!htbp]\centering
@@ -103,7 +103,7 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S15.} Run time, peak memory and estimated energy of one whole job (data loading, embedding and clustering) in the standardised runner on one CPU thread. Energy is estimated at 10 W per busy core.}
+\caption*{\textbf{Supplementary Table S15.} Run time, peak memory and estimated energy of one whole job (data loading, embedding and clustering) in the standardised runner on one CPU thread. Energy is estimated at 10 W per busy core. The reruns of the five memory-capped methods on the largest Stereo-seq section were made on another server (CPU only, 125 GB RAM, different processor, see Supplementary Note~\SNcompute): they count for peak memory but not for run time and energy.}
 \input{../results/supp/resources.tex}
 \end{table}
 
@@ -165,7 +165,7 @@ All runs used one CPU thread per job on a 4-core Intel Xeon (2.8 GHz) with 15 GB
 
 \begin{figure}[H]\centering
 \includegraphics[width=0.9\linewidth,height=0.78\textheight,keepaspectratio]{fig4_boundary.png}
-\caption*{\textbf{Supplementary Figure S4.} Accuracy on spots at layer boundaries and in layer interiors on the 12 DLPFC sections, linear diffusion versus AnisoST (labelled Anisotropic); one line per section; Wilcoxon signed-rank test, $n=12$ sections.}
+\caption*{\textbf{Supplementary Figure S4.} Accuracy on spots at layer boundaries and in layer interiors on the 12 DLPFC sections, linear diffusion versus AnisoST; one line per section; Wilcoxon signed-rank test, $n=12$ sections.}
 \end{figure}
 
 \end{document}
