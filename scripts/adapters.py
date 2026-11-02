@@ -80,7 +80,22 @@ def spagcn(a, k, seed, ds):
 def graphst(a, k, seed, ds):
     import torch, scanpy as sc
     from GraphST import GraphST
+    import GraphST.utils as gu
     from GraphST.utils import clustering
+
+    def mclust_R(adata, num_cluster, modelNames="EEE", used_obsm="emb_pca", random_seed=2020):
+        # GraphST's own mclust_R fails with mclust 6.x ("length of 'dimnames' [2] not equal to array extent") when Mclust is
+        # called directly from rpy2; calling it inside an R function gives the same result
+        import rpy2.robjects as ro, rpy2.robjects.numpy2ri as n2r
+        np.random.seed(random_seed)
+        ro.r.library("mclust")
+        ro.r["set.seed"](random_seed)
+        fit = ro.r("function(x, G, m) Mclust(x, G, m)$classification")
+        cl = np.asarray(fit(n2r.numpy2rpy(np.asarray(adata.obsm[used_obsm], dtype=float)), num_cluster, modelNames))
+        adata.obs["mclust"] = cl.astype(int)
+        adata.obs["mclust"] = adata.obs["mclust"].astype("category")
+        return adata
+    gu.mclust_R = mclust_R
     b = a.copy()
     if b.n_vars <= 3000:                       # targeted panel: keep every gene, GraphST's remaining preprocessing
         b.var["highly_variable"] = True

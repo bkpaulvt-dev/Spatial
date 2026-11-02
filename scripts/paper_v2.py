@@ -414,8 +414,10 @@ if _bl: mac("mgcnLeakBrca", float(np.mean(_bl)), 2); mac("mgcnLeakBrcaN", str(le
 # runtime / memory from the unified runner
 ur = [json.loads(l) for l in open(R("benchmark_runs.jsonl"))]
 ur = {x["id"]: x for x in ur}.values()
-RS = pd.DataFrame([dict(method=x["method"], dataset=x["dataset"], t=x["resources"].get("wall_s"), mem=x["resources"].get("peak_rss_gb"),
-                        kwh=x["resources"].get("energy_kwh")) for x in ur if x["status"] == "ok"])
+# run time and energy only from the benchmark machine; records with a host tag (rerun on DeepMed2: other CPU, 125 GB RAM) count for memory only
+RS = pd.DataFrame([dict(method=x["method"], dataset=x["dataset"], t=(None if x.get("host") else x["resources"].get("wall_s")),
+                        mem=x["resources"].get("peak_rss_gb"), kwh=(None if x.get("host") else x["resources"].get("energy_kwh")))
+                   for x in ur if x["status"] == "ok"])
 rsm = RS.groupby("method").agg(t=("t", "median"), mem=("mem", "max"), kwh=("kwh", "sum"))
 for m, r_ in rsm.iterrows():
     nme = MCN.get(m, m)
@@ -428,6 +430,14 @@ OL = {"bass": "BASS", "graphst": "GraphST", "nichepca": "NichePCA", "spatial_mgc
 _ol = [OL.get(m, m) for m in OOM]
 mac("listOom", "none" if not _ol else _ol[0] if len(_ol) == 1 else ", ".join(_ol[:-1]) + " and " + _ol[-1]); mac("nOom", str(len(OOM)))
 mac("memCap", os.environ.get("SPATIALBENCH_MAX_RSS_GB", "12"))
+big = {}
+for x in ur:
+    if x["status"] == "ok" and x["dataset"] == "stereo" and str(x["section"]) == "E10.5_E1S1":
+        big[x["method"]] = max(big.get(x["method"], 0), x["resources"].get("peak_rss_gb") or 0)
+for m_, nme_ in (("bass", "Bass"), ("graphst", "Graphst"), ("nichepca", "Nichepca"), ("spatial_mgcn", "Mgcn"), ("deepst", "Deepst")):
+    if m_ in big: mac(f"peakBig{nme_}", f"{big[m_]:.0f}")
+_five = [big[m_] for m_ in ("bass", "graphst", "nichepca", "spatial_mgcn", "deepst") if m_ in big]
+if _five: mac("peakBigMin", f"{min(_five):.0f}"); mac("peakBigMax", f"{max(_five):.0f}")
 tm = nm.groupby("method").time.median()
 for m, v in tm.items(): mac(f"timePilot{MCN.get(m, m)}", f"{v:.0f}")
 out["resources"] = {"unified": {m: {"median_s": round(float(r_.t), 1), "max_mem_gb": round(float(r_.mem), 2), "kwh_total": float(r_.kwh)} for m, r_ in rsm.iterrows()},

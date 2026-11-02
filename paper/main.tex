@@ -157,10 +157,13 @@ DLPFC donor 1 before any other data were analysed (sensitivity: Supplementary Fi
 Seeds: three per section for most methods; one for STAGATE, CCST, Spatial-MGCN and BASS in the published pipelines and for
 GraphST on DLPFC, and one run per section for BayesSpace (Supplementary Table~\STcov). The breast cancer and Stereo-seq sections
 were run only in the standardised runner described below, with three seeds per method (two for CCST on the largest Stereo-seq
-section, where one run takes more than 5 h; one run for BayesSpace; DeepST seeds 1 and 2 exceeded the memory cap on Stereo-seq
-E10.5 E2S1). On these two datasets every job had a memory cap of
-\memCap{} GB on a 15 GB machine and runs that exceeded it are reported as failures; the earlier runs on the first three datasets
-had no cap (the largest, BayesSpace on DLPFC, used 12.5 GB).
+section, where one run takes more than 5 h; one run for BayesSpace). On these two datasets jobs ran one at a time with a memory
+cap of \memCap{} GB on a 15 GB machine; the earlier runs on the first three datasets had no cap (the largest, BayesSpace on DLPFC,
+used 12.5 GB). BASS, GraphST, NichePCA, Spatial-MGCN and DeepST exceeded the cap on the largest Stereo-seq section (18,408 bins), and
+DeepST seeds 1 and 2 on E10.5 E2S1; these 17 jobs were rerun with the same code and settings on a second server with 125 GB RAM
+(CPU only, a different processor). Their accuracy and peak memory are reported with the rest; their run times are not compared
+with the others. For GraphST, the call to R mclust was wrapped for the newer software stack of that server; it gave identical labels
+on test embeddings (Supplementary Note~\SNcompute).
 
 \paragraph{Neutrality.} The authors developed AnisoST, and linear diffusion and PCA are its ablations; the authors did not
 develop any of the published methods. To limit bias, all baseline settings were frozen on the four sections of DLPFC donor 1, every
@@ -213,10 +216,9 @@ this held for \nRobBetterTest{} of them without the development sections. The ba
 \nRobUnres{} comparisons were unresolved (\listRobUnres; for example BASS $\Delta$ \robDBass, 95\% interval \robLoBass{} to
 \robHiBass, and BANKSY $\lambda=0.8$ \robDBanksyHi, \robLoBanksyHi{} to \robHiBanksyHi), and no comparator was equivalent to the
 baseline within $\pm\statMargin$ ARI. With a Bonferroni correction only \nRobBetterBonf{} comparisons (\listRobBetterBonf)
-remained above zero. Ranked on the \rankSections{} sections that every method completed, BASS was first in \pBestBass{} of the
+remained above zero. Ranked on all \rankSections{} sections, BASS was first in \pBestBass{} of the
 bootstrap resamples, linear diffusion in \pBestLin{} and \pBestThird{} in \pBestThirdVal; \nTopRank{} methods had rank 1 within
-their 95\% interval (\figref{fig:accuracy}C; Supplementary Table~\STranks). Among the \rankMethodsComplete{} methods with a result
-on every section, which excludes BASS, linear diffusion was first in \pBestLinComplete. Taking all datasets from the standardised
+their 95\% interval (\figref{fig:accuracy}C; Supplementary Table~\STranks). Taking all datasets from the standardised
 runner instead of the published pipelines gave the same picture (\nRobBetterRunner{} comparisons favouring the baseline,
 \nRobUnresRunner{} unresolved; first rank BASS \pBestBassRunner, linear diffusion \pBestLinRunner; Supplementary
 Table~\STstatsrunner). With each method's default clustering \nStdBetter{}
@@ -233,8 +235,9 @@ other (\figref{fig:accuracy}A), and PCA without any smoothing was also ahead of 
 \meanLinBrca{} on breast cancer, \meanPcaStereo{} against \meanLinStereo{} on Stereo-seq): smoothing with the settings fixed on
 DLPFC did not help on these tissues, and most methods lay within a narrow range. The breast cancer annotation has 20 numbered regions of four classes; scored against the four
 classes with $K=4$, every method with an embedding reached a low ARI (\brcaCoarseLo--\brcaCoarseHi) and the order changed (\brcaCoarseTop{} highest;
-linear diffusion \brcaCoarseLin; Supplementary Table~\STbrca). In our runs \listOom{} exceeded the \memCap{} GB memory cap on the
-largest Stereo-seq section (18,408 bins) and have no result there; they are compared on the remaining sections. Restricting the comparison to the datasets with an expert annotation (dropping STARmap,
+linear diffusion \brcaCoarseLin; Supplementary Table~\STbrca). On the largest Stereo-seq section (18,408 bins) BASS, GraphST,
+NichePCA, Spatial-MGCN and DeepST needed \peakBigMin--\peakBigMax{} GB of RAM (BASS \peakBigBass, NichePCA \peakBigNichepca, GraphST
+\peakBigGraphst, Spatial-MGCN \peakBigMgcn, DeepST \peakBigDeepst{} GB), more than the \memCap{} GB cap of the benchmark machine. Restricting the comparison to the datasets with an expert annotation (dropping STARmap,
 whose annotation provenance is unknown, and Stereo-seq, whose annotation was derived partly by clustering) gave the same picture:
 \nRobBetterExpert{} comparisons favoured the baseline, \nRobUnresExpert{} were unresolved, and BASS and linear diffusion ranked
 first in \pBestBassExpert{} and \pBestLinExpert{} of the resamples (Supplementary Table~\STstatsexpert). Example partitions are
@@ -264,14 +267,14 @@ rule blocks the smoothing needed to reveal regions.
 BayesSpace use their internal clustering). $n=\nSections$ sections (12 DLPFC, 3 STARmap, 5 MERFISH, 1 breast cancer, 3 Stereo-seq);
 values are means over seeds. STARmap: mouse medial prefrontal cortex; MERFISH: mouse hypothalamus; Stereo-seq: mouse embryo.
 (\textbf{A}) Mean ARI per dataset, brain datasets left of the white rule; rows ordered by the mean over datasets, BayesSpace (Visium
-only) last; dots mark the method family; *: mean over the two smaller Stereo-seq sections (memory cap exceeded on the largest). (\textbf{B}) Linear diffusion minus each
+only) last; dots mark the method family. (\textbf{B}) Linear diffusion minus each
 method, with 95\% intervals from a hierarchical bootstrap over \statClusters{} groups (three DLPFC donors, STARmap, MERFISH, breast
 cancer, Stereo-seq; five of the seven groups are brain tissue). Circles and lines: filled, interval above zero; open, unresolved.
 Small grey marks: mean difference on the three brain datasets (filled triangle) and on breast cancer and Stereo-seq (open
 triangle), without intervals (per dataset in Supplementary Table~\STstatsrob). Grey band: equivalence margin of
 $\pm\statMargin$ ARI. BayesSpace was run on the Visium data only. (\textbf{C}) Rank in the bootstrap (dot: median; line: 95\%
-interval; 16 methods ranked); numbers give the probability of ranking first when at least 0.01. Ranks use the \rankSections{} sections that every method
-completed (BayesSpace, run on Visium only, is not ranked). Linear diffusion was chosen as the reference after seeing the
+interval; 16 methods ranked); numbers give the probability of ranking first when at least 0.01. Ranks use all \rankSections{} sections (BayesSpace, run
+on the Visium data only, is not ranked). Linear diffusion was chosen as the reference after seeing the
 means, so this comparison is exploratory.}
 \label{fig:accuracy}
 \end{figure*}
@@ -339,8 +342,7 @@ reorder methods.
 \caption{Effect of the clustering protocol on mean ARI: (\textbf{A}) DLPFC, (\textbf{B}) STARmap, (\textbf{C}) MERFISH,
 (\textbf{D}) breast cancer, (\textbf{E}) Stereo-seq (means over 12, 3, 5, 1 and 3 sections). Open circles: default clustering; filled circles: matched clustering of the same embedding; line colour:
 method family. Default values come from the published pipelines (A--C) and from the standardised runner (D, E). Rows are ordered
-by the matched-clustering mean over the five datasets; Stereo-seq values of methods stopped at the
-memory cap are means over the two smaller sections. SpaGCN, BASS and BayesSpace cluster internally and are not shown.}
+by the matched-clustering mean over the five datasets. SpaGCN, BASS and BayesSpace cluster internally and are not shown.}
 \label{fig:matched}
 \end{figure*}
 
@@ -407,9 +409,10 @@ All methods were run with default or published settings, without a tuning budget
 reach with its authors' own tuning (we could not reproduce HiSTaR's per-section tuning). The reference baseline was chosen after
 the means were seen, and the comparisons with it are exploratory. Four methods (and GraphST on DLPFC) were run with one seed in the published pipelines
 and BayesSpace on Visium only (Supplementary Table~\STcov), so seed variance on the first three datasets is unavailable for them.
-In total, \listOom{} exceeded the \memCap{} GB memory cap on the largest Stereo-seq section; with more memory or a GPU they may run, so
-this is a statement about resource use, not about accuracy. NichePCA failed there with its default workflow, which
-aggregates all genes before PCA; its package also offers other orders of these steps. Settings were the same on every dataset by
+Five methods needed more than the \memCap{} GB of the benchmark machine on the largest Stereo-seq section (up to \peakBigMax{} GB) and
+were rerun on a server with 125 GB RAM; those runs used a different CPU, so their run times are not compared with the rest, and the
+memory figures describe these implementations on this section, not the methods in general. NichePCA's default workflow aggregates
+all genes before PCA; its package also offers other orders of these steps. Settings were the same on every dataset by
 design; dataset-specific tutorial settings (for example SEDR's Stereo-seq graph or Spatial-MGCN's configuration for this breast
 cancer section) were not used, and neighbourhood radii were expressed in spot or bin spacings, which on Stereo-seq bin50 data
 covers a smaller physical area than on Visium; on the square bin grid a six-nearest-neighbour graph also has ties among equidistant
