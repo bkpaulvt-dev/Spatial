@@ -163,7 +163,7 @@ used 12.5 GB). BASS, GraphST, NichePCA, Spatial-MGCN and DeepST exceeded the cap
 DeepST seeds 1 and 2 on E10.5 E2S1; these 17 jobs were rerun with the same code and settings on a second server with 125 GB RAM
 (CPU only, a different processor). Their accuracy and peak memory are reported with the rest; their run times are not compared
 with the others. For GraphST, the call to R mclust was wrapped for the newer software stack of that server; it gave identical labels
-on test embeddings (Supplementary Note~\SNcompute). The reruns gave 20 records for the 17 jobs, because three GraphST jobs failed once before the wrapper was added and were repeated. DeepST on E10.5 E2S1 has seed 0 from the benchmark machine and seeds 1 and 2 from the second server (ARI \deepstEtwoSeed{0}, \deepstEtwoSeed{1}, \deepstEtwoSeed{2}), so host and seed are confounded for that section.
+on test embeddings (Supplementary Note~\SNcompute). The reruns gave 20 records for the 17 jobs, because three GraphST jobs failed once before the wrapper was added and were repeated. DeepST on E10.5 E2S1 has seed 0 from the benchmark machine and seeds 1 and 2 from the second server (ARI \deepstEtwoSeedZero{}, \deepstEtwoSeedOne{}, \deepstEtwoSeedTwo{}), so host and seed are confounded for that section.
 
 \paragraph{Neutrality.} The authors developed AnisoST, and linear diffusion and PCA are its ablations; the authors did not
 develop any of the published methods. To limit bias, all baseline settings were frozen on the four sections of DLPFC donor 1, every

@@ -444,7 +444,7 @@ if _cr: mac("cpuRatioMax", f"{max(max(v) for v in _cr.values()):.1f}")
 # DeepST on E10.5_E2S1: seed 0 from the benchmark machine, seeds 1-2 from the second server
 _d = {x["seed"]: x for x in ur if x["method"] == "deepst" and x["dataset"] == "stereo" and str(x["section"]) == "E10.5_E2S1" and x["status"] == "ok"}
 for sd_ in (0, 1, 2):
-    if sd_ in _d: mac(f"deepstEtwoSeed{sd_}", f"{_d[sd_]['metrics']['ARI']:.2f}")
+    if sd_ in _d: mac(f"deepstEtwoSeed{['Zero','One','Two'][sd_]}", f"{_d[sd_]['metrics']['ARI']:.2f}")
 # MOSTA 'Cavity' class (scripts/mosta_cavity.py)
 if os.path.exists(R("mosta_cavity.csv")):
     _c = pd.read_csv(R("mosta_cavity.csv"))
