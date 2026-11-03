@@ -208,6 +208,7 @@ def ranges(d, kind, min_n):
 
 
 def fig_robustness():
+    """Figure 4: variability of the clustering step on fixed embeddings, three aligned heat maps (method x dataset)."""
     L = [json.loads(l) for l in open(R("clustering_lottery.jsonl"))]
     rows = []
     for r in L:
@@ -215,89 +216,56 @@ def fig_robustness():
         rows.append(dict(dataset=r.get("dataset", "dlpfc"), method=r["method"], slice=str(r["slice"]), rng=a.max() - a.min(),
                          rho=spearmanr(ll, a).statistic))
     LT = pd.DataFrame(rows)
-    order = LT.groupby("method").rng.median().sort_values().index.tolist()[::-1]  # largest median range at top
-    n = len(order); yrow = {m: n - 1 - i for i, m in enumerate(order)}
-    MS = load_mclust_seed()
-    SR = ranges(MS, "seed", 2); FJ = ranges(MS, "full_jit", 2)
-    rg = np.random.default_rng(1)
-    fig = plt.figure(figsize=(WIDTH, 10.4 * CM))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 1.1], wspace=0.07, left=0.125, right=0.835, top=0.74, bottom=0.27)
-    axs = [fig.add_subplot(gs[0, i]) for i in range(3)]
-    jit = {"dlpfc": -0.24, "starmap": -0.12, "merfish": 0.0, "brca": 0.12, "stereo": 0.24}
+    MS = load_mclust_seed(); SR = ranges(MS, "seed", 2)
+    order = LT.groupby("method").rng.mean().sort_values(ascending=False).index.tolist()   # most variable at the top
+    n = len(order)
+    COLS = list(DSN) + ["all"]; NC = len(COLS)
+    SEQV = LinearSegmentedColormap.from_list("seq_orange", ["#fff7ec", "#fdd49e", "#fc8d59", "#d7301f", "#7f0000"])
 
-    def dots(ax, df, col, dy=0.0, sz=3.6):
-        for m in order:
+    def table(df, col, agg):
+        M = np.full((n, NC), np.nan)
+        for i, m in enumerate(order):
             g = df[df.method == m]
-            for ds in DSN:
-                v = g[g.dataset == ds][col].dropna().values
-                if not len(v): continue
-                yy = yrow[m] + dy + jit[ds] * (0.6 if dy else 1.0) + rg.uniform(-0.06, 0.06, len(v))
-                ax.plot(v, yy, ls="", ms=sz, mew=0.6, alpha=0.9, zorder=2, **DMK[ds])
-
-    def iqr(ax, df, col):
-        for m in order:
-            g = df[df.method == m][col].dropna()
-            if not len(g): continue
-            q1, q3 = g.quantile([0.25, 0.75]); yy = yrow[m]
-            ax.plot([q1, q3], [yy, yy], color=INK, lw=1.8, solid_capstyle="butt", zorder=3, alpha=0.8)
-            ax.plot(g.median(), yy, "o", mfc="white", mec=INK, ms=4.0, mew=1.0, zorder=4)
-
-    # A: 20 single-start fits
-    ax = axs[0]
-    dots(ax, LT, "rng"); iqr(ax, LT, "rng")
-    ax.set_yticks([yrow[m] for m in order], [LAB[m] for m in order])
-    ax.set_xlabel("ARI range (max − min)"); ax.set_title("Range over 20\nsingle-start fits", pad=5)
-    # B: R mclust seeds
-    ax = axs[1]
-    xmax_b = 0.65
-    if len(SR):
-        dots(ax, SR, "rng", dy=-0.12); iqr(ax, SR, "rng")
-        xmax_b = max(xmax_b, SR.rng.max() + 0.03)
-    if len(FJ):
-        for _, r_ in FJ.iterrows():
-            if r_.method not in yrow: continue
-            ax.plot(r_.rng, yrow[r_.method] + 0.3 + rg.uniform(-0.05, 0.05), marker="x", ls="", color=INK, ms=3.6, mew=0.8, zorder=5)
-        xmax_b = max(xmax_b, FJ.rng.max() + 0.03)
-    done = set(SR.method) if len(SR) else set()
-    for m in order:
-        if m not in done:
-            ax.text(0.01, yrow[m], "not yet run" if len(MS) else "", ha="left", va="center", fontsize=7, color=MUTE, style="italic")
-    if not len(MS):
-        ax.text(0.5, 0.5, "R mclust runs not available", transform=ax.transAxes, ha="center", va="center", fontsize=7, color=INK2)
-    ax.set_yticks([yrow[m] for m in order], [])
-    ax.set_xlabel("ARI range (max − min)"); ax.set_title("R mclust: range over\n10 random seeds", pad=5)
-    for a in axs[:2]:
-        a.set_ylim(-0.6, n - 0.4); a.set_xlim(-0.01, max(0.65, xmax_b)); a.grid(axis="x", color=GRID, lw=0.5); a.set_axisbelow(True)
-    # C: Spearman rho heatmap
-    H = np.array([[LT[(LT.method == m) & (LT.dataset == d)].rho.median() for d in DSN] for m in order[::-1]])
-    ax = axs[2]
-    im = ax.imshow(np.ma.masked_invalid(H), cmap=DIV, vmin=-1, vmax=1, aspect="auto", extent=[-0.5, ND - 0.5, -0.5, n - 0.5], origin="lower")
-    for i in range(n):
-        for j in range(ND):
-            v = H[i, j]
-            if np.isnan(v):
-                ax.text(j, i, "–", ha="center", va="center", fontsize=7, color=INK2); continue
-            lab = "0.0" if abs(v) < 0.05 else f"{v:+.1f}".replace("-", "−")
-            ax.text(j, i, lab, ha="center", va="center", fontsize=7, color="white" if abs(v) > 0.6 else INK)
-    SPLIT = {"starmap": "STARmap", "merfish": "MERFISH", "stereo": "Stereo-seq", "dlpfc": "DLPFC", "brca": "Breast"}
-    ax.set_xticks(range(ND), [f"{SPLIT[d]} (n = {NSEC[d]})" for d in DSN], rotation=90); ax.xaxis.tick_top()
-    ax.set_yticks(range(n), [LAB[m] for m in order[::-1]]); ax.yaxis.tick_right(); ax.set_ylim(-0.6, n - 0.4); ax.tick_params(length=0)
-    for s in ax.spines.values(): s.set_visible(False)
-    ax.set_title("Log-likelihood vs ARI,\nmedian Spearman ρ", pad=62)
-    p2 = ax.get_position()
-    cax = fig.add_axes([p2.x0 + 0.08 * p2.width, 0.185, 0.84 * p2.width, 0.02])
-    cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[-1, -0.5, 0, 0.5, 1])
-    cb.ax.set_xticklabels(["−1", "−0.5", "0", "0.5", "1"]); cb.outline.set_linewidth(0.4); cb.ax.tick_params(labelsize=7, length=2)
-    cb.set_label("Spearman ρ", fontsize=7, labelpad=1)
-    # letters + legend
-    letter(fig, 0.005, 0.995, "A")
-    for a, s in ((axs[1], "B"), (axs[2], "C")):
-        letter(fig, a.get_position().x0 - 0.015, 0.995, s)
-    h = dataset_handles() + [Line2D([], [], color=INK, lw=1.8, marker="o", mfc="white", mec=INK, ms=4, label="median and IQR"),
-                             Line2D([], [], marker="x", ls="", color=INK, ms=4, mew=0.8, label="R mclust, full-data initialisation + 1% noise (5 runs)")]
-    p0 = axs[0].get_position()
-    fig.legend(handles=h, loc="lower left", ncol=3, frameon=False, bbox_to_anchor=(p0.x0 - 0.115, 0.0), handletextpad=0.4, handlelength=1.8,
-               columnspacing=1.2, labelspacing=0.35)
+            for j, d in enumerate(DSN):
+                v = g[g.dataset == d][col].dropna()
+                if len(v): M[i, j] = agg(v)
+            v = g[col].dropna()
+            if len(v): M[i, NC - 1] = agg(v)
+        return M
+    A = table(LT, "rng", np.mean); B = table(SR, "rng", np.mean); C = table(LT, "rho", np.median)
+    HEAD = {**{d: f"{DSN[d]} (n = {NSEC[d]})" for d in DSN}, "all": "All sections"}
+    fig = plt.figure(figsize=(WIDTH, 11.0 * CM))
+    x0s = [0.125, 0.40, 0.675]; wp = 0.255; yb, hp = 0.165, 0.515
+    axs = [fig.add_axes([x, yb, wp, hp]) for x in x0s]
+    specs = [(A, SEQV, 0.0, 0.5, "{:.2f}", "ARI range of 20 single-start\nGaussian-mixture fits (mean)"),
+             (B, SEQV, 0.0, 0.5, "{:.2f}", "ARI range of R mclust over\n10 random seeds (mean)"),
+             (C, DIV, -1.0, 1.0, "{:+.1f}", "Spearman \u03c1, log-likelihood\nvs ARI (median)")]
+    for k, (ax, (Mx, cmap, vmin, vmax, fmt, title)) in enumerate(zip(axs, specs)):
+        ax.imshow(np.ma.masked_invalid(Mx), cmap=cmap, vmin=vmin, vmax=vmax, aspect="auto")
+        for i in range(n):
+            for j in range(NC):
+                v = Mx[i, j]
+                if np.isnan(v):
+                    ax.text(j, i, "\u2013", ha="center", va="center", fontsize=7, color=INK2); continue
+                lab = fmt.format(v).replace("-", "\u2212")
+                if k == 2 and abs(v) < 0.05: lab = "0.0"
+                dark = (v > 0.32) if k < 2 else (abs(v) > 0.55)
+                ax.text(j, i, lab, ha="center", va="center", fontsize=7, color="white" if dark else INK)
+        ax.set_xticks(range(NC), [HEAD[c] for c in COLS], rotation=90); ax.xaxis.tick_top()
+        ax.set_yticks(range(n), [LAB[m] for m in order] if k == 0 else []); ax.tick_params(length=0, pad=2)
+        ax.axvline(NC - 1.5, color="white", lw=2.4)
+        ax.set_xticks(np.arange(-0.5, NC, 1), minor=True); ax.set_yticks(np.arange(-0.5, n, 1), minor=True)
+        ax.grid(which="minor", color="white", lw=0.6); ax.tick_params(which="minor", length=0)
+        for sp in ax.spines.values(): sp.set_visible(False)
+        ax.set_title(title, fontsize=8, pad=64, color=INK)
+        letter(fig, ax.get_position().x0 - (0.12 if k == 0 else 0.02), 0.995, "ABC"[k])
+    cax1 = fig.add_axes([x0s[0] + 0.04, 0.075, x0s[1] + wp - x0s[0] - 0.08, 0.022])
+    cb1 = fig.colorbar(plt.cm.ScalarMappable(cmap=SEQV, norm=plt.Normalize(0, 0.5)), cax=cax1, orientation="horizontal", ticks=[0, 0.1, 0.2, 0.3, 0.4, 0.5])
+    cb1.outline.set_linewidth(0.4); cb1.ax.tick_params(labelsize=7, length=2); cb1.set_label("ARI range (max \u2212 min), A and B", fontsize=7, labelpad=1)
+    cax2 = fig.add_axes([x0s[2] + 0.04, 0.075, wp - 0.08, 0.022])
+    cb2 = fig.colorbar(plt.cm.ScalarMappable(cmap=DIV, norm=plt.Normalize(-1, 1)), cax=cax2, orientation="horizontal", ticks=[-1, -0.5, 0, 0.5, 1])
+    cb2.ax.set_xticklabels(["\u22121", "\u22120.5", "0", "0.5", "1"]); cb2.outline.set_linewidth(0.4); cb2.ax.tick_params(labelsize=7, length=2)
+    cb2.set_label("Spearman \u03c1, C", fontsize=7, labelpad=1)
     save(fig, "nar_fig3_robustness")
     return LT
 

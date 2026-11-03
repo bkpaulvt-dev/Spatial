@@ -305,14 +305,14 @@ between successive methods. Every fit for three representative methods is shown 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\linewidth]{nar_fig3_robustness.pdf}
-\caption{Variance of the clustering step on fixed embeddings (\lotNMethods{} methods and baselines that output an embedding; one
-symbol per section, up to \nSections{} per method; shape and grey level: dataset). (\textbf{A}) ARI range over 20 single-start fits of the same
-Gaussian mixture. (\textbf{B}) ARI range of R mclust with its default initialisation over ten R random seeds; crosses: range over five
-repetitions with 1\% noise when initialised on all observations. STARmap sections have fewer than 2000 cells, are initialised
-on all cells and show no seed variation (their zero ranges are included in the medians). In A and B, bars: interquartile range;
-open circle: median; rows are ordered by the median range in A, and C uses the same rows. (\textbf{C}) Median Spearman correlation between
-the log-likelihood and the ARI of the 20 fits in A (positive: better-fitting mixtures agree better with the annotation); columns
-rest on 12, 3, 5, 1 and 3 sections.}
+\caption{Variability of the clustering step on fixed embeddings (\lotNMethods{} methods and baselines that output an embedding; rows ordered
+by the mean range in A, the same in all panels; columns: dataset with its number of sections, and all sections together).
+(\textbf{A}) Mean ARI range (maximum minus minimum) over 20 single-start fits of the same Gaussian mixture on one fixed embedding.
+(\textbf{B}) Mean ARI range of R mclust with its default initialisation over ten R random seeds. STARmap sections have fewer than
+2000 cells, are initialised on all cells and show no seed variation (zero range, included in the means). The range under 1\% noise
+is given in Supplementary Table~\STmclust. (\textbf{C}) Median Spearman correlation between the log-likelihood and the ARI of the
+20 fits in A (positive: better-fitting mixtures agree better with the annotation). Each cell averages the sections of one dataset; per-embedding
+values, including the largest ranges, are in Supplementary Tables~\STlottery{} and~\STmclust.}
 \label{fig:robust}
 \end{figure*}
 
