@@ -19,6 +19,7 @@ DS = ["dlpfc", "starmap", "merfish", "brca", "stereo"]
 DSN = {"dlpfc": "DLPFC", "starmap": "STARmap", "merfish": "MERFISH", "brca": "Breast", "stereo": "Stereo-seq"}
 hd = lambda *xs: "\\shortstack{" + "\\\\".join(xs) + "}"
 esc = lambda s: re.sub(r"([_&%#])", r"\\\1", str(s)).replace("λ", "$\\lambda$")
+fm = lambda x: f"{x:+.4f}" if abs(x) < 0.0015 else f"{x:+.3f}"   # four decimals only next to zero
 f3 = lambda x, d=3: "--" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x:.{d}f}"
 
 
@@ -112,14 +113,14 @@ cs = json.load(open(R("stats_cluster_aware.json")))
 for proto, fname, macro, title in (("standard", "stats_std.tex", "STstats", "Difference in mean ARI between linear diffusion and each method, both with their default clustering; equal-weight mean of group means; 95\\% interval from a hierarchical bootstrap over seven groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq); per-dataset columns give the mean difference within each dataset. Without dev. sections: the same estimate without the six development sections. Verdict: baseline higher if the interval is above zero; unresolved otherwise; no comparison met the equivalence criterion (90\\% interval within $\\pm$0.03)."),
                                    ("robust", "stats_rob.tex", "STstatsrob", "Primary analysis: as Supplementary Table~\\STstats{} with matched clustering (the same 20-start best-likelihood Gaussian mixture on every embedding; SpaGCN, BASS and BayesSpace use their internal clustering).")):
     vs = sorted([v for v in cs["comparisons"].values() if v["protocol"] == proto], key=lambda v: -v["delta"])
-    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})", *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DS],
+    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({fm(v['ci95'][0])}, {fm(v['ci95'][1])})", f"({fm(v['ci_bonf'][0])}, {fm(v['ci_bonf'][1])})", *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DS],
              f"{v['test_only']['delta']:+.3f}", f"({v['test_only']['ci95'][0]:+.3f}, {v['test_only']['ci95'][1]:+.3f})", v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
     write(fname, ["Method", "$\\Delta$", "95\\% interval", "Bonferroni interval", *[DSN[x] for x in DS], hd("Without", "dev. sections"), "95\\% interval", "Verdict"], rows, "lrrr" + "r" * len(DS) + "rrl", "\\scriptsize")
     items.append(("table", macro, title, fname))
 if os.path.exists(R("stats_cluster_aware_runner.json")):
     cr = json.load(open(R("stats_cluster_aware_runner.json")))
     vs = sorted([v for v in cr["comparisons"].values() if v["protocol"] == "robust"], key=lambda v: -v["delta"])
-    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})",
+    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({fm(v['ci95'][0])}, {fm(v['ci95'][1])})", f"({fm(v['ci_bonf'][0])}, {fm(v['ci_bonf'][1])})",
              *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DS],
              v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
     rows += [["MIDRULE"], ["\\emph{Bootstrap rank}", "P(rank 1)", "median", "95\\% interval"] + [""] * (len(DS) + 1)]
@@ -131,7 +132,7 @@ if os.path.exists(R("stats_cluster_aware_expert.json")):
     ce = json.load(open(R("stats_cluster_aware_expert.json")))
     vs = sorted([v for v in ce["comparisons"].values() if v["protocol"] == "robust"], key=lambda v: -v["delta"])
     DSX = [x for x in DS if x not in ("starmap", "stereo")]
-    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})",
+    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({fm(v['ci95'][0])}, {fm(v['ci95'][1])})", f"({fm(v['ci_bonf'][0])}, {fm(v['ci_bonf'][1])})",
              *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DSX],
              v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
     rows += [["MIDRULE"], ["\\emph{Bootstrap rank}", "P(rank 1)", "median", "95\\% interval"] + [""] * (len(DSX) + 1)]
@@ -143,7 +144,7 @@ if os.path.exists(R("stats_cluster_aware_brain.json")):
     cb = json.load(open(R("stats_cluster_aware_brain.json")))
     vs = sorted([v for v in cb["comparisons"].values() if v["protocol"] == "robust"], key=lambda v: -v["delta"])
     DSB = [x for x in DS if x not in ("brca", "stereo")]
-    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({v['ci95'][0]:+.3f}, {v['ci95'][1]:+.3f})", f"({v['ci_bonf'][0]:+.3f}, {v['ci_bonf'][1]:+.3f})",
+    rows = [[esc(v["method"]), f"{v['delta']:+.3f}", f"({fm(v['ci95'][0])}, {fm(v['ci95'][1])})", f"({fm(v['ci_bonf'][0])}, {fm(v['ci_bonf'][1])})",
              *[f"{v['per_dataset'].get(x):+.2f}" if x in v["per_dataset"] else "--" for x in DSB],
              v["category"].replace("baseline_better", "baseline higher").replace("_", " ")] for v in vs]
     rows += [["MIDRULE"], ["\\emph{Bootstrap rank}", "P(rank 1)", "median", "95\\% interval"] + [""] * (len(DSB) + 1)]
@@ -266,6 +267,9 @@ rows = [["Reported (HiSTaR article)", "0.65 (median)", "--", "--", "HiSTaR artic
         ["PyTorch port of the official code, 3-start GMM (3 seeds)", f3(h["median_slice"]), f3(h["mean"]), f"{f3(h['ci_lo'])}--{f3(h['ci_hi'])}", "this study"],
         ["Masking at inference removed", f3(hd["median_slice"]), f3(hd["mean"]), f"{f3(hd['ci_lo'])}--{f3(hd['ci_hi'])}", "this study"],
         ["R mclust as in the official pipeline (seed 0)", "--", f3(mc), "--", "this study"]]
+_d = pd.read_json(R("dlpfc_main.jsonl"), lines=True); _q = _d[(_d.method == "histar") & (_d.slice.astype(str) == "151673")]
+if len(_q): rows += [["Section 151673 alone: reported 0.718 (HiSTaR article)", "--", "0.718", "--", "HiSTaR article"],
+                     ["Section 151673 alone: port, 3-start GMM (mean of %d seeds)" % len(_q), "--", f3(_q.ARI.mean()), "--", "this study"]]
 write("histar.tex", ["Setting", "Median ARI", "Mean ARI", "95\\% interval of mean", "Source"], rows, "lrrrl", "\\footnotesize")
 items.append(("table", "SThistar", "Reproduction of HiSTaR on the twelve DLPFC sections.", "histar.tex"))
 

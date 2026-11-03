@@ -121,12 +121,12 @@ for proto, MAP in (("standard", STD), ("robust", ROB)):
             if vals: per[ds] = round(float(np.mean(vals)), 3)
         out["comparisons"][f"{proto}/{m}"] = {
             "method": lab, "protocol": proto, "n_sections": len(delta), "delta": round(point, 3),
-            "ci95": [round(float(x), 3) for x in np.percentile(draws, [2.5, 97.5])],
+            "ci95": [round(float(x), 4) for x in np.percentile(draws, [2.5, 97.5])],
             "ci90": [round(float(x), 3) for x in np.percentile(draws, [5, 95])],
             # Bonferroni over the 16 comparisons of a protocol: two-sided 1 - 0.05/16 interval
-            "ci_bonf": [round(float(x), 3) for x in np.percentile(draws_b, [100 * 0.025 / 16, 100 - 100 * 0.025 / 16])],
+            "ci_bonf": [round(float(x), 4) for x in np.percentile(draws_b, [100 * 0.025 / 16, 100 - 100 * 0.025 / 16])],
             "category": classify(draws), "per_dataset": per,
-            "test_only": {"delta": round(pt, 3), "ci95": [round(float(x), 3) for x in np.percentile(dt, [2.5, 97.5])]}}
+            "test_only": {"delta": round(pt, 3), "ci95": [round(float(x), 4) for x in np.percentile(dt, [2.5, 97.5])]}}
 
 # rank uncertainty (all methods that have embeddings or labels on every section, for both protocols)
 cand = [m for m in LABEL if m != "bayesspace"]

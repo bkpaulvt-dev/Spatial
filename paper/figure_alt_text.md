@@ -11,3 +11,7 @@
 **Figure 4.** Three panels on the variance of the clustering step for 14 methods. Dot plots of the ARI range over 20 single-start Gaussian-mixture fits per fixed embedding (mean about 0.16, up to 0.60); dot plots of the ARI range of R mclust over ten random seeds; and a heat map of the median correlation between log-likelihood and ARI per dataset, positive on DLPFC and STARmap and near zero or negative elsewhere.
 
 **Figure 5.** Five dumbbell plots, one per dataset, comparing each method's mean ARI with its default clustering (open circle) and with matched clustering (filled circle); the protocol changes some methods by more than 0.1 ARI in either direction.
+
+## Notes added in round 5
+- Graphical abstract, "Same embedding, different random start": the two maps show HiSTaR on DLPFC section 151669 (as in Figure 1D); the forest plot is the matched-clustering analysis of Figure 2B (equal-weight mean over datasets).
+- Figure 2: BANKSY was run with two lambda values, so the 17 rows are 16 comparators and the reference; BayesSpace was run on Visium data only.

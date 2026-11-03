@@ -555,6 +555,14 @@ if os.path.exists(SJ):
     mac("nRobBetterBonf", str(len(bonf))); mac("listRobBetterBonf", joinl([TL[m] for m in bonf]))
     border = [m for m in bonf if cs["comparisons"][f"robust/{m}"]["ci_bonf"][0] < 0.01]
     mac("listBonfBorderline", joinl([TL[m] for m in border])); mac("nBonfBorderline", str(len(border)))
+    # leave-one-dataset-out (STATS_EXCLUDE=<dataset>)
+    _lo = {}
+    for _d, _n in (("starmap", "Starmap"), ("merfish", "Merfish"), ("brca", "Brca"), ("stereo", "Stereo")):
+        if os.path.exists(R(f"stats_cluster_aware_drop_{_d}.json")):
+            _c = json.load(open(R(f"stats_cluster_aware_drop_{_d}.json")))
+            _v = [v for v in _c["comparisons"].values() if v["protocol"] == "robust"]
+            _lo[_n] = sum(v["category"] == "baseline_better" for v in _v); mac(f"nDrop{_n}", str(_lo[_n]))
+    if _lo: mac("nDropMin", str(min(_lo.values()))); mac("nDropMax", str(max(_lo.values())))
     # brain-only analysis (the three datasets of the first analysis) and verdict changes of the sensitivity analyses
     if os.path.exists(R("stats_cluster_aware_brain.json")):
         cb = json.load(open(R("stats_cluster_aware_brain.json"))); vb = [v for v in cb["comparisons"].values() if v["protocol"] == "robust"]

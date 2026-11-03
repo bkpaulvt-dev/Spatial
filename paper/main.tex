@@ -216,13 +216,13 @@ values for both protocols in Supplementary Table~\STari). Across all methods and
 reached by \bestDlpfc{} on DLPFC (\bestDlpfcVal), \bestStarmap{} on STARmap (\bestStarmapVal), \bestMerfish{} on MERFISH
 (\bestMerfishVal), \bestBrca{} on breast cancer (\bestBrcaVal) and \bestStereo{} on Stereo-seq (\bestStereoVal). Linear diffusion had a higher mean ARI than
 \nRobBetter{} of \nRobTot{} comparators (95\% interval above zero; \figref{fig:accuracy}B; Supplementary Table~\STstatsrob), and
-this held for \nRobBetterTest{} of them without the development sections. The baseline was ahead of \listRobBetter. The other
+this held for \nRobBetterTest{} of them without the development sections. The baseline was ahead of \listRobBetter{} (all but PCA are published methods, so 7 of the 14 published entries; BayesSpace was run on four groups only and its lower limit is very close to zero). The other
 \nRobUnres{} comparisons were unresolved (\listRobUnres; for example BASS $\Delta$ \robDBass, 95\% interval \robLoBass{} to
 \robHiBass, and BANKSY $\lambda=0.8$ \robDBanksyHi, \robLoBanksyHi{} to \robHiBanksyHi), and no comparator was equivalent to the
 baseline within $\pm\statMargin$ ARI. With a Bonferroni correction only \nRobBetterBonf{} comparisons (\listRobBetterBonf)
-remained above zero\ifnum\nBonfBorderline>0{} (of these, \listBonfBorderline{} had a lower limit within 0.01 of zero and could change with the resampling seed)\fi. Ranked on all \rankSections{} sections, BASS was first in \pBestBass{} of the
-bootstrap resamples, linear diffusion in \pBestLin{} and \pBestThird{} in \pBestThirdVal; \nTopRank{} methods had rank 1 within
-their 95\% interval (\figref{fig:accuracy}C; Supplementary Table~\STranks). Taking all datasets from the standardised
+remained above zero (the lower limits of PCA, and of SpaceFlow just below zero, are within 0.01 of zero, so this count can vary between two and four with the resampling seed). Ranked on all \rankSections{} sections, BASS was first in \pBestBass{} of the
+bootstrap resamples, linear diffusion in \pBestLin{} and no other method in more than \pBestThirdVal; \nTopRank{} methods had rank 1 within
+their 95\% interval (\figref{fig:accuracy}C; Supplementary Table~\STranks). Leaving out one dataset at a time (STARmap, MERFISH, breast cancer or Stereo-seq; the DLPFC donors count as three groups and were always kept), the baseline remained ahead of \nDropMin{} to \nDropMax{} of the 16 comparators (\nDropStarmap, \nDropMerfish, \nDropBrca{} and \nDropStereo{} respectively), against \nRobBetter{} with all datasets. Taking all datasets from the standardised
 runner instead of the published pipelines gave a similar picture, with a different verdict only for \listRunnerFlip{} (\nRobBetterRunner{} comparisons favouring the baseline,
 \nRobUnresRunner{} unresolved; first rank BASS \pBestBassRunner, linear diffusion \pBestLinRunner; Supplementary
 Table~\STstatsrunner). With each method's default clustering \nStdBetter{}
@@ -254,8 +254,8 @@ rule blocks the smoothing needed to reveal regions.
 
 \subsection{Number of domains, seed variability and cost}
 
-Every method was given the annotated number of domains $K$. Changing $K$ by one changed ARI by \kOneAvg{} on average (the
-larger of the two directions \kOneMean, up to \kOneMax; Supplementary Table~\STk). BIC did not provide a usable label-free choice: within $K\pm2$ it selected the largest value in
+Every method was given the annotated number of domains $K$. Changing $K$ by one changed ARI by \kOneAvg{} on average (\kOneMean{} in the
+worse direction, up to \kOneMax{}; Supplementary Table~\STk). BIC did not provide a usable label-free choice: within $K\pm2$ it selected the largest value in
 \kBicEdge{} of \kN{} embeddings. At that choice the ranking of methods was largely preserved (Spearman $\rho=\kRankRho$ between method
 means), but \kAboveLinBic{} moved ahead of linear diffusion (\kLinBic, rank \kLinBicRank), so the lead of the baseline
 depends on giving every method the true $K$.

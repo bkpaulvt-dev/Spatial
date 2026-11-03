@@ -37,10 +37,14 @@ print(f"\n{len(claims) - bad}/{len(claims)} claims match.")
 mac = open(os.path.join(ROOT, "results", "paper_macros.tex")).read()
 defined = set(re.findall(r"\\newcommand\{\\([A-Za-z]+)\}", mac))
 raw = open(os.path.join(ROOT, "paper", "main.tex")).read()
-used = {m for m in re.findall(r"\\([A-Za-z]+)", raw) if re.match(r"(mean[A-Z]|robust|overall|dLin|winsLin|pLin|gain|lot|rho[A-Z]|mc[A-Z]|mcs|mgcn|best|n[A-Z]|time|mem|rob[DLH]|std[DLH]|stat[A-Z]|pBest|rank[A-Z]|k[A-Z])", m)}
+used = {m for m in re.findall(r"\\([A-Za-z]+)", raw) if re.match(r"(mean[A-Z]|robust|overall|dLin|winsLin|pLin|gain|lot|rho[A-Z]|mc[A-Z]|mcs|mgcn|best|n[A-Z]|time|mem|rob[DLH]|std[DLH]|stat[A-Z]|pBest|rank[A-Z]|k[A-Z]|cavity|brcaC|peakB|deepst|list[A-Z]|sd[A-Z]|cpuR)", m)}
 undefined = sorted(m for m in used if m not in defined and m not in {"newcommand", "mathcal"})
 print(f"{len(used) - len(undefined)}/{len(used)} macros used in the text are defined; undefined: {undefined}")
 unused = sorted(defined - set(re.findall(r"\\([A-Za-z]+)", raw)))
 print(f"{len(unused)} generated macros are unused (fine).")
+# coverage guard: the three embedding-based experiments must cover the same number of embeddings
+nums = {k: re.search(r"\\newcommand\{\\%s\}\{(\d+)\}" % k, mac) for k in ("kN", "lotN", "mcsN")}
+cover_ok = all(nums.values()) and len({m.group(1) for m in nums.values()}) == 1
+print("embedding coverage (K-sensitivity, initialisation, R mclust):", {k: (m.group(1) if m else None) for k, m in nums.items()}, "OK" if cover_ok else "MISMATCH")
 import sys
-sys.exit(1 if (bad or undefined) else 0)
+sys.exit(1 if (bad or undefined or not cover_ok) else 0)
