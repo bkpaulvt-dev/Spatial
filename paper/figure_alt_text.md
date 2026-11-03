@@ -6,7 +6,7 @@
 
 **Figure 2.** Three-panel accuracy summary with matched clustering. A heat map of mean ARI for 17 methods across five datasets (DLPFC, STARmap, MERFISH, breast cancer, Stereo-seq); a forest plot of the ARI difference between linear diffusion and each method with 95% bootstrap intervals, eight of which lie above zero; and bootstrap rank intervals, where BASS and linear diffusion most often rank first. Grey triangles show the difference on brain and on the other tissues.
 
-**Figure 3.** Ten maps of DLPFC section 151673: the expert layer annotation and the domains found by nine methods, each titled with its ARI, showing that most methods recover the laminar layers with varying boundary accuracy.
+**Figure 3.** Ten maps of DLPFC section 151673: the expert layer annotation and the domains found by nine methods, each titled with its ARI, showing that most methods recover the laminar layers with varying boundary accuracy; a second block of nine maps marks the misassigned spots of each method (red) in the same order, from 23% (BASS) to 51% (NichePCA).
 
 **Figure 4.** Three panels on the variance of the clustering step for 14 methods. Dot plots of the ARI range over 20 single-start Gaussian-mixture fits per fixed embedding (mean about 0.16, up to 0.60); dot plots of the ARI range of R mclust over ten random seeds; and a heat map of the median correlation between log-likelihood and ARI per dataset, positive on DLPFC and STARmap and near zero or negative elsewhere.
 

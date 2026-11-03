@@ -326,6 +326,7 @@ def fig_protocol():
 
 # ---------------------------------------------------------------- Figure 5: domain maps, DLPFC 151673 (default clustering)
 def fig_maps(section="151673"):
+    """Figure 3: predicted domains of nine methods on one DLPFC section (A) and where each one is wrong (B), ordered by ARI."""
     from sklearn.metrics import adjusted_rand_score
     z = np.load(os.path.join(ROOT, "results", "cache", f"{section}.npz"), allow_pickle=True)
     C, y_true = z["coords"], z["labels"]
@@ -335,31 +336,46 @@ def fig_maps(section="151673"):
     t = np.array([code.get(v, -1) if isinstance(v, str) else -1 for v in y_true])
     # L1..L6, WM. L6 brown (was purple, confusable with L1 blue under deuteranopia); WM dark grey.
     pal = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#8c510a", "#3a3a3a"]
-    short = [s.replace("Layer", "L") for s in names]
+    short = [s_.replace("Layer", "L") for s_ in names]
     meths = ["linear_diffusion", "banksy_l0.8", "bass", "sedr", "stagate", "histar", "graphst", "spagcn", "nichepca"]
-    fig, axs = plt.subplots(2, 5, figsize=(WIDTH, 8.4 * CM),
-                            gridspec_kw={"wspace": 0.02, "hspace": 0.17, "left": 0.005, "right": 0.995, "top": 0.885, "bottom": 0.085})
-    axs = axs.ravel()
-
-    def draw(ax, lab, title):
-        ax.scatter(C[:, 0], -C[:, 1], c=[pal[v] if v >= 0 else "#e4e3df" for v in lab], s=1.6, lw=0, rasterized=True)
-        ax.set_aspect("equal"); ax.axis("off"); ax.set_title(title, fontsize=7, pad=1.5)
-    draw(axs[0], t, "Annotation")
-    for ax, m in zip(axs[1:], meths):
+    K = len(names); res = []
+    for m in meths:
         f = os.path.join(ROOT, "results", "runs", f"dlpfc__{section}__{m}__s0.npz")
-        if not os.path.exists(f): ax.axis("off"); continue
-        p = np.load(f)["labels"]; K = len(names)
+        if not os.path.exists(f): continue
+        p = np.load(f)["labels"]
         pu = np.unique(p[keep]); M = np.zeros((len(pu), K))
-        for i, c in enumerate(pu):
-            for k in range(K): M[i, k] = np.sum((p == c) & (t == k))
-        r, c_ = linear_sum_assignment(-M); mp = {pu[i]: c_[j] for j, i in enumerate(r)}
+        for i_, c in enumerate(pu):
+            for k in range(K): M[i_, k] = np.sum((p == c) & (t == k))
+        r, c_ = linear_sum_assignment(-M); mp = {pu[i_]: c_[j_] for j_, i_ in enumerate(r)}
         mm = np.array([mp.get(v, K - 1) for v in p])
-        ari = adjusted_rand_score(t[keep], p[keep])
-        draw(ax, np.where(keep, mm, -1), f"{LAB[m]} (ARI {ari:.2f})")
-    fig.text(0.5, 0.985, f"DLPFC section {section}, default clustering (each method's own pipeline), seed 0",
+        res.append((m, mm, adjusted_rand_score(t[keep], p[keep])))
+    res.sort(key=lambda r_: -r_[2])                                    # best ARI first
+    ERR, OK, NONE = "#d7301f", "#c9c9c6", "#f1f0ec"
+    fig = plt.figure(figsize=(WIDTH, 14.2 * CM))
+    gs = fig.add_gridspec(4, 5, wspace=0.02, hspace=0.2, left=0.005, right=0.995, top=0.915, bottom=0.075,
+                          height_ratios=[1, 1, 1, 1])
+    axm = [fig.add_subplot(gs[r_, c__]) for r_ in range(4) for c__ in range(5)]
+
+    def draw(ax, colors, title):
+        ax.scatter(C[:, 0], -C[:, 1], c=colors, s=1.5, lw=0, rasterized=True)
+        ax.set_aspect("equal"); ax.axis("off"); ax.set_title(title, fontsize=7, pad=1.5)
+    draw(axm[0], [pal[v] if v >= 0 else "#e4e3df" for v in t], "Annotation")
+    pred_slots = axm[1:5] + axm[5:10]; err_slots = axm[11:15] + axm[15:20]
+    for ax, ax_e, (m, mm, ari) in zip(pred_slots, err_slots, res):
+        draw(ax, [pal[v] if k_ and v >= 0 else "#e4e3df" for v, k_ in zip(mm, keep)], f"{LAB[m]} (ARI {ari:.2f})")
+        wrong = keep & (mm != t)
+        draw(ax_e, [(ERR if w else OK) if k_ else NONE for w, k_ in zip(wrong, keep)], f"{100 * wrong.sum() / keep.sum():.0f}% misassigned")
+    ax = axm[10]; ax.axis("off")
+    ax.legend(handles=[Patch(color=ERR, label="Misassigned"), Patch(color=OK, label="Correct"), Patch(color=NONE, label="No annotation")],
+              loc="center", frameon=False, title="Spot status (B)", handlelength=1.1, handletextpad=0.5, labelspacing=0.5,
+              fontsize=7, title_fontsize=7)
+    fig.legend(handles=[Patch(color=pal[i_], label=s_) for i_, s_ in enumerate(short)], loc="lower center", ncol=len(names), frameon=False,
+               title="Annotated layer (A)", handlelength=1.1, columnspacing=1.4, handletextpad=0.4, fontsize=7, title_fontsize=7,
+               bbox_to_anchor=(0.5, 0.0))
+    fig.text(0.5, 0.995, f"DLPFC section {section}, default clustering (each method's own pipeline), seed 0; methods ordered by ARI",
              ha="center", va="top", fontsize=8)
-    fig.legend(handles=[Patch(color=pal[i], label=s) for i, s in enumerate(short)], loc="lower center", ncol=len(names),
-               frameon=False, bbox_to_anchor=(0.5, 0.0), handlelength=1.1, columnspacing=1.4, handletextpad=0.4, fontsize=7)
+    letter(fig, 0.003, 0.955, "A")
+    letter(fig, 0.003, 0.495, "B")
     save(fig, "nar_fig5_maps")
 
 
