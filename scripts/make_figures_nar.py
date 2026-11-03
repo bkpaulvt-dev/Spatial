@@ -221,7 +221,7 @@ def fig_robustness():
     SR = ranges(MS, "seed", 2); FJ = ranges(MS, "full_jit", 2)
     rg = np.random.default_rng(1)
     fig = plt.figure(figsize=(WIDTH, 10.4 * CM))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 1.1], wspace=0.07, left=0.125, right=0.90, top=0.74, bottom=0.27)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 1.1], wspace=0.07, left=0.125, right=0.835, top=0.74, bottom=0.27)
     axs = [fig.add_subplot(gs[0, i]) for i in range(3)]
     jit = {"dlpfc": -0.24, "starmap": -0.12, "merfish": 0.0, "brca": 0.12, "stereo": 0.24}
 
@@ -246,7 +246,7 @@ def fig_robustness():
     ax = axs[0]
     dots(ax, LT, "rng"); iqr(ax, LT, "rng")
     ax.set_yticks([yrow[m] for m in order], [LAB[m] for m in order])
-    ax.set_xlabel("ARI range (max − min)"); ax.set_title("Range over 20 single-start\nGaussian-mixture fits", pad=5)
+    ax.set_xlabel("ARI range (max − min)"); ax.set_title("Range over 20\nsingle-start fits", pad=5)
     # B: R mclust seeds
     ax = axs[1]
     xmax_b = 0.65
@@ -265,7 +265,7 @@ def fig_robustness():
     if not len(MS):
         ax.text(0.5, 0.5, "R mclust runs not available", transform=ax.transAxes, ha="center", va="center", fontsize=7, color=INK2)
     ax.set_yticks([yrow[m] for m in order], [])
-    ax.set_xlabel("ARI range (max − min)"); ax.set_title("R mclust: range over 10 random seeds\n(default initialisation)", pad=5)
+    ax.set_xlabel("ARI range (max − min)"); ax.set_title("R mclust: range over\n10 random seeds", pad=5)
     for a in axs[:2]:
         a.set_ylim(-0.6, n - 0.4); a.set_xlim(-0.01, max(0.65, xmax_b)); a.grid(axis="x", color=GRID, lw=0.5); a.set_axisbelow(True)
     # C: Spearman rho heatmap
@@ -285,7 +285,7 @@ def fig_robustness():
     for s in ax.spines.values(): s.set_visible(False)
     ax.set_title("Log-likelihood vs ARI,\nmedian Spearman ρ", pad=62)
     p2 = ax.get_position()
-    cax = fig.add_axes([p2.x0 + 0.08 * p2.width, 0.12, 0.84 * p2.width, 0.02])
+    cax = fig.add_axes([p2.x0 + 0.08 * p2.width, 0.185, 0.84 * p2.width, 0.02])
     cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[-1, -0.5, 0, 0.5, 1])
     cb.ax.set_xticklabels(["−1", "−0.5", "0", "0.5", "1"]); cb.outline.set_linewidth(0.4); cb.ax.tick_params(labelsize=7, length=2)
     cb.set_label("Spearman ρ", fontsize=7, labelpad=1)

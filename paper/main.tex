@@ -35,15 +35,14 @@ reproducibility of spatial domain identification methods}
 
 \abstract{Spatial domain identification methods are usually compared by small differences in adjusted Rand index (ARI),
 mostly on one tissue and one run. We benchmarked \nMethodsPub{} published methods and three training-free baselines
-on \nSections{} annotated sections of brain, breast cancer and mouse embryo from 10x Visium, STARmap, MERFISH and Stereo-seq,
+on \nSections{} sections of brain, breast cancer and mouse embryo from 10x Visium, STARmap, MERFISH and Stereo-seq,
 separating each learned embedding from its clustering step. With the same clustering for every embedding, a training-free
 neighbourhood-smoothing baseline (linear diffusion) had a higher mean ARI than \nRobBetter{} of \nRobTot{} comparators and could not be separated
-from the other \nRobUnres{} (exploratory comparisons); BASS and the baseline were the most likely to rank first. Its lead came from
-brain tissue: on the one breast cancer section and three embryo sections most methods, including PCA without smoothing, were slightly ahead.
+from the other \nRobUnres{} (exploratory); BASS and the baseline were the most likely to rank first. Its lead came from
+brain tissue: on breast cancer and embryo sections most methods, including PCA without smoothing, were slightly ahead.
 On fixed embeddings, random restarts of the same Gaussian mixture changed ARI by \lotMean{} on average (up to \lotMax),
-and R mclust's default fit depended on its random seed. Fit likelihood tracked ARI only on cortex. A PyTorch port of HiSTaR did not reproduce its published accuracy, and the released test scripts of one method
-select its reported epoch using the labels. We recommend reporting the clustering protocol and its variance, never selecting
-runs with labels, and evaluating training-free baselines on several tissues.}
+and R mclust's default fit depended on its random seed. Fit likelihood tracked ARI only on cortex. Our port of HiSTaR did not reproduce its published accuracy, and one method's released test scripts select its epoch using the labels. We recommend reporting clustering protocol and variance, never selecting
+runs with labels, and testing training-free baselines on several tissues.}
 
 \keywords{spatial transcriptomics, spatial domains, clustering, reproducibility, benchmarking}
 

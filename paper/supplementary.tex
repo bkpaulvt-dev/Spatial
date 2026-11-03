@@ -23,13 +23,13 @@ Every method was run from its official code (HiSTaR: a PyTorch port of it, given
 Agreement: ARI, NMI, AMI. Per-domain: clusters matched to domains with the Hungarian algorithm; macro-F1, missed domains, recall of domains below 5\% of spots. Spatial: CHAOS (mean distance to the nearest same-cluster neighbour), PAS (fraction of spots whose cluster differs from most of their ten neighbours), Moran's I of the labels, boundary F1. Label-free: silhouette, Davies--Bouldin, Calinski--Harabasz. Definitions and code: spatialbench/metrics.py (unit tests in tests/).
 
 \subsection*{Supplementary Note 4. Statistics}
-Sections are nested in groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq). Differences to the reference are equal-weight means of group means with 95\% percentile intervals from a hierarchical bootstrap (5000 resamples: groups, then sections within groups). Equivalence: 90\% interval within $\pm$0.03 ARI, about the seed-to-seed standard deviation. Intervals are uncorrected; Bonferroni-corrected intervals over the 16 comparisons (two-sided level 1 - 0.05/16) are given as a check. Ranks and the probability of ranking first come from the same resamples. The reference method was chosen after seeing the means, so these comparisons are exploratory. Code: \texttt{scripts/stats\_cluster\_aware.py}.
+Sections are nested in groups (three DLPFC donors, STARmap, MERFISH, breast cancer, Stereo-seq). Differences to the reference are equal-weight means of group means with 95\% percentile intervals from a hierarchical bootstrap (5000 resamples: groups, then sections within groups; the 95\% and 90\% intervals, ranks and the probability of ranking first each come from their own loop of this design). Equivalence: 90\% interval within $\pm$0.03 ARI, about the seed-to-seed standard deviation. Intervals are uncorrected; Bonferroni-corrected intervals over the 16 comparisons (two-sided level $1-0.05/16$) are given as a check; they come from a separate bootstrap of 20000 resamples, and their tails (the 0.16\% quantile) rest on few resamples, so a limit within 0.01 of zero can change with the random seed. Leave-one-dataset-out repeats of the analysis are summarised in the main text. The reference method was chosen after seeing the means, so these comparisons are exploratory. Code: \texttt{scripts/stats\_cluster\_aware.py}.
 
 \subsection*{Supplementary Note 5. Audit of released code}
 Repositories were screened with \texttt{scripts/audit\_leakage.py} for five patterns of label use (Supplementary Table~\STaudit), and every candidate line was read by one author. The taxonomy and all judgements, including false alarms, are in \texttt{docs/LEAKAGE\_AUDIT.md}. The audit describes what the released code does; it does not establish how published results were obtained.
 
 \subsection*{Supplementary Note 6. Computing environment}
-All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited to one by environment variables; some native libraries may still have started helper threads) on a 4-core Intel Xeon (2.8 GHz) with 15 GB of memory, Python 3.13, R 4.3.3 and mclust 6.0.1. Memory-heavy methods (DeepST, BayesSpace, NichePCA) were run one job at a time. The 17 jobs that exceeded the 12 GB cap on Stereo-seq (BASS, GraphST, NichePCA, Spatial-MGCN and DeepST on E10.5\_E1S1, DeepST seeds 1 and 2 on E10.5\_E2S1) were rerun with the same code and settings and the same one-thread limit on a server with 125 GB RAM and 20 threads (Intel Core i9-9820X, CPU only; its two GPUs were not used because the driver was older than the installed PyTorch build supports). GraphST's call to R mclust was wrapped (a function calling \texttt{Mclust} inside R) because the direct call failed in that software stack; on the GraphST embeddings of two sections the wrapped and the original function gave identical labels. Their records carry a host tag, and their run times are not used in the timing tables. For the breast cancer and Stereo-seq runs every job ran alone with a cap of 12 GB resident memory (process tree, sampled once per second); a job above the cap, or leaving less than 0.8 GB of system memory, was stopped and recorded as out of memory.
+All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited to one by environment variables; some native libraries may still have started helper threads) on a 4-core Intel Xeon (2.8 GHz) with 15 GB of memory, Python 3.13, R 4.3.3 and mclust 6.0.1. Memory-heavy methods (DeepST, BayesSpace, NichePCA) were run one job at a time. The 17 jobs that exceeded the 12 GB cap on Stereo-seq (BASS, GraphST, NichePCA, Spatial-MGCN and DeepST on E10.5\_E1S1, DeepST seeds 1 and 2 on E10.5\_E2S1) were rerun with the same code and settings on a server with 125 GB RAM and 20 threads (Intel Core i9-9820X, CPU only; the thread count was not restricted, and DeepST and NichePCA used several cores, with CPU time about 4 to 6 times wall time, while the other three methods used one; its two GPUs were not used because the driver was older than the installed PyTorch build supports). GraphST's call to R mclust was wrapped (a function calling \texttt{Mclust} inside R) because the direct call failed in that software stack; the wrapper is part of the adapter for every run made after it was added (earlier GraphST records used the original call), and on the GraphST embeddings of two sections the wrapped and the original function gave identical labels (a check made by hand; no script is kept for it). Their records carry a host tag, and their run times are not used in the timing tables. For the breast cancer and Stereo-seq runs every job ran alone with a cap of 12 GB resident memory (process tree, sampled once per second); a job above the cap, or leaving less than 0.8 GB of system memory, was stopped and recorded as out of memory.
 
 \clearpage\section*{Supplementary Tables}
 \begin{table}[!htbp]\centering
@@ -61,12 +61,12 @@ All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S7.} Sensitivity analysis: as Supplementary Table~\STstatsrob{} (matched clustering) but with every dataset taken from the standardised runner (one execution environment, shared preprocessing), and the corresponding bootstrap ranks on the sections completed by every method.}
+\caption*{\textbf{Supplementary Table S7.} Sensitivity analysis: as Supplementary Table~\STstatsrob{} (matched clustering) but with every dataset taken from the standardised runner (one execution environment, shared preprocessing), with the corresponding bootstrap ranks.}
 \input{../results/supp/stats_runner.tex}
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S8.} Sensitivity analysis: as Supplementary Table~\STstatsrob{} (matched clustering) restricted to the datasets with an expert annotation (DLPFC, MERFISH, breast cancer; STARmap, whose annotation provenance is unknown, and Stereo-seq, whose annotation was derived partly by clustering, are left out), with the corresponding bootstrap ranks.}
+\caption*{\textbf{Supplementary Table S8.} Sensitivity analysis: as Supplementary Table~\STstatsrob{} (matched clustering) restricted to the datasets whose annotation is not known to be derived from clustering (DLPFC, MERFISH, breast cancer; the provenance of the MERFISH and breast cancer annotations was not verified; STARmap, whose annotation provenance is unknown, and Stereo-seq, whose annotation was derived partly by clustering, are left out), with the corresponding bootstrap ranks.}
 \input{../results/supp/stats_expert.tex}
 \end{table}
 
@@ -86,7 +86,7 @@ All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S12.} Initialisation experiment: one fixed embedding per section refitted 20 times with a single-start Gaussian mixture (up to 24 sections per method). Range (median and mean over sections) and SD of ARI across the 20 fits; best-by-ARI minus mean: ARI gain of choosing the best fit by agreement with the labels; best-likelihood minus mean: gain of choosing the fit with the highest likelihood (the text counts methods with a gain above +0.005, so values printed as +0.005 may fall on either side); $\rho$: median Spearman correlation between log-likelihood and ARI.}
+\caption*{\textbf{Supplementary Table S12.} Initialisation experiment: one fixed embedding per section refitted 20 times with a single-start Gaussian mixture (up to 24 sections per method). Range (median and mean over sections) and SD of ARI across the 20 fits; best-by-ARI minus mean: ARI gain of choosing the best fit by agreement with the labels; best-likelihood minus mean: gain of choosing the fit with the highest likelihood (the text counts methods whose gain, before rounding, is above +0.005); $\rho$: median Spearman correlation between log-likelihood and ARI.}
 \input{../results/supp/lottery.tex}
 \end{table}
 
@@ -106,7 +106,7 @@ All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S16.} Run time, peak memory and estimated energy of one whole job (data loading, embedding and clustering) in the standardised runner on one CPU thread. Energy is estimated at 10 W per busy core. The reruns of the five memory-capped methods on the largest Stereo-seq section were made on another server (CPU only, 125 GB RAM, different processor, see Supplementary Note~\SNcompute): they count for peak memory but not for run time and energy.}
+\caption*{\textbf{Supplementary Table S16.} Run time, peak memory and estimated energy of one whole job (data loading, embedding and clustering) in the standardised runner on one CPU thread. Energy is estimated at 10 W per busy core. The reruns of the five memory-capped methods on the largest Stereo-seq section were made on another server (CPU only, 125 GB RAM, different processor, see Supplementary Note~\SNcompute): they count for peak memory but not for run time and energy. Run time is the median over jobs and energy the mean per job; peak memory is the maximum over jobs. BayesSpace's 12.5 GB is its DLPFC run, which had no memory cap.}
 \input{../results/supp/resources.tex}
 \end{table}
 
@@ -131,7 +131,7 @@ All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited
 \end{table}
 
 \begin{table}[!htbp]\centering
-\caption*{\textbf{Supplementary Table S21.} Mean ARI of the final training epoch (used in the benchmark) and of the epoch with the highest ARI against the annotation, as selected by the released test scripts (seed 0).}
+\caption*{\textbf{Supplementary Table S21.} Mean ARI of the final training epoch (used in the benchmark) and of the epoch with the highest ARI against the annotation, as selected by the released test scripts (seed 0; DLPFC is the dataset the released scripts target, the rule was applied by us to STARmap and MERFISH; the breast cancer row uses the runner records, where the repository provides a configuration for this section, and the three seeds are averaged).}
 \input{../results/supp/labelepoch.tex}
 \end{table}
 
@@ -153,7 +153,7 @@ All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited
 \clearpage\section*{Supplementary Figures}
 \begin{figure}[H]\centering
 \includegraphics[width=0.9\linewidth,height=0.78\textheight,keepaspectratio]{v2_fig1_lottery.png}
-\caption*{\textbf{Supplementary Figure S1.} Initialisation experiment for three representative methods (HiSTaR, GraphST and AnisoST), per section: ARI of 20 single-start fits of one fixed embedding (grey), the best-likelihood fit (blue) and R mclust with default settings (open circle); DLPFC, STARmap and MERFISH (all datasets: Figure 4A of the main text).}
+\caption*{\textbf{Supplementary Figure S1.} Initialisation experiment for three representative methods (HiSTaR, GraphST and AnisoST), per section: ARI of 20 single-start fits of one fixed embedding (grey), the best-likelihood fit (blue) and R mclust with default settings (open circle); DLPFC, STARmap and MERFISH (all datasets: Figure 4A of the main text). MERFISH sections are ordered by Bregma position. R mclust's default fit gave an ARI of about 0.06 for AnisoST on all three STARmap sections (the fit is deterministic there; we did not investigate the cause, and the 20-start Gaussian mixture does not show it).}
 \end{figure}
 
 \begin{figure}[H]\centering
