@@ -269,7 +269,7 @@ T(159.0, 82.2, "vs", 7, INK2, ha="center")
 for j, (t1, t2) in enumerate((("Agreement", "ARI, NMI and AMI"), ("Domain and spatial quality", "macro-F1, CHAOS, PAS"), ("Cost", "run time and memory"))):
     T(145.0, 68.2 - j * 6.3, t1, 7, INK); T(145.0, 65.4 - j * 6.3, t2, 7, MUTE)
 tx, ty = 159.5, 44.5
-T(tx, 47.6, "Bootstrap over donors", 7, INK, ha="center"); T(tx, 44.8, "and datasets", 7, INK, ha="center")
+T(tx, 47.6, "Bootstrap over 7 groups", 7, INK, ha="center"); T(tx, 44.8, "(donors and datasets)", 7, INK, ha="center")
 ax.add_patch(Circle((tx, ty - 3.2), 0.9, fc=INK2, zorder=3))
 for i, xx in enumerate([tx - 8.0, tx - 4.0, tx, tx + 4.0, tx + 8.0]):
     ax.plot([tx, xx], [ty - 3.2, ty - 7.6], color=MUTE, lw=0.5, zorder=2)

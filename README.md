@@ -97,7 +97,7 @@ Three tiers. Tier 1 needs no data and no method packages.
 |---|---|---|---|
 | 1. Numbers, tables, supplement, checks | `make numbers supplement check` | ~2 min | committed `results/` |
 | 2. Figures and PDFs | `make figures paper` | ~5 min | Figures 1 and 5 also need `results/cache`, `results/runs`, `results/emb` (below) |
-| 3. Everything from raw data | `make data benchmark benchmark-legacy robustness all` | ~150 CPU-hours benchmark + ~1 day robustness | full environment and data |
+| 3. Everything from raw data | `make data benchmark benchmark-legacy robustness all` | ~210 CPU-hours benchmark + ~1 day robustness | full environment and data |
 
 `make all` = `numbers supplement figures paper check`; it does not rerun the benchmark.
 
@@ -138,17 +138,20 @@ Mapping of every claim, figure and table to its evidence: `docs/EVIDENCE_MAP.md`
 
 ### Large intermediates
 
-`results/runs/` (138 MB), `results/emb/` (1.1 GB, seed-0 embeddings) and `results/cache/` (45 MB) are not in git.
+`results/runs/` (200 MB), `results/emb/` (1.6 GB, seed-0 embeddings) and `results/cache/` (92 MB) are not in git.
 `results/cache/` is rebuilt by `make data`; `results/runs/` and `results/emb/` are rebuilt by the benchmark and
 will be archived on Zenodo (DOI to be added). Only the Figure 1 and Figure 5 scripts and the robustness
 experiments need them.
 
 ## Compute
 
-All runs were CPU-only, one thread per job (`OMP_NUM_THREADS=1`), on a 4-core Intel Xeon (2.1 GHz) container
-with 15 GB RAM. The unified benchmark took about 150 CPU-hours (CCST ≈ 52 h, Spatial-MGCN ≈ 21 h, GraphST ≈ 19 h,
+All runs were CPU-only, one thread per job (`OMP_NUM_THREADS=1`), on a 4-core Intel Xeon (2.8 GHz) container
+with 15 GB RAM. The unified benchmark took about 210 CPU-hours (CPU time, benchmark machine only) (CCST ≈ 52 h, Spatial-MGCN ≈ 21 h, GraphST ≈ 19 h,
 SpaceFlow ≈ 16 h, STAGATE ≈ 15 h; training-free baselines < 0.5 h each). Peak memory per job was below 3 GB for
-most methods, but up to 12.5 GB for BayesSpace, 9.2 GB for DeepST and 7.2 GB for NichePCA, so these run one at a
+most methods on the smaller sections. BayesSpace reached 12.5 GB (DLPFC), and five methods exceeded the 12 GB cap on the 18,408-bin
+Stereo-seq section (BASS, GraphST, NichePCA, Spatial-MGCN, DeepST): those 17 jobs were rerun on a second server (125 GB RAM, 20 threads,
+CPU only; `scripts/setup_deepmed2.sh`, `scripts/deepmed2_pipeline.sh`, `scripts/rerun_memory_failures.sh`, then `python scripts/merge_bigmem.py`;
+see `docs/BIGMEM_RERUN.md`), where they needed 12 to 28 GB, with DeepST and NichePCA using several cores. Memory-heavy jobs run one at a
 time. Runtime and memory comparisons are specific to this machine.
 
 The breast cancer and Stereo-seq runs (`make benchmark-new`) ran one job at a time with a per-job cap of 12 GB resident

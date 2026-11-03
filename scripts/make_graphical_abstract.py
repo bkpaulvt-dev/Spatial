@@ -58,8 +58,8 @@ def flow_arrow(x0, x1, y=H / 2):
 # ---------------------------------------------------------------- column 1: inputs
 T(36.0, 92.0, "Benchmark", 14, INK, "bold", ha="center")
 for i, (ds, s, lab, ms) in enumerate((("dlpfc", "151673", "DLPFC", 0.5), ("starmap", "20180417_BZ5_control", "STARmap", 0.45),
-                                       ("merfish", "-0.14", "MERFISH", 0.2), ("brca", "block_a_1", "Breast", 0.45),
-                                       ("stereo", "E9.5_E1S1", "Embryo", 0.15))):
+                                       ("merfish", "-0.14", "MERFISH", 0.2), ("brca", "block_a_1", "Breast cancer", 0.45),
+                                       ("stereo", "E9.5_E1S1", "Mouse embryo", 0.15))):
     C, code, _ = cache(ds, s)
     code = np.where(code >= 0, code % 8, code)          # palette of 8 colours (illustration only)
     tissue(C, code, 2.0 + i * 13.6, 52.0, 12.0, ms)

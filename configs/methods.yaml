@@ -13,7 +13,7 @@ methods:
     settings: {lambda_sim: 0.3, epochs: "200 + 200", knn: 6, embedding: "[F0,F1,F2] concat"}
     clustering: {official: "R mclust EEE", ours_standard: "3-start tied-covariance GMM", ours_robust: "20-start GMM, best likelihood"}
     deviations: ["masking at inference removed in 'deterministic' variant only; headline uses published behaviour",
-                 "per-section lambda_sim tuning described in the paper's supplement is NOT applied"]
+                 "per-section lambda_sim tuning described in the paper's supplement is NOT applied", "run as our PyTorch port (no run of the official code; fidelity not checked against it)", "default clustering in this benchmark is a 3-start GMM (our choice); the official pipeline uses R mclust (reported separately)"]
   graphst:
     publication: "Long et al., Nat Commun 2023;14:1155"
     kind: deep graph contrastive autoencoder
@@ -29,7 +29,7 @@ methods:
     settings_source: tutorial
     settings: {k_geom: 18, max_m: 1, decay: scaled_gaussian, lambda: [0.2, 0.8], pcs: 20}
     clustering: {official: "Leiden / mclust (package)", ours_standard: "3-start GMM", ours_robust: "20-start GMM"}
-    deviations: ["both recommended lambdas are run: 0.2 (cell typing) and 0.8 (domain segmentation)"]
+    deviations: ["both recommended lambdas are run: 0.2 (cell typing) and 0.8 (domain segmentation)", "default clustering in this benchmark is a 3-start GMM (our choice); the package offers Leiden and mclust"]
   spagcn:
     publication: "Hu et al., Nat Methods 2021;18:1342"
     kind: graph convolutional network
@@ -78,14 +78,14 @@ methods:
     settings_source: tutorial
     settings: {lambda_I: "0.3 Visium / 0.8 single cell", hidden: 256, epochs: 5000, lr: 1e-6, pcs_for_kmeans: 30}
     clustering: {official: "k-means (n_init=100)"}
-    deviations: ["graph threshold chosen to give about 6 neighbours per cell (the authors hand-pick a threshold per dataset)"]
+    deviations: ["graph threshold chosen to give about 6 neighbours per cell (the authors hand-pick a threshold per dataset)", "run as our re-implementation; it was not validated against the original code"]
   spatial_mgcn:
     publication: "Wang et al., Brief Bioinform 2023 (Spatial-MGCN)"
     kind: deep multi-view graph convolution
     code: {source: "cs-wangbo/Spatial-MGCN, repository modules used directly", commit: cf4412d}
     settings_source: tutorial
     settings: {lr: 0.001, weight_decay: 5e-4, k: 14, radius: "4.1 spot spacings (560 px)", hidden: [128, 64], alpha_beta_gamma: [1, 10, 0.1], epochs: 201}
-    clustering: {official: "k-means each epoch; epoch chosen by ARI against the annotation (LEAKAGE, see docs/LEAKAGE_AUDIT.md)", ours: "final epoch (label-free); label-selected value recorded separately"}
+    clustering: {official: "k-means each epoch; the epoch is chosen by ARI against the annotation (label use, Supplementary Note 5)", ours: "final epoch (label-free); label-selected value recorded separately"}
     deviations: ["unannotated spots kept (the released script deletes them before training)", "label-free epoch rule", "default settings on every dataset (the repository configuration for this breast cancer section and a bin50-specific setting were not used)", "in the label-selected-epoch diagnostic only, non-finite embedding values are replaced by zero (numpy nan_to_num) before k-means"]
   deepst:
     publication: "Xu et al., Nucleic Acids Res 2022;50:e131"
@@ -102,7 +102,7 @@ methods:
     settings_source: tutorial
     settings: {DLPFC: {C: 20, geneSelect: sparkx, nSE: 3000, nPC: 20, scaleFeature: false, nsample: 10000}, STARmap: {C: 15, nPC: 20}, MERFISH: {C: 20, nPC: 20}}
     clustering: {official: "own (joint cell-type and domain model)"}
-    deviations: ["each section analysed separately (the authors' MERFISH/DLPFC analyses are multi-sample)"]
+    deviations: ["each section analysed separately (the authors' MERFISH/DLPFC analyses are multi-sample)", "selects its own genes (3000 spatially variable genes by SPARK-X on DLPFC); the DLPFC settings (C = 20, SPARK-X) were reused unchanged on breast cancer and Stereo-seq, with the number of domains C set to the annotated K"]
   bayesspace:
     publication: "Zhao et al., Nat Biotechnol 2021;39:1375"
     kind: Bayesian statistical model
@@ -110,7 +110,7 @@ methods:
     settings_source: package_default
     settings: {platform: Visium, pcs: 15, hvg: 2000, init: mclust, model: t, gamma: 3, nrep: 50000, burn_in: 1000}
     clustering: {official: "own MCMC"}
-    deviations: ["Visium only (the model needs a regular spot lattice with a fixed neighbour structure)"]
+    deviations: ["Visium only (its square-lattice mode for other platforms was designed for larger spots and was not used on the Stereo-seq bin50 grid; STARmap and MERFISH have no lattice)", "the clone at this commit reports development version 1.21.2 while the installed package reports 1.5.1, so the exact commit of the run is not recorded"]
   linear_diffusion:
     publication: "this work (baseline)"
     kind: training-free
@@ -122,7 +122,7 @@ methods:
     kind: training-free, edge-preserving diffusion
     settings_source: our_rule
     settings: {knn: 6, alpha: 0.5, steps: 10, q: 0.5, pcs: 30, clustering: "20-start GMM"}
-    deviations: ["same as linear_diffusion"]
+    deviations: ["same settings as linear diffusion, with edge weights recomputed at every step"]
   pca_gmm:
     publication: "this work (non-spatial reference)"
     kind: training-free

@@ -3,8 +3,7 @@
 **Scope.** Official repositories of the benchmarked methods, at the commits below. **Method.** (1) static
 screening with `scripts/audit_leakage.py` (candidate lines per category, `results/leakage_scan/`), then
 (2) manual reading of every candidate. Only findings confirmed by reading the code are listed as
-findings. **Status: authors not yet contacted; do not publish a claim about a specific method before
-they have been given the chance to respond.**
+findings. **Status: the findings are reported neutrally in the manuscript as what the released code does; the authors of the methods were not contacted (decision of the study authors).**
 
 ## Taxonomy
 | Code | Leakage type | Why it matters |

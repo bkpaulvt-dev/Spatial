@@ -26,7 +26,7 @@ BASS_ANALYSIS_COMMIT := 81dfe7353093823eed68f403d9c4033031b73de4
 BASS_ANALYSIS := data/ext/BASS-Analysis
 EMBCSV := results/emb/csv
 
-.PHONY: all env data data-dlpfc data-extra data-new cache benchmark benchmark-new benchmark-legacy robustness lottery \
+.PHONY: all env data data-dlpfc data-extra data-new bigmem-merge cache benchmark benchmark-new benchmark-legacy robustness lottery \
         k-sensitivity mclust mclust-seed export-emb qc stats numbers supplement figures paper check test help
 
 all: numbers supplement figures paper check
@@ -83,6 +83,10 @@ benchmark:
 benchmark-new:
 	SPATIALBENCH_MAX_RSS_GB=12 $(PYTHON) scripts/bench_queue.py --datasets brca stereo --seeds 0 1 2 --workers 1
 	$(PYTHON) scripts/baselines_3start.py
+
+# merge the records of the memory-capped jobs rerun on the second server (see docs/BIGMEM_RERUN.md)
+bigmem-merge:
+	$(PYTHON) scripts/merge_bigmem.py
 
 # Earlier per-family pipelines whose result files the paper also reads (HiSTaR/HiCAST, AnisoST, BANKSY/SpaGCN,
 # STARmap/MERFISH, GraphST, the 9 "new" methods) and the boundary analysis.

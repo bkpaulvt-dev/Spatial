@@ -1,6 +1,6 @@
 # Benchmark protocol (pre-registration draft v0.1)
 
-**Status: DRAFT.** To be frozen (tagged in git and archived on Zenodo with its hash) *before* any
+**Status: DRAFT (this file was not frozen before the analyses; it is the working protocol, and the manuscript and its supplement are the authoritative description; deviations are listed under Amendments).** To be frozen (tagged in git and archived on Zenodo with its hash) *before* any
 result on the held-out test sections of newly added datasets is generated. After freezing, any change
 is recorded in a dated amendment list at the end of this file and reported in the paper.
 
@@ -20,6 +20,9 @@ practice alone can produce?
 * **Label provenance** (`configs/datasets.yaml`): expert / reference_atlas / marker / algorithm / unknown.
   Datasets whose labels were produced by a clustering algorithm are reported but **excluded from the
   primary ranking** (circularity). `unknown` provenance must be resolved before ranking.
+  *Superseded for the paper (see Amendments):* STARmap (`unknown`) and Stereo-seq (`algorithm`) are kept in the primary
+  analysis because dropping them would leave five groups; the analysis restricted to datasets whose annotation is not known to be
+  clustering-derived is reported as the check this rule calls for.
 * **Split**: for every dataset one or more *development* sections (fixed in the registry before any
   run); all remaining sections are *test*. Development sections are the only data usable for tuning
   (Arm B) or for choosing preprocessing rules.
@@ -79,4 +82,13 @@ for every run; `scripts/check_paper_numbers.py` verifies the manuscript against 
 reproducibility package (code, configs, container/lock files, results) is archived.
 
 ## 10. Amendments
-(none yet)
+Recorded retrospectively; none of these were pre-registered.
+1. Section 2: STARmap and Stereo-seq are in the primary analysis (see the note there); a sensitivity analysis without them is reported.
+2. Section 8: the primary comparison uses matched clustering (20-start Gaussian mixture), cluster-aware hierarchical bootstrap over
+   groups, an equivalence margin of 0.03 ARI, and a reference baseline (linear diffusion) chosen after the means were seen (exploratory).
+3. Section 5: HiSTaR was run as a PyTorch port and CCST as a re-implementation; GraphST uses its Stereo-seq mode; BASS keeps its DLPFC
+   settings on breast cancer and Stereo-seq.
+4. Section 5 (never re-run with different settings): the GraphST call to R mclust was wrapped (same function, run inside R) on the second
+   server because the direct call failed with mclust 6.x; labels were identical to the original function on two test embeddings.
+5. Seventeen jobs that exceeded the memory cap of the benchmark machine were rerun with unchanged settings on a second server.
+

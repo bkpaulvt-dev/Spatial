@@ -126,7 +126,7 @@ copied back (about 17 jobs x 2 files).
   (ARI) and memory are reportable.
 
 ## 9. What happens afterwards (not your job, for information)
-The cloud session merges the records (append `benchmark_runs_bigmem*.jsonl` to `results/benchmark_runs.jsonl`; analyses keep the newest
+The cloud session merges the records (`python scripts/merge_bigmem.py` appends `benchmark_runs_bigmem*.jsonl` to `results/benchmark_runs.jsonl` with `host="deepmed2"`, idempotently; analyses keep the newest
 record per run id), exports the new embeddings, redoes the initialisation, K-sensitivity and R mclust analyses for the newly working
 methods, regenerates every number, figure and table, rebuilds the paper and pushes it to GitHub and Overleaf (see
 `docs/BIGMEM_RERUN.md`, section 3).

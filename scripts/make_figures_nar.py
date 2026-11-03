@@ -97,7 +97,7 @@ def fig_accuracy():
     ms.append("bayesspace")  # Visium only (DLPFC and breast cancer)
     n = len(ms); y = np.arange(n)[::-1]
     fig = plt.figure(figsize=(WIDTH, 11.4 * CM))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.45, 1.15, 0.85], wspace=0.08, left=0.135, right=0.985, top=0.885, bottom=0.27)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.45, 1.15, 0.85], wspace=0.08, left=0.135, right=0.985, top=0.855, bottom=0.27)
     ax0, ax1, ax2 = [fig.add_subplot(gs[0, i]) for i in range(3)]
     # A: heatmap of mean ARI (matched clustering)
     A = np.array([[mean_m[m].get(d, np.nan) for d in DSN] for m in ms], float)
@@ -110,7 +110,7 @@ def fig_accuracy():
             else:
                 star = "*" if (d == "stereo" and m in OOM) else ""
                 ax0.text(j, n - 1 - i, f"{v:.2f}{star}", ha="center", va="center", fontsize=7, color="white" if v > 0.45 else INK)
-    ax0.set_xticks(range(ND), [DSN[d].replace("Stereo-seq", "Stereo") for d in DSN]); ax0.xaxis.tick_top(); ax0.tick_params(length=0)
+    ax0.set_xticks(range(ND), [DSN[d].replace("Stereo-seq", "Stereo-\nseq") for d in DSN]); ax0.xaxis.tick_top(); ax0.tick_params(length=0)
     ax0.set_yticks(y, [LAB[m] for m in ms]); ax0.tick_params(axis="y", pad=9)
     for s in ax0.spines.values(): s.set_visible(False)
     for yy, m in zip(y, ms):
@@ -130,12 +130,12 @@ def fig_accuracy():
     ax1.axvline(0, color=INK2, lw=0.6, zorder=1)
     for yy, m in zip(y, ms):
         if m == "linear_diffusion":
-            ax1.text(0.0, yy, "reference", ha="center", va="center", fontsize=7, color=INK2, style="italic"); continue
+            ax1.text(0.0, yy, "reference", ha="center", va="center", fontsize=7, color=INK2, style="italic", bbox=dict(fc="white", ec="none", pad=1.0), zorder=5); continue
         v = comp_m[m]; lo, hi = v["ci95"]; col = FCOL[FAMILY[m]]
         pdv = v["per_dataset"]
         br = [pdv[x] for x in ("dlpfc", "starmap", "merfish") if x in pdv]; ot = [pdv[x] for x in ("brca", "stereo") if x in pdv]
-        if br: ax1.plot(np.mean(br), yy + 0.32, "^", ms=3.4, mfc="#8a8a8a", mec="#8a8a8a", zorder=2)
-        if ot: ax1.plot(np.mean(ot), yy + 0.32, "^", ms=3.4, mfc="white", mec="#8a8a8a", mew=0.7, zorder=2)
+        if br: ax1.plot(np.mean(br), yy + 0.32, "^", ms=4.2, mfc="#555555", mec="#555555", zorder=2)
+        if ot: ax1.plot(np.mean(ot), yy + 0.32, "^", ms=4.2, mfc="white", mec="#555555", mew=0.8, zorder=2)
         ax1.plot([lo, hi], [yy, yy], color=col, lw=1.3, solid_capstyle="butt", zorder=2)
         filled = lo > 0
         ax1.plot(v["delta"], yy, "o", ms=4.8, mfc=col if filled else "white", mec=col, mew=1.1, zorder=3)
@@ -150,8 +150,8 @@ def fig_accuracy():
     h = [Line2D([], [], marker="o", ls="", mfc=INK2, mec=INK2, ms=4.5, label="interval above zero"),
          Line2D([], [], marker="o", ls="", mfc="white", mec=INK2, ms=4.5, label="unresolved"),
          Patch(color="#e9e9e6", label="±0.03 equivalence margin"),
-         Line2D([], [], marker="^", ls="", mfc="#8a8a8a", mec="#8a8a8a", ms=4, label="brain (mean)"),
-         Line2D([], [], marker="^", ls="", mfc="white", mec="#8a8a8a", ms=4, label="other tissues (mean)")]
+         Line2D([], [], marker="^", ls="", mfc="#555555", mec="#555555", ms=4.2, label="brain (mean)"),
+         Line2D([], [], marker="^", ls="", mfc="white", mec="#555555", ms=4.2, label="other tissues (mean)")]
     p2_ = ax2.get_position()
     fig.legend(handles=h, loc="lower left", ncol=1, frameon=False, bbox_to_anchor=(p2_.x0 - 0.03, 0.0),
                handletextpad=0.3, labelspacing=0.3)
@@ -171,7 +171,7 @@ def fig_accuracy():
     ax2.set_xlim(0.3, XP + 0.2); ax2.set_xticks([1, *range(4, NR - 1, 3), NR])
     ax2.spines["bottom"].set_bounds(0.3, NR + 0.7)
     ax2.set_xlabel("Rank (1 = best)\nP(best) shown when ≥ 0.01"); ax2.grid(axis="x", color=GRID, lw=0.5); ax2.set_axisbelow(True)
-    ax2.set_title("Rank, median and\n95% interval", pad=14)
+    ax2.set_title("Rank, median and\n95% interval", pad=24)
     ax2.text(XP, n - 0.45, "P(best)", ha="right", va="bottom", fontsize=7, color=INK2)
     # letters
     for ax, s, dx in ((ax0, "A", -0.12), (ax1, "B", -0.02), (ax2, "C", -0.02)):
@@ -221,7 +221,7 @@ def fig_robustness():
     SR = ranges(MS, "seed", 2); FJ = ranges(MS, "full_jit", 2)
     rg = np.random.default_rng(1)
     fig = plt.figure(figsize=(WIDTH, 10.4 * CM))
-    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 1.1], wspace=0.07, left=0.125, right=0.985, top=0.80, bottom=0.27)
+    gs = fig.add_gridspec(1, 3, width_ratios=[1.0, 1.0, 1.1], wspace=0.07, left=0.125, right=0.90, top=0.74, bottom=0.27)
     axs = [fig.add_subplot(gs[0, i]) for i in range(3)]
     jit = {"dlpfc": -0.24, "starmap": -0.12, "merfish": 0.0, "brca": 0.12, "stereo": 0.24}
 
@@ -279,11 +279,11 @@ def fig_robustness():
                 ax.text(j, i, "–", ha="center", va="center", fontsize=7, color=INK2); continue
             lab = "0.0" if abs(v) < 0.05 else f"{v:+.1f}".replace("-", "−")
             ax.text(j, i, lab, ha="center", va="center", fontsize=7, color="white" if abs(v) > 0.6 else INK)
-    SPLIT = {"starmap": "STAR-\nmap", "merfish": "MER-\nFISH", "stereo": "Stereo-\nseq", "dlpfc": "DLPFC\n", "brca": "Breast\n"}
-    ax.set_xticks(range(ND), [f"{SPLIT[d]}\nn = {NSEC[d]}" for d in DSN]); ax.xaxis.tick_top()
-    ax.set_yticks(range(n), []); ax.set_ylim(-0.6, n - 0.4); ax.tick_params(length=0)
+    SPLIT = {"starmap": "STARmap", "merfish": "MERFISH", "stereo": "Stereo-seq", "dlpfc": "DLPFC", "brca": "Breast"}
+    ax.set_xticks(range(ND), [f"{SPLIT[d]} (n = {NSEC[d]})" for d in DSN], rotation=90); ax.xaxis.tick_top()
+    ax.set_yticks(range(n), [LAB[m] for m in order[::-1]]); ax.yaxis.tick_right(); ax.set_ylim(-0.6, n - 0.4); ax.tick_params(length=0)
     for s in ax.spines.values(): s.set_visible(False)
-    ax.set_title("Log-likelihood vs ARI,\nmedian Spearman ρ", pad=36)
+    ax.set_title("Log-likelihood vs ARI,\nmedian Spearman ρ", pad=62)
     p2 = ax.get_position()
     cax = fig.add_axes([p2.x0 + 0.08 * p2.width, 0.12, 0.84 * p2.width, 0.02])
     cb = fig.colorbar(im, cax=cax, orientation="horizontal", ticks=[-1, -0.5, 0, 0.5, 1])

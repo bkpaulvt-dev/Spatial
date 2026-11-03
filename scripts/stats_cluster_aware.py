@@ -1,10 +1,11 @@
-"""Cluster-aware re-analysis of the accuracy comparison (replaces the pooled Wilcoxon over 20 sections).
+"""Cluster-aware re-analysis of the accuracy comparison (replaces the pooled Wilcoxon over sections).
 
 Unit of analysis: sections are nested in clusters = DLPFC donors (3) and the STARmap, MERFISH, BRCA and Stereo-seq
 datasets (one cluster each, since their sections come from one animal/experiment/study). Hierarchical bootstrap: resample clusters, then sections within
 a cluster; the estimate is the equal-weight mean of cluster means. Reference method: linear diffusion (declared exploratory:
-it was picked after seeing the means). Equivalence margin: ARI 0.03, fixed before looking (about the seed SD).
-Also: rank uncertainty (P(best), 95% rank interval) and a sensitivity analysis that excludes the development sections.
+it was picked after seeing the means). Equivalence margin: ARI 0.03, chosen as about the seed SD (before the final analyses were run; no formal pre-registration).
+Also: rank uncertainty (P(best), 95% rank interval) from a separate 5000-resample loop; Bonferroni intervals from a separate 20000-resample bootstrap; and a sensitivity analysis that excludes the development sections.
+STATS_EXCLUDE=<dataset> drops one dataset (leave-one-dataset-out; output stats_cluster_aware_drop_<dataset>.json).
 
 python scripts/stats_cluster_aware.py -> results/stats_cluster_aware.json (+ prints a table)
 """
@@ -127,7 +128,7 @@ for proto, MAP in (("standard", STD), ("robust", ROB)):
             "category": classify(draws), "per_dataset": per,
             "test_only": {"delta": round(pt, 3), "ci95": [round(float(x), 3) for x in np.percentile(dt, [2.5, 97.5])]}}
 
-# rank uncertainty (methods with all 20 sections), for both protocols
+# rank uncertainty (all methods that have embeddings or labels on every section, for both protocols)
 cand = [m for m in LABEL if m != "bayesspace"]
 def ranking(MAP, shared=True):
   """shared=True: every method (BayesSpace aside) on the sections all of them completed (methods stopped at the memory
@@ -170,7 +171,8 @@ out["means_standard"] = {m: dmeans(STD[m]) for m in list(LABEL) + [REF]}
 out["means_robust"] = {m: dmeans(ROB[m]) for m in list(LABEL) + [REF]}
 OUTF = ("stats_cluster_aware_runner.json" if SOURCE == "runner" else
         "stats_cluster_aware_expert.json" if sorted(EXCL) == ["starmap", "stereo"] else
-        "stats_cluster_aware_brain.json" if sorted(EXCL) == ["brca", "stereo"] else "stats_cluster_aware.json")
+        "stats_cluster_aware_brain.json" if sorted(EXCL) == ["brca", "stereo"] else
+        ("stats_cluster_aware_drop_%s.json" % "_".join(sorted(EXCL))) if EXCL else "stats_cluster_aware.json")
 json.dump(out, open(R(OUTF), "w"), indent=1)
 
 print(f"reference: linear diffusion; clusters: {out['clusters']}; margin {MARGIN}")

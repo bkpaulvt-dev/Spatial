@@ -157,7 +157,7 @@ if mf:
 json.dump(out, open(R("paper_numbers_v2.json"), "w"), indent=1)
 
 # ------------------------------------------------------------------ figures
-slices = {ds: sorted(LT[LT.dataset == ds].slice.unique(), key=lambda s: float(s) if ds == "merfish" else s) for ds in DS0}
+slices = {ds: sorted(LT[LT.dataset == ds].slice.unique(), key=lambda s: -float(s) if ds == "merfish" else s) for ds in DS0}
 methods = [m for m in ["histar", "graphst", "anisost"] if m in LT.method.unique()]
 MN = {"histar": "HiSTaR", "graphst": "GraphST", "anisost": "AnisoST"}
 mb = base.reset_index() if mf else None
@@ -175,8 +175,8 @@ for i, m in enumerate(methods):
             if mb is not None:
                 q = mb[(mb.dataset == ds) & (mb.method == m) & (mb.slice == r["slice"])]
                 if len(q): ax.scatter(k, q.ARI.iloc[0], s=30, facecolor="none", edgecolor=INK, lw=1.1, zorder=4)
-        ax.set_xticks(range(len(slices[ds])), [s.replace("_control", "").replace("2018", "") for s in slices[ds]] if i == len(methods) - 1 else [],
-                      rotation=60, fontsize=7)
+        ax.set_xticks(range(len(slices[ds])), [s.replace("-", "\u2212") for s in slices[ds]] if i == len(methods) - 1 else [],
+                      rotation=60, fontsize=7, ha="right")
         ax.set_xlim(-0.7, len(slices[ds]) - 0.3)
         if i == 0: ax.set_title(DSN[ds], fontsize=8.5, color=INK)
         if jx == 0: ax.set_ylabel(f"{MN[m]}\nARI")
@@ -240,7 +240,7 @@ print(json.dumps({k: out[k] for k in ("pooled", "lottery_by_method")}, indent=1)
 MAC = {}
 def mac(name, val, dec=3):
     v = val if isinstance(val, str) else f"{val:.{dec}f}"
-    v = v.replace("<", "\\ensuremath{<}")
+    v = v.replace("<", "\\ensuremath{<}").replace("λ=", "λ = ")
     if v.startswith("p"): v = "$" + v.replace("\\ensuremath{<}", "<") + "$"
     if v.startswith("-"): v = "\\ensuremath{-}" + v[1:]
     MAC[name] = v
@@ -402,6 +402,7 @@ if os.path.exists(R("brca_coarse.json")):
     top = sorted(v4, key=v4.get, reverse=True)
     mac("brcaCoarseTop", " and ".join(MN2.get(m, m) for m in top[:2])); mac("brcaCoarseLinRank", str(top.index("linear_diffusion") + 1))
     mac("brcaCoarseN", str(len(v4)))
+    mac("brcaCoarseNear", str(sum(0.18 <= x <= 0.21 for x in v4.values())))
 # Spatial-MGCN label-selected epoch
 sm = nm[nm.method == "spatial_mgcn"].assign(g=lambda x: x.ARI_label_selected_epoch - x.ARI)
 mac("mgcnLeak", float(sm.g.mean()), 3)

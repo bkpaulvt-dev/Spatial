@@ -26,3 +26,6 @@ paper/*.fdb_latexmk
 paper/*.fls
 *.part
 paper/submission/
+
+# lock directories of the parallel R mclust jobs
+results/*.lock_*/
