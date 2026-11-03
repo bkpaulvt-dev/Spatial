@@ -243,7 +243,7 @@ NichePCA, Spatial-MGCN and DeepST needed \peakBigMin--\peakBigMax{} GB of RAM (B
 \peakBigGraphst, Spatial-MGCN \peakBigMgcn, DeepST \peakBigDeepst{} GB; measured on the larger server with 20 threads, where DeepST and NichePCA used several cores), reaching or exceeding the \memCap{} GB cap of the benchmark machine on the first attempt. GraphST, Spatial-MGCN and DeepST build dense graphs or matrices over all bins; for NichePCA the demand follows from its default workflow, which also has a sparse option that we did not use. Restricting the comparison to the datasets whose annotation is not known to be derived from clustering (dropping STARmap,
 whose annotation provenance is unknown, and Stereo-seq, whose annotation was derived partly by clustering) gave the same picture:
 \nRobBetterExpert{} comparisons favoured the baseline and \nRobUnresExpert{} were unresolved (the verdict changed for \listExpertFlip{} compared with the main analysis); BASS and linear diffusion each ranked
-first in about \pBestBassExpert{} and \pBestLinExpert{} of the resamples (Supplementary Table~\STstatsexpert). Example partitions are
+first in about \pBestBassExpert{} and \pBestLinExpert{} of the resamples (Supplementary Table~\STstatsexpert). On the three brain datasets alone, the baseline was ahead of \nRobBetterBrain{} of \nRobTotBrain{} comparators, and BASS and linear diffusion ranked first in \pBestBassBrain{} and \pBestLinBrain{} of the resamples (Supplementary Table~\STstatsbrain). Example partitions are
 shown in \figref{fig:maps} and, for breast cancer and Stereo-seq, in Supplementary Figure~\SFmapsnew.
 
 The edge-preserving variant AnisoST did not improve on linear diffusion overall (MERFISH: 0.363 vs 0.497), although on DLPFC it
