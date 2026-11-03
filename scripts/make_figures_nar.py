@@ -275,27 +275,49 @@ def fig_protocol():
     ms = [m for m in LAB if m in mean_m and m in mean_d and len(mean_m[m]) == ND and len(mean_d[m]) == ND and m not in INTERNAL]
     ms.sort(key=lambda m: -np.mean([mean_m[m][d] for d in DSN]))
     n = len(ms); y = np.arange(n)[::-1]
-    fig, axs = plt.subplots(1, ND, figsize=(WIDTH, 8.6 * CM), sharey=True,
-                            gridspec_kw={"wspace": 0.1, "left": 0.135, "right": 0.985, "top": 0.9, "bottom": 0.255})
-    for ax, ds in zip(axs, DSN):
+    GAIN = json.load(open(R("paper_numbers_v2.json")))["clustering_gain_all"]
+    gkey = lambda m: {"linear_diffusion": "linear_diffusion_single_gmm", "pca_gmm": "pca_gmm_single_gmm", "anisost": "anisost_single_gmm"}.get(m, m)
+    fig, axs = plt.subplots(1, ND + 1, figsize=(WIDTH, 9.0 * CM), sharey=True,
+                            gridspec_kw={"wspace": 0.14, "left": 0.15, "right": 0.985, "top": 0.86, "bottom": 0.255,
+                                         "width_ratios": [1, 1, 1, 1, 1, 1.95]})
+    for ax, ds in zip(axs[:ND], DSN):
         for yy, m in zip(y, ms):
             a, b = mean_d[m][ds], mean_m[m][ds]
             ax.plot([a, b], [yy, yy], color=FCOL[FAMILY[m]], lw=2.0, solid_capstyle="butt", zorder=2)
             ax.plot(a, yy, "o", ms=4.8, mfc="white", mec=INK, mew=0.9, zorder=3)
             ax.plot(b, yy, "o", ms=4.0, mfc=INK, mec=INK, zorder=4)
-        ax.set_xlim(0.0, 0.8); ax.set_xticks([0, 0.2, 0.4, 0.6, 0.8])
-        ax.set_xticklabels(["", "0.2", "", "0.6", ""])
+        ax.set_xlim(0.0, 0.8); ax.set_xticks([0.2, 0.4, 0.6])
+        ax.set_xticklabels(["0.2", "0.4", "0.6"])
         ax.grid(axis="x", color=GRID, lw=0.5); ax.set_axisbelow(True); ax.set_xlabel("Mean ARI")
-        ax.set_title(f"{DSN[ds]} (n = {NSEC[ds]})", pad=4)
-    axs[0].set_yticks(y, [LAB[m] for m in ms]); axs[0].set_ylim(-0.6, n - 0.4)
-    axs[0].tick_params(axis="y", pad=9)
+        ax.set_title(f"{DSN[ds]}\n(n = {NSEC[ds]})", pad=4)
+    axs[0].set_yticks(y, [LAB[m] for m in ms]); axs[0].set_ylim(-0.6, n + 0.35)
+    axs[0].tick_params(axis="y", pad=11)
     for yy, m in zip(y, ms):
         axs[0].plot(-0.035, yy, "o", color=FCOL[FAMILY[m]], ms=4.3, clip_on=False, zorder=5, transform=axs[0].get_yaxis_transform())
     letter(fig, 0.005, 0.995, "A")
-    for a, s in zip(axs[1:], "BCDE"):
+    # F: change of mean ARI when the default clustering is replaced by matched clustering (mean over all sections, as in the text)
+    axf = axs[ND]; UP, DOWN = "#5e3c99", "#8c510a"
+    axf.axvline(0, color=INK2, lw=0.7, zorder=1); axf.axvspan(-0.005, 0.005, color="#e9e9e6", lw=0, zorder=0)
+    for yy, m in zip(y, ms):
+        g = GAIN.get(gkey(m))
+        if g is None: continue
+        col = UP if g["delta"] > 0 else DOWN; sig = g["p"] < 0.05
+        axf.plot([0, g["delta"]], [yy, yy], color=col, lw=1.6, solid_capstyle="butt", zorder=2)
+        axf.plot(g["delta"], yy, "o", ms=4.8, mfc=col if sig else "white", mec=col, mew=1.1, zorder=3)
+        txt = f"{g['delta']:+.3f}".replace("-", "\u2212")
+        axf.text(0.108, yy, txt, ha="left", va="center", fontsize=7, color=INK)
+        axf.text(0.338, yy, f"{g['wins']}/{g['n']}", ha="right", va="center", fontsize=7, color=INK)
+    axf.set_xlim(-0.1, 0.34); axf.spines["bottom"].set_bounds(-0.1, 0.1); axf.set_xticks([-0.1, -0.05, 0, 0.05, 0.1]); axf.set_xticklabels(["\u22120.1", "", "0", "", "0.1"])
+    axf.grid(axis="x", color=GRID, lw=0.5); axf.set_axisbelow(True); axf.set_xlabel("Change in mean ARI")
+    axf.set_title("Matched minus\ndefault", pad=4)
+    axf.text(0.108, n - 0.3, "change", ha="left", va="bottom", fontsize=7, color=INK2)
+    axf.text(0.338, n - 0.3, "wins", ha="right", va="bottom", fontsize=7, color=INK2)
+    for a, s in zip(axs[1:], "BCDEF"):
         letter(fig, a.get_position().x0 - 0.012, 0.995, s)
     h = [Line2D([], [], marker="o", ls="", mfc="white", mec=INK, ms=4.8, label="Default clustering (method's own pipeline)"),
-         Line2D([], [], marker="o", ls="", mfc=INK, mec=INK, ms=4.2, label="Matched clustering (20-start Gaussian mixture)")]
+         Line2D([], [], marker="o", ls="", mfc=INK, mec=INK, ms=4.2, label="Matched clustering (20-start Gaussian mixture)"),
+         Line2D([], [], marker="o", ls="", mfc=UP, mec=UP, ms=4.8, label="F: matched higher"),
+         Line2D([], [], marker="o", ls="", mfc=DOWN, mec=DOWN, ms=4.8, label="F: matched lower; filled: p < 0.05, uncorrected")]
     fig.legend(handles=h, loc="lower left", ncol=2, frameon=False, bbox_to_anchor=(0.12, 0.055), columnspacing=1.6, handletextpad=0.3)
     fig.legend(handles=family_handles(), loc="lower left", ncol=3, frameon=False, bbox_to_anchor=(0.12, 0.0), columnspacing=1.6,
                handletextpad=0.3, title=None)
