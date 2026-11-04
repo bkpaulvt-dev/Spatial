@@ -1,0 +1,76 @@
+# Registry of the NEW datasets (new-datasets extension). Kept apart from configs/datasets.yaml on purpose: scripts/stats_cluster_aware.py
+# enumerates that file as the bootstrap groups of the original analysis, which must not change. Read by scripts/newdata_queue.py.
+# Every section is split "test": nothing is tuned on any new section. verified: false = to be confirmed against the source before submission.
+schema_version: 1
+datasets:
+  sim_bands:
+    name: Simulated tissue, geometry A "layered bands" (domain-size experiment)
+    technology: simulation (self-written negative-binomial generator, scripts/simulate_domains.py)
+    generation: square lattice 120 x 120 (14,400 spots, spacing 1), whole-transcriptome-like counts (5,000 genes)
+    species: none (profiles from human DLPFC section 151507, layers L1-L6, a dev section)
+    resolution: spot spacing 1 (no physical unit)
+    n_sections: 20
+    n_domains: 6
+    label_provenance: {class: simulated, verified: true, note: "domains known by construction: 6 domains repeated m times as parallel bands (m = 1, 2, 4, 7; band width about 20, 10, 5, 2.9 rows); design fixed in docs/PREREGISTERED_SIM.md before any simulation result existed"}
+    settings_note: "whole-transcriptome path as DLPFC/breast/Stereo-seq (spatialbench.data.WHOLE_TRANSCRIPTOME, not VISIUM so BayesSpace is not run); BASS keeps its DLPFC branch, as for breast cancer and Stereo-seq (scripts/run_r_method.R)"
+    source: {counts: "data/Sim/sim_bands/<section>.h5ad written by scripts/simulate_domains.py", citation: "this work; profiles from Maynard et al., Nat Neurosci 2021 (DLPFC 151507)"}
+    license: {status: not_applicable, note: "synthetic data; reference profiles from the public spatialLIBD data"}
+    sections:
+      "m1_r0": {split: test}
+      "m1_r1": {split: test}
+      "m1_r2": {split: test}
+      "m1_r3": {split: test}
+      "m1_r4": {split: test}
+      "m2_r0": {split: test}
+      "m2_r1": {split: test}
+      "m2_r2": {split: test}
+      "m2_r3": {split: test}
+      "m2_r4": {split: test}
+      "m4_r0": {split: test}
+      "m4_r1": {split: test}
+      "m4_r2": {split: test}
+      "m4_r3": {split: test}
+      "m4_r4": {split: test}
+      "m7_r0": {split: test}
+      "m7_r1": {split: test}
+      "m7_r2": {split: test}
+      "m7_r3": {split: test}
+      "m7_r4": {split: test}
+  sim_blocks:
+    name: Simulated tissue, geometry B "random blocks" (domain-size experiment)
+    technology: simulation (self-written negative-binomial generator, scripts/simulate_domains.py)
+    generation: square lattice 120 x 120 (14,400 spots, spacing 1), whole-transcriptome-like counts (5,000 genes)
+    species: none (profiles from human DLPFC section 151507, layers L1-L6, a dev section)
+    resolution: spot spacing 1 (no physical unit)
+    n_sections: 25
+    n_domains: 6
+    label_provenance: {class: simulated, verified: true, note: "domains known by construction: w x w blocks (w = 3, 5, 8, 12, 20) each assigned one of 6 domains at random (all 6 present)"}
+    settings_note: "same as sim_bands"
+    source: {counts: "data/Sim/sim_blocks/<section>.h5ad written by scripts/simulate_domains.py", citation: "this work"}
+    license: {status: not_applicable}
+    sections:
+      "w3_r0": {split: test}
+      "w3_r1": {split: test}
+      "w3_r2": {split: test}
+      "w3_r3": {split: test}
+      "w3_r4": {split: test}
+      "w5_r0": {split: test}
+      "w5_r1": {split: test}
+      "w5_r2": {split: test}
+      "w5_r3": {split: test}
+      "w5_r4": {split: test}
+      "w8_r0": {split: test}
+      "w8_r1": {split: test}
+      "w8_r2": {split: test}
+      "w8_r3": {split: test}
+      "w8_r4": {split: test}
+      "w12_r0": {split: test}
+      "w12_r1": {split: test}
+      "w12_r2": {split: test}
+      "w12_r3": {split: test}
+      "w12_r4": {split: test}
+      "w20_r0": {split: test}
+      "w20_r1": {split: test}
+      "w20_r2": {split: test}
+      "w20_r3": {split: test}
+      "w20_r4": {split: test}

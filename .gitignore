@@ -29,3 +29,6 @@ paper/submission/
 
 # lock directories of the parallel R mclust jobs
 results/*.lock_*/
+
+# new-datasets extension: per-job files (large; copied back by hand like results/runs)
+results/newdata_runs/
