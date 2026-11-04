@@ -48,4 +48,5 @@ annotations (`metadata.tsv`): `JinmiaoChenLab/SEDR_analyses/data/DLPFC/<slice>/`
 python scripts/benchmark_dlpfc.py --data data/DLPFC --out results/dlpfc_main.jsonl \
     --seeds 0 1 2 --methods histar histar_deterministic hicast --workers 4
 # ablation variants:  --config no_lg='{"local_global": false}'
+# on a GPU:           add --device cuda   (TinkerCliffs: sbatch scripts/tinkercliffs_gpu_job.sh)
 ```

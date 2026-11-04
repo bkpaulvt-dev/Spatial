@@ -46,11 +46,14 @@ def run_one(job):
     from hicast.histar import HiSTaR
     from hicast.model import HiCAST
 
-    method, cfg, slice_id, seed, data_root, cache = job
+    method, cfg, slice_id, seed, data_root, cache, device = job
     d = cached_slice(data_root, cache, slice_id)
     k = d.meta["n_clusters"]
     torch.manual_seed(seed)
     np.random.seed(seed)
+    if device.startswith("cuda"):
+        torch.cuda.manual_seed_all(seed)
+    cfg = {"device": device, **cfg}
     t0 = time.time()
     if method.startswith("histar"):
         model = HiSTaR(d.X, d.coords, k, seed=seed, **cfg).fit()
@@ -59,7 +62,7 @@ def run_one(job):
     Z = model.embed()
     train_time = time.time() - t0
     pred = gmm_eee(Z, k)
-    res = {"method": method, "slice": slice_id, "seed": seed, "time": train_time}
+    res = {"method": method, "slice": slice_id, "seed": seed, "time": train_time, "device": device}
     res.update(evaluate(pred, d.labels))
     ref = evaluate(spatial_refine(pred, d.coords), d.labels)
     res.update({f"{m}_refined": v for m, v in ref.items()})
@@ -76,6 +79,7 @@ def main():
     ap.add_argument("--methods", nargs="*", default=["histar", "hicast"])
     ap.add_argument("--config", nargs="*", default=[], help="NAME=JSON HiCAST/HiSTaR variants")
     ap.add_argument("--workers", type=int, default=4)
+    ap.add_argument("--device", default="cpu", help="cpu, cuda or cuda:N (workers share the GPU)")
     args = ap.parse_args()
 
     configs = {"histar": {}, "histar_deterministic": {"deterministic_eval": True}, "hicast": {}}
@@ -97,7 +101,12 @@ def main():
             for line in f:
                 r = json.loads(line)
                 done.add((r["method"], r["slice"], r["seed"]))
-    jobs = [(m, configs[m], s, sd, args.data, cache)
+    if args.device.startswith("cuda"):
+        import torch
+        if not torch.cuda.is_available():
+            sys.exit("--device cuda given but no GPU is visible (check the Slurm --gres line)")
+        print(f"GPU: {torch.cuda.get_device_name(0)}", flush=True)
+    jobs = [(m, configs[m], s, sd, args.data, cache, args.device)
             for sd in args.seeds for s in args.slices for m in args.methods
             if (m, s, sd) not in done]
     print(f"{len(jobs)} runs to do ({len(done)} already done)", flush=True)

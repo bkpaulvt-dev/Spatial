@@ -14,7 +14,9 @@ Paste the "Prompt for the new chat" section into a Claude Code session running
   `histar`, `histar_deterministic`, `hicast` = 108 lines). Median ARI: HiCAST 0.493
   vs HiSTaR 0.509 (p = 0.68). HiCAST does not beat HiSTaR yet.
 * Write-up: `docs/HiCAST.md` (§5–6 have results and lessons).
-* Code runs on CPU by default (`device="cpu"`); ~2 min per run per core.
+* Code runs on CPU by default (~2 min per run per core). For a GPU, pass
+  `--device cuda` to the benchmark; `scripts/tinkercliffs_gpu_job.sh` does this.
+  GPU numbers are not bit-identical to CPU ones, so compare methods within one device.
 
 ## To do
 
@@ -24,7 +26,8 @@ Paste the "Prompt for the new chat" section into a Claude Code session running
    `ssh`/`scp` without asking for Duo every time.
 2. On TinkerCliffs: clone the repo, create a Python env, install `requirements.txt`.
 3. Download the 12 DLPFC slices into `~/Spatial/data/DLPFC/<slice>/`.
-4. Submit `scripts/tinkercliffs_job.sh` with Slurm (fill in your allocation account).
+4. Submit `scripts/tinkercliffs_gpu_job.sh` (GPU) or `scripts/tinkercliffs_job.sh` (CPU)
+   with Slurm, after filling in your allocation account and checking the partition.
 5. Reproduce the main benchmark, then run new experiments (ablations, more seeds,
    GPU runs, held-out-donor tuning) with `--config NAME=JSON`.
 6. Copy results back, commit them to the branch, push.
@@ -44,15 +47,20 @@ Steps:
 1. Over ssh: check `sinfo`, `module avail` (Miniconda/Anaconda), and which Slurm
    account I can use (`sacctmgr show assoc user=bikashkumar` or ask me).
 2. Clone the repo on TinkerCliffs into ~/Spatial (branch claude/bold-knuth-opoo9b),
-   create a conda env "spatial" with python 3.11, pip install -r requirements.txt.
+   create a conda env "spatial" with python 3.11, pip install -r requirements.txt
+   (on a GPU node check `python -c "import torch; print(torch.cuda.is_available())"`
+   prints True; if not, install a CUDA build of torch from pytorch.org).
 3. Download DLPFC data into ~/Spatial/data/DLPFC/<slice>/ for slices
    151507 151508 151509 151510 151669 151670 151671 151672 151673 151674 151675 151676:
    - filtered_feature_bc_matrix.h5 from
      https://spatial-dlpfc.s3.us-east-2.amazonaws.com/h5/<slice>_filtered_feature_bc_matrix.h5
    - metadata.tsv from GitHub repo JinmiaoChenLab/SEDR_analyses, path data/DLPFC/<slice>/metadata.tsv
      (raw.githubusercontent.com; check whether the branch is main or master).
-4. Run one quick test (one slice, one seed) on an interactive node, then fill in
-   the account/partition in scripts/tinkercliffs_job.sh and sbatch it.
+4. Run one quick test on an interactive GPU node, e.g.
+   `interact -A <account> -p a100_normal_q --gres=gpu:1 -t 1:00:00`, then
+   `python scripts/benchmark_dlpfc.py --data data/DLPFC --out results/test.jsonl
+   --slices 151673 --seeds 0 --methods hicast --device cuda --workers 1`.
+   Then fill in account/partition in scripts/tinkercliffs_gpu_job.sh and sbatch it.
 5. Monitor with squeue; when done, scp results/*.jsonl back to my Mac,
    summarise median ARI per method, commit and push to the branch.
 ```
