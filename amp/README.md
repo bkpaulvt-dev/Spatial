@@ -40,4 +40,6 @@ Outputs in `--out`: `metrics.json` (val history, test AUROC/AUPRC/MCC per task f
 - `--synthetic` / `--tiny` are smoke tests of the code path only; their metrics are meaningless.
 - The local tokenizer is checked against the Hugging Face tokenizer at start-up for real models.
 
+GPU server instructions (for Claude Code on the lab machine): `amp/RUN_ON_GPU.md`.
+
 Tests: `python -m pytest tests_amp -q`

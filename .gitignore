@@ -3,3 +3,7 @@ __pycache__/
 data/
 results/cache/
 *.npz
+runs/
+logs/
+*.pt
+.venv-amp/

@@ -83,3 +83,23 @@ def test_build_dataset_merges_sources_and_flags_conflicts(tmp_path):
     assert "AXBBBB" not in w.index and s["per_source"]["pos"]["dropped"]["non-standard/empty"] == 1
     assert s["per_source"]["hc50"]["unresolved_labels"] == 1  # ">500" is dropped, not guessed
     assert s["label_conflicts_set_to_unknown"] >= 1
+
+
+def test_tools_clusters_feed_training_and_aggregate(tmp_path):
+    from amp import tools
+    df = load_table(synthetic.make(300, seed=2))
+    df.to_csv(tmp_path / "p.csv", index=False)
+    fa = tmp_path / "p.fasta"; tools.write_fasta(tmp_path / "p.csv", fa)
+    assert fa.read_text().count(">") == len(df)
+    cid = cluster_sequences(list(df.sequence), 0.5)
+    rep = {c: df.sequence[np.where(cid == c)[0][0]] for c in set(cid)}
+    pd.DataFrame({"rep": [rep[c] for c in cid], "member": df.sequence}).to_csv(tmp_path / "c.tsv", sep="\t", header=False, index=False)
+    tools.add_clusters(tmp_path / "p.csv", tmp_path / "c.tsv", tmp_path / "pc.csv")
+    for seed in (0, 1):
+        train.main(["--data", str(tmp_path / "pc.csv"), "--tiny", "--out", str(tmp_path / f"r{seed}"), "--epochs", "2",
+                    "--bs", "16", "--seed", str(seed)])
+        tr, te = pd.read_csv(tmp_path / f"r{seed}" / "train.csv"), pd.read_csv(tmp_path / f"r{seed}" / "test.csv")
+        pc = pd.read_csv(tmp_path / "pc.csv").set_index("sequence").cluster
+        assert not set(pc[tr.sequence]) & set(pc[te.sequence])   # supplied clusters respected, no leakage
+    t = tools.aggregate([tmp_path / "r0" / "metrics.json", tmp_path / "r1" / "metrics.json"])
+    assert set(t.model) == {"logreg", "ESM-2"} and (t.n_seeds == 2).any()
