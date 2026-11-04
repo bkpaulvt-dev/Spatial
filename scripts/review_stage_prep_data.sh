@@ -4,7 +4,7 @@
 set -e
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}; cd "$BASE/Spatial"
 . "$BASE/Spatial/scripts/deepmed2_env.sh"; disk_guard 100 || exit 99
-source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"; export R_LIBS_USER="$BASE/Rlib"
+. "$BASE/Spatial/scripts/spatialbench_path.sh"   # project env without any conda from ~/shared_disk (CLAUDE.md); export R_LIBS_USER="$BASE/Rlib"
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ]
 python scripts/download_dlpfc.py
 BA=data/ext/BASS-Analysis; COMMIT=81dfe7353093823eed68f403d9c4033031b73de4        # as in the Makefile (data-extra)

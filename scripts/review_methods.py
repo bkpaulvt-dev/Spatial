@@ -96,13 +96,21 @@ def bass_multisample(a, k, seed, ds):
                 open(os.path.join(d, "genes.txt"), "w").write("\n".join(map(str, x.var_names)) + "\n")
                 open(os.path.join(d, "barcodes.txt"), "w").write("\n".join(f"s{j}" for j in range(x.n_obs)) + "\n")
                 C = np.asarray(x.obsm["spatial"], float); pd.DataFrame({"x": C[:, 0], "y": C[:, 1]}).to_csv(os.path.join(d, "coords.csv"), index=False)
-            p = subprocess.run(["Rscript", os.path.join(HERE, "review_bass_multi.R"), td, str(len(secs)), str(R), str(seed), ds], capture_output=True, text=True, timeout=24 * 3600,
-                               env=dict(os.environ, **({"BASS_NSAMPLE": dry} if dry else {})))
+            try:
+                p = subprocess.run(["Rscript", os.path.join(HERE, "review_bass_multi.R"), td, str(len(secs)), str(R), str(seed), ds], capture_output=True, text=True,
+                                   timeout=24 * 3600 - 600, env=dict(os.environ, **({"BASS_NSAMPLE": dry} if dry else {})))
+            except subprocess.TimeoutExpired:   # the joint fit is shared by the group's jobs: record the limit once, so the siblings fail at once instead of repeating a 24 h fit
+                msg = "time limit (24 h) of the joint multi-sample fit"
+                json.dump({"failed": msg}, open(cf, "w")); raise RuntimeError(msg)
             if p.returncode != 0:
-                raise RuntimeError(f"review_bass_multi.R failed (exit code {p.returncode}; -9 = killed, e.g. out of memory): {p.stderr[-1200:]} | stdout: {p.stdout[-300:]}")
+                msg = f"review_bass_multi.R failed (exit code {p.returncode}; -9 = killed, e.g. out of memory): {p.stderr[-1200:]} | stdout: {p.stdout[-300:]}"
+                if p.returncode in (-9, 137): json.dump({"failed": "memory limit of the joint multi-sample fit (killed)"}, open(cf, "w"))
+                raise RuntimeError(msg)
             labs = {s: pd.read_csv(os.path.join(td, f"labels_{i}.csv"))["label"].astype(int).tolist() for i, s in enumerate(secs)}
         json.dump({"R": R, "group": group, "labels": labs, "joint_fit_wall_s": time.time() - t0}, open(cf, "w"))
     c = json.load(open(cf))
+    if "failed" in c:
+        raise RuntimeError(c["failed"] + " (recorded by the first job of the group)")
     return {"labels": np.asarray(c["labels"][sec]), "emb": None, "extra": {"group_size": len(group), "R": c["R"], "joint_fit_wall_s": c["joint_fit_wall_s"]}}
 
 

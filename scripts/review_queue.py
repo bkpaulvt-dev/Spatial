@@ -64,7 +64,7 @@ def main():
             for fut in as_completed([ex.submit(run, j, a.timeout, 1) for j in batch]):
                 r = fut.result(); res = r.get("resources") or {}
                 r.update(host=HOST, extension="review", device=a.device, method_version=review_methods.version_of(r["method"]),
-                         outcome="ok" if r["status"] == "ok" else "time limit" if res.get("timed_out") else "memory limit" if res.get("oom_killed") else "error")
+                         outcome="ok" if r["status"] == "ok" else "time limit" if (res.get("timed_out") or "time limit (24 h)" in str(r.get("error", ""))) else "memory limit" if res.get("oom_killed") else "error")
                 open(a.out, "a").write(json.dumps(r) + "\n")
                 met = r.get("metrics", {})
                 print(f"{r['id']:<52} {r['outcome']:<12} ARI={met.get('ARI', float('nan')):.3f} t={res.get('wall_s', 0):.0f}s mem={res.get('peak_rss_gb', 0):.1f}GB", flush=True)

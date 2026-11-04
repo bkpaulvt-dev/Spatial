@@ -3,7 +3,7 @@ BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}; cd "$BASE/Spatial" || exit 1
 . "$BASE/Spatial/scripts/deepmed2_env.sh"   # disk rule (CLAUDE.md)
 # disk_guard before every stage/download; a failing guard waits (up to 6 h, as the runbook says) and then exits 99 (skipped, reason in the log)
 for _i in $(seq 1 36); do disk_guard 100 && break; [ $_i -eq 36 ] && exit 99; sleep 600; done
-source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
+. "$BASE/Spatial/scripts/spatialbench_path.sh"   # project env without any conda from ~/shared_disk (CLAUDE.md)
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ] || { echo "not the project environment"; exit 2; }
 export R_LIBS="$BASE/Rlib" R_LIBS_USER="$BASE/Rlib" TMPDIR="$BASE/tmp" MAKEFLAGS=-j4 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1; mkdir -p "$TMPDIR"
 export SPATIALBENCH_MAX_RSS_GB=${SPATIALBENCH_MAX_RSS_GB:-30}

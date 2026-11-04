@@ -15,7 +15,7 @@ notify() { [ -n "$NTFY_TOPIC" ] && curl -fsS -m 10 -H "Title: SpatialBench newda
 say() { echo "$(date '+%F %T') [phase2] $*" | tee -a "$STATUS"; case "$*" in *STOP*|*DONE*|*"dataset"*|*failed*) notify "[phase2] $*";; esac; }
 trap 'notify "phase2 ended (exit code $?); see newdata_status.txt"' EXIT
 say "phase 2 start (pid $$)"
-source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
+. "$BASE/Spatial/scripts/spatialbench_path.sh"   # project env without any conda from ~/shared_disk (CLAUDE.md)
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ] || { say "STOP: python is not the project environment"; exit 2; }
 export R_LIBS_USER="$BASE/Rlib"
 commit_small() {   # small files only, branch new-datasets only, no force; a failed push is fine

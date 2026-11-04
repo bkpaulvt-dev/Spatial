@@ -25,7 +25,7 @@ if [ ! -f "$BASE/.setup_done" ]; then
   [ -f "$BASE/.setup_done" ] || { say "STOP: setup failed three times"; exit 2; }
 fi
 say "stage 1/4: setup done"
-source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
+. "$BASE/Spatial/scripts/spatialbench_path.sh"   # project env without any conda from ~/shared_disk (CLAUDE.md)
 export R_LIBS_USER="$BASE/Rlib"      # R packages of the project live here, not in ~/R/library
 
 # 2. wait for enough free RAM (the server is shared); up to 6 h

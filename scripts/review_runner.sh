@@ -25,7 +25,7 @@ notify() { [ -n "$NTFY_TOPIC" ] && curl -fsS -m 10 -H "Title: SpatialBench revie
 say() { echo "$(date '+%F %T') $*" | tee -a "$STATUS"; case "$*" in *STOP*|*PIPELINE_DONE*|*done*|*FAILED*|*skipped*) notify "[review] $*";; esac; }
 trap 'notify "review runner ended (exit code $?); see review_status.txt"' EXIT
 say "review runner start (pid $$, host $(hostname), cap ${SPATIALBENCH_MAX_RSS_GB} GB per job)"
-source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
+. "$BASE/Spatial/scripts/spatialbench_path.sh"   # project env without any conda from ~/shared_disk (CLAUDE.md)
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ] || { say "STOP: python is not the project environment"; exit 2; }
 export R_LIBS_USER="$BASE/Rlib"
 

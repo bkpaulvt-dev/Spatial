@@ -19,7 +19,7 @@ trap 'notify "newdata pipeline ended (exit code $?); see newdata_status.txt"' EX
 say "pipeline start (pid $$, host $(hostname), cap ${SPATIALBENCH_MAX_RSS_GB} GB per job)"
 
 # 0. preflight: only the project environment, never the shared base
-source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
+. "$BASE/Spatial/scripts/spatialbench_path.sh"   # project env without any conda from ~/shared_disk (CLAUDE.md)
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ] || { say "STOP: python is not the project environment"; exit 2; }
 export R_LIBS_USER="$BASE/Rlib"
 python -m pytest -q tests/test_dataset_groups.py >/dev/null 2>&1 || { say "STOP: dataset-group test failed (existing datasets would resolve differently)"; exit 2; }

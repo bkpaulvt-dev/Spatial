@@ -23,7 +23,7 @@ if [ "$1" = "status" ]; then
   echo; echo "--- last 15 lines of $STATUS"; tail -15 "$STATUS" 2>/dev/null || echo "(no status file yet)"
   echo; echo "--- jobs running now:"; ps -eo pid,etime,rss,args | grep -E "bench_run|newdata_queue|newdata_g3|mclust_seed|simulate_domains" | grep -v grep | cut -c1-140 || true
   echo; echo "--- records so far (newest per job):"
-  source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env" 2>/dev/null
+  . "$BASE/Spatial/scripts/spatialbench_path.sh"   # project env without any conda from ~/shared_disk (CLAUDE.md)
   python - <<'PY'
 import json, glob, collections
 last = {}
