@@ -93,3 +93,14 @@ deep methods (BASS, DeepST, SpaceFlow, STAGATE, GraphST, Spatial-MGCN, CCST; Bay
 3. G3 on the simulation (a-e): per setting, for full-design methods with the full design; for tier-3 methods only on their single tissue and **descriptively**, no interval, no verdict.
 4. Duration estimates (linear-scaling cost, then x1.6-2.4 for the superlinear cost seen on the 18,408-bin Stereo-seq section): tier 1 about 4-5 h (measured about 3 jobs/min);
    tier 2 about 15-25 h; tier 3 about 2 days (63 jobs, about 49 h lower bound) to 3-5 days.
+
+---
+## Amendment 2 (2026-11-04, after 17:00 server time): one heavy slot for the simulation, tier 3 paused until the review runs have finished. Based on cost only.
+
+**Status of the data when this was written.** Tier 1 (the 5 cheapest methods, full design) was still running; **no tier-2 or tier-3 method had produced any result.** Nothing below depends on any ARI.
+
+**Why.** The review runs (`docs/DEEPMED2_NEXT.md`) must not wait 2-3 weeks for the simulation. The 2-job cap is therefore split: the simulation / real-data pipeline (`newdata_*`) uses **1 heavy slot**
+(`$BASE/newdata_workers`, read by `scripts/newdata_queue.py`) and the review stages use the other slot (GPU jobs count inside the cap).
+**Rule.** The tier-3 methods on the simulation (`bass, deepst, spaceflow, stagate, graphst, spatial_mgcn, bayesspace, ccst`, reduced design as in Amendment 1) **wait until the review runner has finished
+all stages (run or failed)**; tiers 1 and 2 (full design) and the Allen MERFISH phase continue meanwhile. Only the order and the number of parallel jobs change: **no design, method, setting, seed, metric or analysis rule changes.**
+Duration: tiers 1-2 take about twice as long with one worker (tier 2 about 1.5-2 days); tier 3 starts after the review stages (several weeks).

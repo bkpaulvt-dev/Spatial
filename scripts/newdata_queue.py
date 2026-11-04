@@ -28,6 +28,15 @@ BASE = os.environ.get("BASE", "/mnt/disk/bikashkumar/SpatialBench")
 HOLD = os.path.join(BASE, "newdata_hold")      # while this file exists the queue waits before starting (lets the real-data phase go first)
 # Amendment of docs/PREREGISTERED_SIM.md (2026-11-04, based only on cost): the 8 tier-3 (deep) methods run a REDUCED design on the
 # simulation: seed 0, replicate 0 of every setting (9 tissues per method). Tiers 1 and 2 keep the full design (45 tissues x 3 seeds).
+# Amendment 2 of docs/PREREGISTERED_SIM.md (2026-11-04, cost only): this queue uses ONE heavy slot (worker cap from $BASE/newdata_workers, default 1; the review stages use the
+# other slot), and the sim_ tier-3 methods wait until the review runner has finished (PIPELINE_DONE or STOP in review_status.txt).
+REVIEW_STATUS = os.path.join(BASE, "review_status.txt")
+def worker_cap(w):
+    try: return max(1, min(w, int(open(os.path.join(BASE, "newdata_workers")).read().split()[0])))
+    except Exception: return min(w, 1)
+def review_finished():
+    try: t = open(REVIEW_STATUS).read(); return "PIPELINE_DONE" in t or "STOP:" in t
+    except Exception: return False
 TIER3 = ("bass", "deepst", "spaceflow", "stagate", "graphst", "spatial_mgcn", "bayesspace", "ccst")
 REG = os.path.join(ROOT, "configs", "datasets_newdata.yaml")
 RUNS = os.path.join(ROOT, "results", "newdata_runs")
@@ -108,9 +117,14 @@ def main():
         print(f"hold file {HOLD} present: waiting (real-data phase first)", flush=True)
         while os.path.exists(HOLD):
             time.sleep(300)
+    a.workers = worker_cap(a.workers)
     for m, jobs in plan:
         if not jobs:
             continue
+        if m in TIER3 and jobs[0][0].startswith("sim_") and not review_finished():
+            print(f"tier-3 simulation methods paused until the review runner has finished (Amendment 2); waiting before {m}", flush=True)
+            while not review_finished():
+                time.sleep(600)
         with ThreadPoolExecutor(1 if m in SERIAL else a.workers) as ex:
             futs = [ex.submit(bq.run, j, a.timeout, 1) for j in jobs]
             for fut in as_completed(futs):
