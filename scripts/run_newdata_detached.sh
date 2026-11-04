@@ -5,6 +5,8 @@
 #   bash scripts/run_newdata_detached.sh status     plain-language status
 # Phone alerts (optional): the topic file $BASE/ntfy_topic is used if it exists; it is never printed or committed.
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}
+export TMPDIR=/mnt/disk/bikashkumar/SpatialBench/tmp PIP_CACHE_DIR=/mnt/disk/bikashkumar/SpatialBench/.pip_cache CONDA_PKGS_DIRS=/mnt/disk/bikashkumar/SpatialBench/.conda_pkgs XDG_CACHE_HOME=/mnt/disk/bikashkumar/SpatialBench/.cache   # root (/) is full: temporary and cache files on /mnt/disk
+mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" "$CONDA_PKGS_DIRS" "$XDG_CACHE_HOME"
 cd "$BASE/Spatial" 2>/dev/null || cd "$(dirname "$0")/.."
 PIDF="$BASE/newdata_pipeline.pid"; STATUS="$BASE/newdata_status.txt"
 running() { P=$(cat "$PIDF" 2>/dev/null); [ -n "$P" ] && kill -0 "$P" 2>/dev/null; }

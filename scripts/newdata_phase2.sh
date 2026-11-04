@@ -6,6 +6,8 @@
 # Datasets decided as NOT runnable (reasons in docs/NEWDATA_REPORT.md): osmFISH (region labels not documented as anatomical), HER2+ (data files encrypted),
 # prostate (spot annotations not confirmed in the deposit), Visium HD / Xenium (no domain labels; too large).
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}
+export TMPDIR=/mnt/disk/bikashkumar/SpatialBench/tmp PIP_CACHE_DIR=/mnt/disk/bikashkumar/SpatialBench/.pip_cache CONDA_PKGS_DIRS=/mnt/disk/bikashkumar/SpatialBench/.conda_pkgs XDG_CACHE_HOME=/mnt/disk/bikashkumar/SpatialBench/.cache   # root (/) is full: temporary and cache files on /mnt/disk
+mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" "$CONDA_PKGS_DIRS" "$XDG_CACHE_HOME"
 export SPATIALBENCH_MAX_RSS_GB=${CAP_GB:-30} OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 cd "$BASE/Spatial" || exit 1
 STATUS="$BASE/newdata_status.txt"

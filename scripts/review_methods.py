@@ -35,6 +35,39 @@ def bayesspace_st(a, k, seed, ds):
     return {"labels": lab, "emb": None, "extra": {"platform_ST": 1.0}}
 
 
+def run_env_worker(env, worker, a, k, seed, ds, extra=(), timeout=24 * 3600):
+    """Run scripts/review_workers/<worker> with the python of $BASE/envs/<env> (own environment). The section is passed as files (raw counts, gene names, coordinates); no label is given
+    to the worker. Returns (labels, embedding or None, version strings)."""
+    import scipy.sparse as sp
+    base = os.environ.get("BASE", "/mnt/disk/bikashkumar/SpatialBench")
+    with tempfile.TemporaryDirectory() as td:
+        sp.save_npz(os.path.join(td, "counts.npz"), sp.csr_matrix(a.X)); open(os.path.join(td, "genes.txt"), "w").write("\n".join(map(str, a.var_names)) + "\n")
+        np.save(os.path.join(td, "spatial.npy"), np.asarray(a.obsm["spatial"], float))
+        out = os.path.join(td, "out.npz")
+        p = subprocess.run([os.path.join(base, "envs", env, "bin", "python"), os.path.join(HERE, "review_workers", worker), td, out, str(k), str(seed), ds, *map(str, extra)],
+                           capture_output=True, text=True, timeout=timeout, env=dict(os.environ, OMP_NUM_THREADS="1", MKL_NUM_THREADS="1", OPENBLAS_NUM_THREADS="1"))
+        if p.returncode != 0:
+            raise RuntimeError(f"{worker} failed (exit code {p.returncode}; -9 = killed, e.g. out of memory): {p.stderr[-1200:]} | stdout: {p.stdout[-300:]}")
+        z = np.load(out, allow_pickle=False)
+        return z["labels"].astype(int), (np.asarray(z["emb"]) if "emb" in z.files else None), list(z["versions"])
+
+
+def cellcharter(a, k, seed, ds):
+    lab, emb, ver = run_env_worker("m2", "cellcharter_worker.py", a, k, seed, ds)
+    return {"labels": lab, "emb": emb, "extra": {}}
+
+
+def histar_official(a, k, seed, ds):
+    lab, emb, ver = run_env_worker("histar", "histar_official_worker.py", a, k, seed, ds)
+    return {"labels": lab, "emb": emb, "extra": {"used_fallback_mclust": float("inside an R function" in ver[1])}}
+
+
+def mender(a, k, seed, ds):
+    from spatialbench.data import VISIUM
+    lab, emb, ver = run_env_worker("mender", "mender_worker.py", a, k, seed, ds, extra=(int(ds in VISIUM),))
+    return {"labels": lab, "emb": emb, "extra": {}}
+
+
 # ---- M5: multi-sample BASS (the way the BASS authors ran it: sections of one donor / animal jointly; BASS-Analysis analysis/DLPFC.Rmd and MERFISH.Rmd) ----
 BASS_GROUPS = {"dlpfc": [["151507", "151508", "151509", "151510"], ["151669", "151670", "151671", "151672"], ["151673", "151674", "151675", "151676"]],
                "merfish": [["-0.04", "-0.09", "-0.14", "-0.19", "-0.24"]]}
@@ -73,4 +106,4 @@ def bass_multisample(a, k, seed, ds):
     return {"labels": np.asarray(c["labels"][sec]), "emb": None, "extra": {"group_size": len(group), "R": c["R"], "joint_fit_wall_s": c["joint_fit_wall_s"]}}
 
 
-ADAPTERS = {"bayesspace_st": bayesspace_st, "bass_multisample": bass_multisample}
+ADAPTERS = {"bayesspace_st": bayesspace_st, "bass_multisample": bass_multisample, "cellcharter": cellcharter, "mender": mender, "histar_official": histar_official}

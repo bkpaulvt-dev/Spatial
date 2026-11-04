@@ -14,10 +14,10 @@ g <- Reduce(intersect, lapply(cnts, rownames)); cnts <- lapply(cnts, function(m)
 set.seed(seed)
 ns <- Sys.getenv("BASS_NSAMPLE", "")   # dry runs only
 if (ds == "dlpfc") {
-  obj <- createBASSObject(cnts, xys, C = 20, R = R, beta_method = "SW", init_method = "mclust", nsample = if (nzchar(ns)) as.integer(ns) else 10000)
+  obj <- createBASSObject(cnts, xys, C = 20, R = R, beta_method = "SW", init_method = "mclust", nsample = if (nzchar(ns)) as.integer(ns) else 10000, burnin = if (nzchar(ns)) 100L else 2000L)
   obj <- BASS.preprocess(obj, doLogNormalize = TRUE, geneSelect = "sparkx", nSE = 3000, doPCA = TRUE, scaleFeature = FALSE, nPC = 20)
 } else {
-  obj <- if (nzchar(ns)) createBASSObject(cnts, xys, C = 20, R = R, beta_method = "SW", nsample = as.integer(ns)) else createBASSObject(cnts, xys, C = 20, R = R, beta_method = "SW")
+  obj <- if (nzchar(ns)) createBASSObject(cnts, xys, C = 20, R = R, beta_method = "SW", nsample = as.integer(ns), burnin = 100L) else createBASSObject(cnts, xys, C = 20, R = R, beta_method = "SW")
   obj <- BASS.preprocess(obj, doLogNormalize = TRUE, doPCA = TRUE, scaleFeature = TRUE, nPC = 20)
 }
 obj <- BASS.run(obj); obj <- BASS.postprocess(obj)
