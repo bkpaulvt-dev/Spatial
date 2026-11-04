@@ -11,6 +11,8 @@ index 1), with the same code and settings as the paper, and to hand back the res
 seeds on E10.5_E1S1) + 2 (DeepST seeds 1, 2 on E10.5_E2S1).
 
 ## 1. Rules (read first, they matter)
+
+> **Disk rule (always):** the root disk `/` of DeepMed2 can be 100% full. Never write temporary files, caches, installs or results to `/` (including `/tmp` and the home folder). Source `scripts/deepmed2_env.sh` at the top of every script and call `disk_guard` before every stage; see `CLAUDE.md`.
 1. Work **only** inside `/mnt/disk/bikashkumar/SpatialBench` (the repository is its subfolder `Spatial`, branch
    `claude/great-cori-opzfx7`, GitHub `https://github.com/bkpaulvt-dev/Spatial`).
 2. **No sudo.** Install nothing system-wide. **Never modify the shared base conda environment** or `~/R/library`; everything goes
