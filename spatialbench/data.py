@@ -12,6 +12,10 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 VISIUM = {"dlpfc", "brca"}                        # 10x Visium: hexagonal spot lattice, array_row/array_col
 WHOLE_TRANSCRIPTOME = VISIUM | {"stereo"}         # spot/bin-level, whole transcriptome (HVG selection as DLPFC);
                                                   # the others (STARmap, MERFISH) are single-cell targeted panels
+# Simulated tissues of the new-datasets extension (scripts/simulate_domains.py; docs/PREREGISTERED_SIM.md): whole-transcriptome-like
+# counts on a square lattice, so they join WHOLE_TRANSCRIPTOME but not VISIUM (BayesSpace is not run on them).
+SIM = {"sim_bands", "sim_blocks"}
+WHOLE_TRANSCRIPTOME = WHOLE_TRANSCRIPTOME | SIM
 
 
 def load_registry(path: str | None = None) -> dict:
@@ -65,6 +69,12 @@ def load_section(ds: str, sec: str, root: str | None = None):
         a.var_names_make_unique()
         a.obs["ground_truth"] = b.obs["annotation"].astype(str).to_numpy()[keep].astype(object)
         a.obsm["spatial"] = np.asarray(b.obsm["spatial"], dtype=np.float64)[keep]
+        return a
+    if ds in SIM:   # simulated tissue written by scripts/simulate_domains.py: data/Sim/<ds>/<section>.h5ad (raw counts in .X)
+        import scanpy as sc
+        a = sc.read_h5ad(os.path.join(root, "data", "Sim", ds, f"{sec}.h5ad"))
+        a.obsm["spatial"] = np.asarray(a.obsm["spatial"], dtype=np.float64)
+        a.obs["ground_truth"] = a.obs["ground_truth"].astype(str).astype(object).values
         return a
     csv = os.path.join(root, "data", "ext", "csv")
     cnt = pd.read_csv(os.path.join(csv, f"{ds}_{sec}_counts.csv"), index_col=0)

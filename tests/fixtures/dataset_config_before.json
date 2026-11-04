@@ -1,0 +1,37 @@
+{
+ "brca": {
+  "bass_branch": "whole_transcriptome(DLPFC settings)",
+  "graphst_datatype": "10X",
+  "loader": "brca",
+  "visium_group": true,
+  "whole_transcriptome_group": true
+ },
+ "dlpfc": {
+  "bass_branch": "whole_transcriptome(DLPFC settings)",
+  "graphst_datatype": "10X",
+  "loader": "dlpfc",
+  "visium_group": true,
+  "whole_transcriptome_group": true
+ },
+ "merfish": {
+  "bass_branch": "targeted(C=20)",
+  "graphst_datatype": "10X",
+  "loader": "csv_fallback",
+  "visium_group": false,
+  "whole_transcriptome_group": false
+ },
+ "starmap": {
+  "bass_branch": "targeted(C=15)",
+  "graphst_datatype": "10X",
+  "loader": "csv_fallback",
+  "visium_group": false,
+  "whole_transcriptome_group": false
+ },
+ "stereo": {
+  "bass_branch": "whole_transcriptome(DLPFC settings)",
+  "graphst_datatype": "Stereo",
+  "loader": "stereo",
+  "visium_group": false,
+  "whole_transcriptome_group": true
+ }
+}

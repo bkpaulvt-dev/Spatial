@@ -110,3 +110,11 @@ datasets:
       "E9.5_E1S1": {split: test}
       "E10.5_E2S1": {split: test}
       "E10.5_E1S1": {split: test}
+
+# ---- New-datasets extension (NEWDATA): registered in configs/datasets_newdata.yaml, NOT here ----------------------------------
+# Reason: scripts/stats_cluster_aware.py enumerates every dataset listed in this file as a bootstrap group, so adding them here would
+# change the original 7-group analysis when it is regenerated. The extension is analysed separately (results/newdata_*).
+# Settings of the new whole-transcriptome datasets (simulated tissues sim_bands, sim_blocks): same as DLPFC/breast/Stereo-seq (genes in
+# >= 50 spots and >= 10 counts, 2000 HVG, 200 PCs; spatialbench.data.WHOLE_TRANSCRIPTOME). BASS keeps its DLPFC branch on them (nSE 3000
+# sparkx, C = 20, 20 PCs, SW), exactly as it did for breast cancer and Stereo-seq (scripts/run_r_method.R). Verified by
+# tests/test_dataset_groups.py: the five datasets above resolve to the same configuration as before the extension.
