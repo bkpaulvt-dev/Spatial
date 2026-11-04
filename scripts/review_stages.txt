@@ -1,21 +1,23 @@
 # Ordered stages of the review runner (scripts/review_runner.sh). Format:  name|phase|script
-#   phase prep  = light work (downloads, installs, source checks); may run now, one at a time, in its own folders
-#   phase heavy = benchmark runs; start only after the current plan has finished (PHASE2_DONE in newdata_status.txt), at most 2 jobs at a time
+#   phase prep  = light work (downloads, installs, source checks); runs at once, one at a time
+#   phase heavy = benchmark runs; one heavy slot (the other slot belongs to the newdata pipeline, Amendment 2 of docs/PREREGISTERED_SIM.md)
 # A stage whose script does not exist yet is "blocked (not built)" and is picked up as soon as the file appears. Exit code 99 = skipped by decision.
-# Order follows docs/DEEPMED2_NEXT.md section 4: R1 (D3, D4, D1, D2; D8 is already in phase 2), R2, R3, R4, R5, then D6/D7.
+# Order = owner's build/run order (2026-11-04); R5 runs last; if cuts are needed drop D6/D7, M3, R5, M1 in that order.
 prep_data|prep|scripts/review_stage_prep_data.sh
+bayesspace_stereo_st|heavy|scripts/review_stage_bayesspace_st.sh
+m5_bass_multisample|heavy|scripts/review_stage_m5.sh
+m2_cellcharter_mender|heavy|scripts/review_stage_m2.sh
+m6_fidelity_histar|heavy|scripts/review_stage_m6_histar.sh
+d8_allen_merfish|heavy|scripts/review_stage_d8.sh
 d3_osmfish_d4_baristaseq|heavy|scripts/review_stage_d3d4.sh
+a9_spatialmgcn_stopping|heavy|scripts/review_stage_a9.sh
+m1_spatialpca_precast|heavy|scripts/review_stage_m1.sh
+m4_novae|heavy|scripts/review_stage_m4.sh
+r4_gpu_env_and_timing|heavy|scripts/review_stage_r4.sh
+m6_fidelity_ccst|heavy|scripts/review_stage_m6_ccst.sh
+m3_graphbg_drsc|heavy|scripts/review_stage_m3.sh
 d1_her2|heavy|scripts/review_stage_d1.sh
 d2_prostate|heavy|scripts/review_stage_d2.sh
-m5_bass_multisample|heavy|scripts/review_stage_m5.sh
-m6_fidelity_histar_ccst|heavy|scripts/review_stage_m6.sh
-bayesspace_stereo_st|heavy|scripts/review_stage_bayesspace_st.sh
-m2_cellcharter_mender|heavy|scripts/review_stage_m2.sh
-m1_spatialpca_precast|heavy|scripts/review_stage_m1.sh
-m3_graphbg_drsc|heavy|scripts/review_stage_m3.sh
-m4_novae|heavy|scripts/review_stage_m4.sh
-a9_spatialmgcn_stopping|heavy|scripts/review_stage_a9.sh
 a10_cross_host|heavy|scripts/review_stage_a10.sh
-r4_gpu_env_and_timing|heavy|scripts/review_stage_r4.sh
-r5_tuning_arm|heavy|scripts/review_stage_r5.sh
 d6_d7_scalability|heavy|scripts/review_stage_d6d7.sh
+r5_tuning_arm|heavy|scripts/review_stage_r5.sh

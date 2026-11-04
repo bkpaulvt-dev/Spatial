@@ -19,6 +19,23 @@ from bench_run import job_id  # noqa: E402
 HOST = socket.gethostname().lower()
 
 
+def run(job, timeout, threads):
+    """Same as bench_queue.run (same record, same resource measurement) but runs scripts/review_bench_run.py, which also knows the methods of review_methods.py."""
+    ds, sec, m, seed = job
+    jid = job_id(ds, sec, m, seed); runs = bq.RUNS
+    env = dict(os.environ, OMP_NUM_THREADS=str(threads), MKL_NUM_THREADS=str(threads), OPENBLAS_NUM_THREADS=str(threads))
+    cmd = [sys.executable, os.path.join(HERE, "review_bench_run.py"), "--method", m, "--dataset", ds, "--section", sec, "--seed", str(seed), "--out", runs] + (["--save-emb"] if seed == 0 else [])
+    res = bq.measure_command(cmd, timeout=timeout, env=env)
+    path = os.path.join(runs, jid + ".json")
+    rec = json.load(open(path)) if os.path.exists(path) else {"id": jid, "method": m, "dataset": ds, "section": sec, "seed": seed, "status": "error", "error": "no result file"}
+    if res["exit_code"] != 0 or res["timed_out"]:
+        rec["status"] = "error"
+        rec["error"] = ("timeout" if res["timed_out"] else "killed (out of memory)" if res["oom_killed"] else f"exit code {res['exit_code']}") + " | " + res["stderr"][-300:]
+    rec["resources"] = {k: res[k] for k in ("wall_s", "cpu_s", "peak_rss_gb", "peak_gpu_mem_gb", "energy_kwh", "energy_source", "exit_code", "oom_killed", "timed_out")}
+    rec["resources"]["threads"] = threads
+    return rec
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--job", action="append", default=[], help="dataset:section:method:seed (repeatable)"); ap.add_argument("--jobs-file")
@@ -43,7 +60,7 @@ def main():
     os.makedirs(a.runs_dir, exist_ok=True); bq.RUNS = a.runs_dir
     for batch, w in (([j for j in todo if j[2] not in SERIAL], a.workers), ([j for j in todo if j[2] in SERIAL], 1)):
         with ThreadPoolExecutor(w) as ex:
-            for fut in as_completed([ex.submit(bq.run, j, a.timeout, 1) for j in batch]):
+            for fut in as_completed([ex.submit(run, j, a.timeout, 1) for j in batch]):
                 r = fut.result(); res = r.get("resources") or {}
                 r.update(host=HOST, extension="review", device=a.device,
                          outcome="ok" if r["status"] == "ok" else "time limit" if res.get("timed_out") else "memory limit" if res.get("oom_killed") else "error")

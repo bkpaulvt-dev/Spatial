@@ -28,7 +28,8 @@ source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ] || { say "STOP: python is not the project environment"; exit 2; }
 export R_LIBS_USER="$BASE/Rlib"
 
-gate_open() { grep -q "PHASE2_DONE" "$GATE_FILE" 2>/dev/null; }
+# Amendment 2 (docs/PREREGISTERED_SIM.md): the gate is open from the start (the simulation pipeline uses 1 heavy slot, the review stages the other); GATE_REQUIRE=1 restores the old gate
+gate_open() { [ -z "$GATE_REQUIRE" ] || grep -q "PHASE2_DONE" "$GATE_FILE" 2>/dev/null; }
 STAGES=${STAGES:-scripts/review_stages.txt}; RETRY_SLEEP=${RETRY_SLEEP:-120}      # overridable for tests only (REVIEW_NO_GIT=1 also skips commit and push)
 commit_small() {
   [ -z "$REVIEW_NO_GIT" ] || return 0
