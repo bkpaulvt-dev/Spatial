@@ -13,7 +13,7 @@ You are Claude Code on the lab server **DeepMed2** for the owner (Bikash Kumar P
 
 ## 1. Rules (never break)
 
-> **Disk rule (always):** the root disk `/` of DeepMed2 can be 100% full. Never write temporary files, caches, installs or results to `/` (including `/tmp` and the home folder). Source `scripts/deepmed2_env.sh` at the top of every script and call `disk_guard` before every stage; see `CLAUDE.md`.
+> **Disk rule (always):** the root disk `/` of DeepMed2 can be 100% full. Never write temporary files, caches, installs or results to `/` (including `/tmp` and the home folder). Source `scripts/deepmed2_env.sh` at the top of every script and call `disk_guard` before every stage; see `CLAUDE.md`. Never use `~/shared_disk` for any data, environment, cache or result.
 1. **Never change any method code or setting of the existing 16 methods**: `scripts/adapters.py`, `scripts/new_methods.py`, `scripts/bench_run.py`,
    `spatialbench/` (except purely additive dataset registration as already done), `configs/methods.yaml`. New methods go into **new files**
    (`scripts/extra_methods.py`, `configs/methods_extra.yaml`), with the source, commit and every deviation recorded.
