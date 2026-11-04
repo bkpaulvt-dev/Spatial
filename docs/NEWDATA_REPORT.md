@@ -3,16 +3,16 @@
 Branch `new-datasets` (from `origin/claude/great-cori-opzfx7`). Rules: `docs/NEWDATA_COMMAND.md`. This file is updated as work proceeds;
 the final summary goes to `docs/NEWDATA_HANDOFF.md`. The paper and all existing results are untouched.
 
-## Status by dataset (2026-11-04)
-| Dataset | Status | Why |
+## Status by dataset (updated 2026-11-04)
+| Dataset | Status | Why (what I found, from the primary sources) |
 |---|---|---|
-| Simulated tissue (domain-size experiment) | **running** (pipeline `scripts/newdata_pipeline.sh`) | design pre-registered in `docs/PREREGISTERED_SIM.md` before any result |
-| osmFISH mouse cortex (Codeluppi 2018) | not run | no loader/downloader yet; region labels must first be shown to be anatomical, not cluster-derived (otherwise label class `algorithm`, excluded from accuracy) |
-| HER2-positive breast (Andersson 2021, ST platform) | not run | which sections carry pathologist labels is not yet confirmed from the data deposit; ST lattice needs a decision on BayesSpace gating |
-| Prostate Visium (Erickson 2022) | not run | not confirmed that the deposit contains pathologist region labels (dropped if not) |
-| BaristaSeq mouse cortex (SDMBench) | **skipped** | the SDMBench pages I could reach list BaristaSeq only as a technology: no tissue and no label provenance are documented there (processed data are on Figshare project 163942 / sdmbench.drai.cn; the Nature Methods article could not be opened from this server). SDMBench is Nature Methods 2024, not Genome Biology as in the task text |
+| Simulated tissue (domain-size experiment) | **running** (`scripts/newdata_pipeline.sh`) | design pre-registered in `docs/PREREGISTERED_SIM.md` (+ Amendment 1) before any result |
+| Allen whole-mouse-brain MERFISH (Zhuang-ABCA-1, Zhang 2023) | **prepared, queued** (phase 2, after tier 1) | rule applied: 72 coronal sections with > 20,000 cells; 25/50/75th percentile of CCF x (Spearman with section number 1.0) = sections 066, 085, 103 (26,940 / 32,047 / 29,220 cells, 1,122 genes); labels = CCF divisions with >= 1% of cells (K = 11, 11, 7) from registration to the atlas, not clustering. CCF placeholders named "unassigned" are not anatomical divisions: set to NA (decided before any method ran). Licence not found: to be checked |
+| osmFISH mouse cortex (Codeluppi 2018) | **skipped** | the data page (linnarssonlab.org/osmFISH/availability) describes the `Region` attribute only as "the location of the cell in one of the inferred regions"; the paper's Methods could not be read from this server (bioRxiv returned a block page, Nature needs a login), so the labels are **not documented as anatomical**; by the agreed default they are treated as algorithm-derived and left out of the accuracy comparison |
+| HER2-positive breast cancer ST (Andersson 2021) | **skipped** | Zenodo 3957257 is open and CC-BY-4.0, but its data files (count matrices, spot selections and the 8 pathologist-label files `*_labeled_coordinates.tsv`) are **password-encrypted zips**; the passwords are in the authors' README. Using them would mean writing a password into a script, log or command line, which the run rules forbid. If the owner places the unpacked files in `data/HER2ST/`, a loader can be added |
+| Prostate (Erickson 2022) | **skipped** | the paper says two uropathologists annotated all 23,282 Visium spots spot by spot, but I could not confirm that the per-spot annotation files are in the Mendeley deposit (10.17632/svw96g68dv; its description lists count matrices, histology images and additional material; licence CC BY-NC 3.0). Rule: only if the deposit contains the labels |
+| BaristaSeq mouse cortex (SDMBench) | **skipped** | the SDMBench pages I could reach list BaristaSeq only as a technology: no tissue and no label provenance (processed data: Figshare project 163942, sdmbench.drai.cn; the Nature Methods article could not be opened). SDMBench is Nature Methods 2024, not Genome Biology as in the task text |
 | Visium HD (colorectal) and Xenium (breast) | **skipped, not downloaded** | see below |
-| Allen whole-mouse-brain MERFISH (Zhang 2023) | not run | needs section choice by the pre-set rule (3 sections of > 20,000 cells at the 25th/50th/75th percentile of A-P position, major CCF divisions with >= 1% of cells as labels) and a downloader; heavy |
 
 **Visium HD and Xenium.** The public 10x Visium HD colorectal-cancer sample ships with unsupervised clusters only, and I found no domain-level
 ground truth for the Xenium breast sample; scoring cell types or clusters as if they were domains would be circular and is forbidden by the
@@ -27,5 +27,5 @@ section already exceeded 12 GB for five methods). They were therefore not downlo
 5. Methods run cheapest first by measured cost. Tiers 1-2 (9 cheapest methods) keep the full design (45 tissues x 3 seeds); the 8 tier-3 (deep) methods run a REDUCED design (seed 0, replicate 0, 9 tissues each), by Amendment 1 of `docs/PREREGISTERED_SIM.md` (2026-11-04, cost only, written before any tier-3 result). Headline contrast and verdicts use the full design only; tier 3 is reported separately. A job over 24 h is recorded as "time limit", never subsampled or retried with other settings.
 6. The GraphST mclust wrapper is already in the base branch (`adapters.py`, merged in f5854f3); nothing was cherry-picked.
 
-## Not yet written (so not run)
-`scripts/newdata_g3.py` (G3 re-tests a-e on the simulation), the extended hierarchical bootstrap `scripts/newdata_stats.py --extended` for real datasets, and the novelty check. See `docs/NEWDATA_DEEPMED2.md`.
+## Not done
+The extended hierarchical bootstrap (new real-data group next to the original 7-group result, G4) and the novelty check are not implemented: the original bootstrap lives inside `scripts/stats_cluster_aware.py`, which runs and writes its outputs at import, so it cannot be reused without touching existing results. G3 (a-e) is implemented in `scripts/newdata_g3.py`.

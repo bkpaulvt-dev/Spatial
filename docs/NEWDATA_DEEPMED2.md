@@ -23,12 +23,17 @@ Logs: `newdata_pipeline.log`, `newdata_queue.log`, `newdata_sim.log`, `newdata_s
 small result files on branch `new-datasets`, and a push of that branch only (no force; skipped silently if credentials are missing).
 Results: `results/newdata_runs_deepmed2.jsonl` (host-tagged), per-job `results/newdata_runs/*.json|npz` (git-ignored; copy them back, about 100 MB per 100 jobs).
 
-## Left to do (no code passed a dry run yet)
-- **G3 on the simulation** (a-e of `docs/PREREGISTERED_SIM.md`): a script working on the seed-0 embeddings in `results/newdata_runs/<id>.npz` (20 single-start fits and log-likelihoods; matched vs default from the records; K-1/K+1 fits; R mclust seeds on exported embeddings as in `scripts/mclust_seed.R`).
-- **osmFISH**: `scripts/download_new_datasets.py` entry (linnarssonlab.org/osmFISH, SHA-256), confirm that the region labels are anatomical, add to `configs/datasets_newdata.yaml` as a targeted panel (the CSV fallback of `load_section` already handles targeted panels: `data/ext/csv/<ds>_<sec>_counts.csv` and `_info.csv`).
-- **HER2+ (ST), prostate, Allen MERFISH**: confirm labels and sections first (rules in `docs/NEWDATA_REPORT.md`); whole-transcriptome ones need an additive membership edit like commit `5b01ab9` plus the same config-equivalence test.
-- **Extended bootstrap** with the new real-data groups next to the original 7-group result (same hierarchical bootstrap, linear diffusion as reference, margin +-0.03).
-- Final `docs/NEWDATA_HANDOFF.md`.
+## Phase 2 (real data): `bash scripts/run_newdata_detached.sh phase2`
+Waits for tier 1 to finish and push, then (the hold file keeps tiers 2-3 waiting): Allen MERFISH dry run (job list + one real small job), all methods x 3 seeds (24 h and 30 GB per job),
+G3 (a-e) on the seed-0 embeddings (`scripts/newdata_g3.py`: python fits, R mclust seeds via `scripts/mclust_seed.R` unchanged), commit/push, **removes `$BASE/newdata_hold`** so the
+simulation continues with tiers 2 and 3; then waits for `PIPELINE_DONE`, runs the final analysis, G3 on the simulation (full-design methods) and `scripts/newdata_handoff.py`
+(writes `docs/NEWDATA_HANDOFF.md`). To let tiers 2-3 start earlier, delete the hold file by hand (but never run two queues at once: at most 2 heavy jobs).
+Estimated: Allen benchmark about 4-8 days (about 30,000 cells per section, 16 methods x 3 seeds, deep methods may hit the 30 GB or 24 h limit and are then recorded as such), G3 about 1 day; simulation tier 2 about 1 day, tier 3 about 2-5 days, G3 on the simulation about 1-2 days.
+
+## Left to do
+- **osmFISH**: needs confirmation from the paper's Methods that `Region` is anatomical (then `data/ext/csv/osmfish_<sec>_{counts,info}.csv` from the loom file, targeted panel through the CSV fallback).
+- **HER2+ (ST)**: needs the unpacked files from the owner (see `docs/NEWDATA_REPORT.md`). **Prostate**: needs confirmation that the deposit has the spot labels.
+- **Extended bootstrap** (G4) and the novelty check: not implemented (reason in `docs/NEWDATA_REPORT.md`).
 
 ## What to report (short, plain language)
-Hardware and free RAM; per tier: jobs ok / error (with reasons), cells not run; H1/H2 verdicts exactly as the script prints them (including "inconclusive" and the ceiling/floor flag); every deviation; where the result files are and whether the push worked.
+Hardware and free RAM; per tier and dataset: jobs ok / error (with reasons), cells not run; H1/H2 verdicts exactly as the script prints them (including "inconclusive" and the ceiling/floor flag); the G3 table; every deviation; where the result files are and whether the push worked.

@@ -53,7 +53,7 @@ def final_error(r):
 def has_data(ds, sec):
     if ds.startswith("sim_"):
         return os.path.exists(os.path.join(ROOT, "data", "Sim", ds, f"{sec}.h5ad"))
-    return True
+    return os.path.exists(os.path.join(ROOT, "data", "ext", "csv", f"{ds}_{sec}_counts.csv"))     # targeted panels via the CSV fallback
 
 
 def build(datasets, sections, seeds, methods, out, max_attempts, require_data=True):
@@ -88,6 +88,7 @@ def main():
     ap.add_argument("--timeout", type=int, default=24 * 3600); ap.add_argument("--max-attempts", type=int, default=3)
     ap.add_argument("--max-methods", type=int, help="only the N cheapest methods (tiering)")
     ap.add_argument("--no-require-data", action="store_true"); ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--ignore-hold", action="store_true", help="run although the hold file exists (used by the real-data phase itself)")
     ap.add_argument("--out", default=os.path.join(ROOT, "results", f"newdata_runs_{HOST}.jsonl"))
     a = ap.parse_args()
     plan, cost = build(a.datasets, a.sections, a.seeds, a.methods, a.out, a.max_attempts, not a.no_require_data)
@@ -103,7 +104,7 @@ def main():
     if a.dry_run:
         return
     os.makedirs(RUNS, exist_ok=True); bq.RUNS = RUNS      # bq.run() reads this module global: keep the new per-job files apart
-    if os.path.exists(HOLD):
+    if os.path.exists(HOLD) and not a.ignore_hold:
         print(f"hold file {HOLD} present: waiting (real-data phase first)", flush=True)
         while os.path.exists(HOLD):
             time.sleep(300)

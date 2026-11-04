@@ -74,3 +74,25 @@ datasets:
       "w20_r2": {split: test}
       "w20_r3": {split: test}
       "w20_r4": {split: test}
+  allenmerfish:
+    name: Mouse whole brain, coronal sections (MERFISH, Allen Brain Cell Atlas Zhuang-ABCA-1)
+    technology: MERFISH
+    generation: imaging, targeted panel (1,122 genes), single cell
+    species: mouse
+    tissue: whole brain, coronal sections of one adult mouse (ABCA-1)
+    resolution: single cell (section-plane coordinates in mm)
+    n_sections: 3
+    n_domains: {"ABCA1-066": 11, "ABCA1-085": 11, "ABCA1-103": 7}
+    n_obs: {"ABCA1-066": 26940, "ABCA1-085": 32047, "ABCA1-103": 29220}
+    label_provenance: {class: reference_atlas, verified: true,
+      note: "per-cell parcellation index from the registration of each MERFISH section to the Allen CCFv3 (ccf_coordinates.csv of the ABC Atlas, Zhang et al. Nature 2023), mapped to the CCF term set 'division' (Allen-CCF-2020 parcellation_to_parcellation_term_membership); registration, not clustering. Divisions with >= 1% of the section's cells are the domains; cells of other divisions, of placeholder divisions named 'unassigned' (not anatomical), and cells without a CCF row are label NA (kept in the data, never scored). The exclusion of the 'unassigned' placeholders was decided before any method ran on these sections."}
+    selection_rule: "sections of Zhuang-ABCA-1 with > 20,000 cells (72 candidates), ordered by median CCF x (anterior-posterior; Spearman 1.0 with the section number), the 25th, 50th and 75th percentile by nearest rank: Zhuang-ABCA-1.066, .085, .103 (results/newdata_allen_sections.json)"
+    settings_note: "targeted-panel path (all 1,122 genes, library-size normalised, log, scale, 50 PCs), through the CSV fallback of spatialbench.data.load_section; BASS targeted branch (C = 20), as for MERFISH animal 1. Dense CSV counts: scripts/newdata_allen.py --export"
+    source: {counts: "https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/expression_matrices/Zhuang-ABCA-1/20230830/Zhuang-ABCA-1-raw.h5ad (raw counts, 1.2 GB)",
+             labels: "metadata/Zhuang-ABCA-1-CCF/20230830/ccf_coordinates.csv + metadata/Allen-CCF-2020/20230630/parcellation_to_parcellation_term_membership.csv (same bucket); section-plane x, y from metadata/Zhuang-ABCA-1/20230830/cell_metadata.csv",
+             citation: "Zhang et al., Nature 2023 (doi 10.1038/s41586-023-06808-9); Allen Brain Cell Atlas (Yao et al., Nature 2023)"}
+    license: {status: to_check, note: "no licence statement found on the pages read; Allen Institute terms of use apply; confirm before redistribution (the derived CSVs are not committed)"}
+    sections:
+      "ABCA1-066": {split: test}
+      "ABCA1-085": {split: test}
+      "ABCA1-103": {split: test}

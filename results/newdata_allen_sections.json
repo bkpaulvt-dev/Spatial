@@ -1,0 +1,65 @@
+{
+ "rule": "sections with > 20000 cells ordered by median CCF x; 25th/50th/75th percentile by nearest rank; labels = CCF divisions with >= 1% of the section's cells",
+ "n_candidate_sections": 72,
+ "spearman_section_number_vs_ccf_x": 1.0,
+ "sections": [
+  "Zhuang-ABCA-1.066",
+  "Zhuang-ABCA-1.085",
+  "Zhuang-ABCA-1.103"
+ ],
+ "per_section": {
+  "Zhuang-ABCA-1.066": {
+   "n_cells": 26940,
+   "ap_ccf_x_median_mm": 5.739488925,
+   "n_registered": 26445,
+   "division_fractions_kept": {
+    "Isocortex": 0.3122,
+    "STR": 0.2174,
+    "PAL": 0.1077,
+    "HY": 0.1072,
+    "lfbs": 0.0477,
+    "OLF": 0.047,
+    "mfbs": 0.0461,
+    "TH": 0.0237,
+    "VL": 0.0138,
+    "V3": 0.0132,
+    "CTXsp": 0.0118
+   },
+   "K": 11
+  },
+  "Zhuang-ABCA-1.085": {
+   "n_cells": 32047,
+   "ap_ccf_x_median_mm": 7.309677499999999,
+   "n_registered": 31430,
+   "division_fractions_kept": {
+    "Isocortex": 0.241,
+    "TH": 0.1572,
+    "HY": 0.1306,
+    "HPF": 0.1092,
+    "STR": 0.07,
+    "lfbs": 0.0618,
+    "CTXsp": 0.0544,
+    "mfbs": 0.0354,
+    "OLF": 0.0339,
+    "VL": 0.0189,
+    "cm": 0.0121
+   },
+   "K": 11
+  },
+  "Zhuang-ABCA-1.103": {
+   "n_cells": 29220,
+   "ap_ccf_x_median_mm": 9.0021545625,
+   "n_registered": 28540,
+   "division_fractions_kept": {
+    "MB": 0.2641,
+    "HPF": 0.2635,
+    "Isocortex": 0.2157,
+    "P": 0.132,
+    "lfbs": 0.0245,
+    "cm": 0.017,
+    "mfbs": 0.0138
+   },
+   "K": 7
+  }
+ }
+}
