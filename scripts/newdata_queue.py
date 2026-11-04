@@ -9,6 +9,7 @@ the next method. Errors: out-of-memory / timeout are final (recorded, not retrie
 unchanged settings. Nothing about any method is changed.
 
   python scripts/newdata_queue.py --dry-run [--datasets sim_bands] [--max-methods N]
+Tier-3 methods (TIER3) run only seed 0 / replicate 0 on the simulation (amendment of the pre-registration); real datasets: all methods x 3 seeds.
   python scripts/newdata_queue.py --datasets sim_bands sim_blocks --workers 2
 """
 import argparse, json, os, socket, statistics, sys, time
@@ -23,6 +24,11 @@ from bench_run import job_id  # noqa: E402
 from spatialbench.data import VISIUM  # noqa: E402
 
 HOST = socket.gethostname().lower()
+BASE = os.environ.get("BASE", "/mnt/disk/bikashkumar/SpatialBench")
+HOLD = os.path.join(BASE, "newdata_hold")      # while this file exists the queue waits before starting (lets the real-data phase go first)
+# Amendment of docs/PREREGISTERED_SIM.md (2026-11-04, based only on cost): the 8 tier-3 (deep) methods run a REDUCED design on the
+# simulation: seed 0, replicate 0 of every setting (9 tissues per method). Tiers 1 and 2 keep the full design (45 tissues x 3 seeds).
+TIER3 = ("bass", "deepst", "spaceflow", "stagate", "graphst", "spatial_mgcn", "bayesspace", "ccst")
 REG = os.path.join(ROOT, "configs", "datasets_newdata.yaml")
 RUNS = os.path.join(ROOT, "results", "newdata_runs")
 ORIG = os.path.join(ROOT, "results", "benchmark_runs.jsonl")
@@ -68,7 +74,8 @@ def build(datasets, sections, seeds, methods, out, max_attempts, require_data=Tr
     for m in order:
         jobs = [(ds, sec, m, s) for ds, sec in secs for s in seeds
                 if not (m in VISIUM_ONLY and ds not in VISIUM) and job_id(ds, sec, m, s) not in done
-                and (not require_data or has_data(ds, sec))]
+                and (not require_data or has_data(ds, sec))
+                and not (m in TIER3 and ds.startswith("sim_") and (s != 0 or not sec.endswith("_r0")))]   # reduced design for tier 3
         plan.append((m, jobs))
     return plan, cost
 
@@ -96,6 +103,10 @@ def main():
     if a.dry_run:
         return
     os.makedirs(RUNS, exist_ok=True); bq.RUNS = RUNS      # bq.run() reads this module global: keep the new per-job files apart
+    if os.path.exists(HOLD):
+        print(f"hold file {HOLD} present: waiting (real-data phase first)", flush=True)
+        while os.path.exists(HOLD):
+            time.sleep(300)
     for m, jobs in plan:
         if not jobs:
             continue
@@ -103,6 +114,9 @@ def main():
             futs = [ex.submit(bq.run, j, a.timeout, 1) for j in jobs]
             for fut in as_completed(futs):
                 r = fut.result(); r["host"] = HOST; r["extension"] = "newdata"
+                res = r.get("resources") or {}
+                r["outcome"] = "ok" if r["status"] == "ok" else "time limit" if res.get("timed_out") else "memory limit" if res.get("oom_killed") else "error"
+                r["design"] = "reduced" if (r["method"] in TIER3 and r["dataset"].startswith("sim_")) else "full"
                 with open(a.out, "a") as f:
                     f.write(json.dumps(r) + "\n")
                 met = r.get("metrics", {})

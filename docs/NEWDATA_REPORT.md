@@ -24,7 +24,7 @@ section already exceeded 12 GB for five methods). They were therefore not downlo
 2. Additive edits in `spatialbench/data.py` and `scripts/run_r_method.R` (commit `5b01ab9`, approved): names `sim_bands`, `sim_blocks` join the whole-transcriptome group (not the Visium group). `tests/test_dataset_groups.py` shows the five existing datasets resolve exactly as before.
 3. Per-job memory cap 30 GB (original benchmark: 12 GB on a 15 GB machine); records carry `host`, run times are not compared.
 4. The simulator is self-written (numpy gamma-Poisson); SRTsim/scDesign3 were not installed because they estimate their own models and give no control of geometry at a fixed effect size (the pre-registered design needs that control).
-5. Methods run cheapest first by measured cost, all 45 tissues per method. The full design (45 tissues x 16 methods x 3 seeds = 2,160 jobs) is far beyond what a few days allow (rough lower bound for 624 jobs of the first tiers alone: 220 h with two workers); cells not run are reported as "not run (time)".
+5. Methods run cheapest first by measured cost. Tiers 1-2 (9 cheapest methods) keep the full design (45 tissues x 3 seeds); the 8 tier-3 (deep) methods run a REDUCED design (seed 0, replicate 0, 9 tissues each), by Amendment 1 of `docs/PREREGISTERED_SIM.md` (2026-11-04, cost only, written before any tier-3 result). Headline contrast and verdicts use the full design only; tier 3 is reported separately. A job over 24 h is recorded as "time limit", never subsampled or retried with other settings.
 6. The GraphST mclust wrapper is already in the base branch (`adapters.py`, merged in f5854f3); nothing was cherry-picked.
 
 ## Not yet written (so not run)

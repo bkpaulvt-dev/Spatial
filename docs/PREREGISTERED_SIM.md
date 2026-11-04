@@ -70,3 +70,26 @@ With only 5 replicates the intervals are wide; this is stated wherever the verdi
 
 ## Not part of the confirmatory analysis
 Any other metric (NMI, boundary metrics), any other contrast, and any analysis suggested by looking at the results are exploratory and labelled as such.
+
+---
+## Amendment 1 (2026-11-04, 12:0x EST): reduced design for the tier-3 methods. Based on cost only.
+
+**Status of the data when this was written.** Tier 1 (the 5 cheapest methods, full design) was running and had recorded only BANKSY (lambda 0.2) results; **no tier-3
+method had produced any result.** The only look at a result beyond that was a two-job pipeline check (linear diffusion and PCA on tissue m1_r0, seed 0). Nothing below depends on any ARI.
+
+**Why.** The full design (45 tissues x 3 seeds x 16 methods = 2,160 jobs) has a lower bound of about 760 h with two workers (about 32 days), driven by the eight
+deep methods (BASS, DeepST, SpaceFlow, STAGATE, GraphST, Spatial-MGCN, CCST; BayesSpace is not run on the square lattice). That is not acceptable for this project.
+
+**Rule (fixed by cost, not by results).** The eight tier-3 methods **`bass, deepst, spaceflow, stagate, graphst, spatial_mgcn, bayesspace, ccst`**
+(the methods ranked 10th to 17th by measured cost in the original benchmark; listed explicitly in `scripts/newdata_queue.py` and `scripts/newdata_stats.py`) run a **reduced design**:
+**seed 0 only, replicate 0 only, all 9 settings (4 band + 5 block settings) = 9 tissues per method** (63 jobs; BayesSpace has 0). One job at a time for DeepST (serial), otherwise two in parallel;
+24 h per job. A job over 24 h is recorded as outcome "time limit" (a job over the 30 GB cap as "memory limit"), and is **never subsampled, shortened or retried with other settings**.
+**Tiers 1 and 2 are unchanged**: the 9 cheapest methods (BANKSY lambda 0.2 and 0.8, AnisoST, linear diffusion, PCA, NichePCA, SpaGCN, SEDR, HiSTaR) keep the full design (45 tissues x 3 seeds).
+
+**Analysis consequences.**
+1. The headline contrast Delta = ARI(linear diffusion) - ARI(PCA), H1, H2 and the G3 verdicts use the **full design only** (tiers 1 and 2; linear diffusion and PCA are tier-1 methods). Nothing from tier 3 enters any of those intervals.
+2. Tier-3 methods are reported **separately and labelled "reduced design"** (one tissue per setting, no interval): in the summary table, in `results/newdata_sim_ari_table.csv` (column `design`), and in the bottom row of the figure.
+   "Best three methods" per setting is computed over full-design methods only; tier-3 ARIs are listed beside it, never ranked into it.
+3. G3 on the simulation (a-e): per setting, for full-design methods with the full design; for tier-3 methods only on their single tissue and **descriptively**, no interval, no verdict.
+4. Duration estimates (linear-scaling cost, then x1.6-2.4 for the superlinear cost seen on the 18,408-bin Stereo-seq section): tier 1 about 4-5 h (measured about 3 jobs/min);
+   tier 2 about 15-25 h; tier 3 about 2 days (63 jobs, about 49 h lower bound) to 3-5 days.

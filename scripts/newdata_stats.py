@@ -14,6 +14,9 @@ import numpy as np, pandas as pd
 ROOT = os.environ.get("NEWDATA_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))   # NEWDATA_ROOT: tests only
 R = lambda *p: os.path.join(ROOT, "results", *p)
 MARGIN = 0.03; NBOOT = 10000; SEED = 20261104
+# Amendment (2026-11-04, cost only): tier-3 methods ran a REDUCED design (seed 0, replicate 0, 9 tissues). They are never pooled with the
+# full design (tiers 1-2: 45 tissues x 3 seeds) in one interval; the headline contrast uses linear diffusion and PCA (full design) only.
+TIER3 = ("bass", "deepst", "spaceflow", "stagate", "graphst", "spatial_mgcn", "bayesspace", "ccst")
 M_A, W_B = [1, 2, 4, 7], [3, 5, 8, 12, 20]
 
 
@@ -65,6 +68,7 @@ def main():
     delta = pd.DataFrame(rows); delta.to_csv(R("newdata_sim_delta.csv"), index=False)
     # mean ARI per method and setting
     tab = (d.groupby(["method", "geometry", "param"]).ari.agg(["mean", "size"]).reset_index().rename(columns={"mean": "ari_mean", "size": "n_jobs"}))
+    tab["design"] = np.where(tab.method.isin(TIER3), "reduced (seed 0, replicate 0)", "full (5 replicates x 3 seeds)")
     tab.to_csv(R("newdata_sim_ari_table.csv"), index=False)
     # hypotheses
     out = {"n_records": int(len(d)), "settings_with_delta": int(sum(len(v) > 0 for v in per.values()))}
@@ -86,7 +90,9 @@ def main():
     ms = tab.groupby(["geometry", "param"]).ari_mean.agg(["min", "max"])
     full = tab.groupby("method").n_jobs.sum()
     out["ceiling_floor"] = ("uninformative: every mean ARI > 0.95 or < 0.10" if ((tab.ari_mean > 0.95) | (tab.ari_mean < 0.10)).all() else "ok (not all methods at ceiling or floor)")
-    out["best_three"] = {f"{g}{p}": tab[(tab.geometry == g) & (tab.param == p)].nlargest(3, "ari_mean")[["method", "ari_mean", "n_jobs"]].to_dict("records") for g, p in settings}
+    tf, tr = tab[~tab.method.isin(TIER3)], tab[tab.method.isin(TIER3)]
+    out["best_three_full_design"] = {f"{g}{p}": tf[(tf.geometry == g) & (tf.param == p)].nlargest(3, "ari_mean")[["method", "ari_mean", "n_jobs"]].to_dict("records") for g, p in settings}
+    out["reduced_design_ari"] = {f"{g}{p}": tr[(tr.geometry == g) & (tr.param == p)].sort_values("ari_mean", ascending=False)[["method", "ari_mean"]].to_dict("records") for g, p in settings}
     out["coverage_jobs_ok_per_method"] = {k: int(v) for k, v in full.items()}
     json.dump(out, open(R("newdata_stats_sim.json"), "w"), indent=1, default=float)
     with open(R("newdata_sim_summary.md"), "w") as f:
@@ -97,27 +103,43 @@ def main():
                 f"non-decreasing in w: {bool(bmono)}; **{v2}**.\n\n| Geometry | Setting | Replicates | Delta (LD - PCA) | 95% CI |\n|---|---|---|---|---|\n")
         for _, r in delta.iterrows():
             f.write(f"| {r.geometry} | {'m' if r.geometry == 'A' else 'w'}={int(r.param)} | {int(r.n_replicates)} | {r.delta:.3f} | {r.ci_low:.3f} to {r.ci_high:.3f} |\n")
+        f.write("\n(Headline contrast: FULL design, linear diffusion and PCA only.)\n\n## Tier-3 methods: REDUCED design (seed 0, replicate 0 of each setting; one tissue per cell, no interval)\n\n")
+        if len(tr):
+            pv = tr.pivot_table(index="method", columns=["geometry", "param"], values="ari_mean")
+            f.write("| method | " + " | ".join(f"{g}:{p}" for g, p in pv.columns) + " |\n|---|" + "---|" * len(pv.columns) + "\n")
+            for m, row in pv.iterrows():
+                f.write(f"| {m} | " + " | ".join("" if np.isnan(v) else f"{v:.3f}" for v in row) + " |\n")
+        else:
+            f.write("not run yet\n")
     print(open(R("newdata_sim_summary.md")).read())
     figure(tab, d)
 
 
 def figure(tab, d):
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
-    full = tab.groupby("method").n_jobs.sum(); cands = [m for m in full.index if m not in ("linear_diffusion", "pca_gmm")]
-    top = tab[tab.method.isin(cands)].groupby("method").ari_mean.mean().nlargest(3).index.tolist()
+    tf, tr = tab[~tab.method.isin(TIER3)], tab[tab.method.isin(TIER3)]
+    cands = [m for m in tf.method.unique() if m not in ("linear_diffusion", "pca_gmm")]
+    top = tf[tf.method.isin(cands)].groupby("method").ari_mean.mean().nlargest(3).index.tolist()
     cols = {"linear_diffusion": "#2a78d6", "pca_gmm": "#5a5a5a"}; pal = ["#eb6834", "#1baf7a", "#8a5cd6"]
     for m, c in zip(top, pal): cols[m] = c
-    fig, ax = plt.subplots(1, 2, figsize=(7.4, 3.0), sharey=True)
-    for a, g, xs, xl, ttl in [(ax[0], "A", M_A, "band width (spot spacings, about 120 / 6m)", "A: layered bands"),
-                              (ax[1], "B", W_B, "block side w (spot spacings)", "B: random blocks")]:
+    rcols = dict(zip(sorted(tr.method.unique()), ["#eb6834", "#1baf7a", "#8a5cd6", "#c9a227", "#2a78d6", "#5a5a5a", "#b04a8a"]))
+    fig, ax = plt.subplots(2, 2, figsize=(7.4, 5.4), sharey=True)
+    for k, (g, xs, xl, ttl) in enumerate([("A", M_A, "band width (spot spacings, about 120 / 6m)", "A: layered bands"),
+                                          ("B", W_B, "block side w (spot spacings)", "B: random blocks")]):
         x = [120 / (6 * m) for m in xs] if g == "A" else xs
         for m, c in cols.items():
-            y = [tab[(tab.method == m) & (tab.geometry == g) & (tab.param == p)].ari_mean.mean() for p in xs]
-            a.plot(x, y, "-o", ms=3.5, lw=1.5 if m in ("linear_diffusion", "pca_gmm") else 1.0, color=c, label=m.replace("_", " "))
-        a.set_xscale("log"); a.set_xlabel(xl, fontsize=8); a.set_title(ttl, fontsize=8.5, loc="left"); a.grid(axis="y", color="#e4e3df", lw=0.5)
-        a.spines[["top", "right"]].set_visible(False); a.tick_params(labelsize=7)
-    ax[0].set_ylabel("mean ARI", fontsize=8); ax[1].legend(fontsize=6.5, frameon=False, loc="lower right")
-    fig.suptitle("Domain-size simulation (K = 6, 14,400 spots): ARI versus domain size", fontsize=8.5, x=0.01, ha="left")
+            y = [tf[(tf.method == m) & (tf.geometry == g) & (tf.param == p)].ari_mean.mean() for p in xs]
+            ax[0, k].plot(x, y, "-o", ms=3.5, lw=1.5 if m in ("linear_diffusion", "pca_gmm") else 1.0, color=c, label=m.replace("_", " "))
+        for m, c in rcols.items():
+            y = [tr[(tr.method == m) & (tr.geometry == g) & (tr.param == p)].ari_mean.mean() for p in xs]
+            ax[1, k].plot(x, y, "--s", ms=3.5, lw=0.9, color=c, label=m.replace("_", " "))
+        for r in (0, 1):
+            ax[r, k].set_xscale("log"); ax[r, k].grid(axis="y", color="#e4e3df", lw=0.5); ax[r, k].spines[["top", "right"]].set_visible(False); ax[r, k].tick_params(labelsize=7)
+        ax[0, k].set_title(ttl + ": FULL design (5 replicates x 3 seeds)", fontsize=8, loc="left"); ax[1, k].set_title(ttl + ": REDUCED design (seed 0, replicate 0)", fontsize=8, loc="left")
+        ax[1, k].set_xlabel(xl, fontsize=8)
+    ax[0, 0].set_ylabel("mean ARI", fontsize=8); ax[1, 0].set_ylabel("ARI (one tissue)", fontsize=8)
+    ax[0, 1].legend(fontsize=6.5, frameon=False, loc="lower right"); ax[1, 1].legend(fontsize=6.5, frameon=False, loc="lower right")
+    fig.suptitle("Domain-size simulation (K = 6, 14,400 spots): ARI versus domain size; tier-3 methods shown separately", fontsize=8.5, x=0.01, ha="left")
     fig.tight_layout(); fig.savefig(os.path.join(ROOT, "docs", "figures", "newdata_sim_ari.png"), dpi=200); print("saved figure")
 
 
