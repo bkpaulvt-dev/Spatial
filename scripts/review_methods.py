@@ -107,3 +107,34 @@ def bass_multisample(a, k, seed, ds):
 
 
 ADAPTERS = {"bayesspace_st": bayesspace_st, "bass_multisample": bass_multisample, "cellcharter": cellcharter, "mender": mender, "histar_official": histar_official}
+
+
+_VER = {}
+
+
+def version_of(method):
+    """Package / code version string of a review method, stored in every record (field method_version)."""
+    if method in _VER:
+        return _VER[method]
+    base = os.environ.get("BASE", "/mnt/disk/bikashkumar/SpatialBench")
+
+    def rpkg(name):
+        try:
+            return subprocess.run(["Rscript", "-e", f"cat(as.character(packageVersion('{name}')))"], capture_output=True, text=True, timeout=120,
+                                  env=dict(os.environ, R_LIBS=os.path.join(base, "Rlib"))).stdout.strip() or "unknown"
+        except Exception:
+            return "unknown"
+
+    def freeze(env, pkg):
+        try:
+            for l in open(os.path.join(base, "envs", f"{env}.freeze.txt")):
+                if l.lower().startswith(pkg.lower() + "=="):
+                    return l.strip()
+        except Exception:
+            pass
+        return f"{pkg} (version unknown)"
+    v = {"bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace"), "bass_multisample": lambda: "BASS " + rpkg("BASS"),
+         "cellcharter": lambda: freeze("m2", "cellcharter") + "; " + freeze("m2", "scvi-tools"), "mender": lambda: freeze("mender", "SOMENDER"),
+         "histar_official": lambda: "official HiSTaR code, pinned commit 0039a3b"}.get(method, lambda: "")
+    _VER[method] = v()
+    return _VER[method]

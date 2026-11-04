@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, ".."))
 sys.path[:0] = [ROOT, HERE]
+import review_methods  # noqa: E402
 import bench_queue as bq  # noqa: E402
 from adapters import SERIAL  # noqa: E402
 from bench_run import job_id  # noqa: E402
@@ -62,7 +63,7 @@ def main():
         with ThreadPoolExecutor(w) as ex:
             for fut in as_completed([ex.submit(run, j, a.timeout, 1) for j in batch]):
                 r = fut.result(); res = r.get("resources") or {}
-                r.update(host=HOST, extension="review", device=a.device,
+                r.update(host=HOST, extension="review", device=a.device, method_version=review_methods.version_of(r["method"]),
                          outcome="ok" if r["status"] == "ok" else "time limit" if res.get("timed_out") else "memory limit" if res.get("oom_killed") else "error")
                 open(a.out, "a").write(json.dumps(r) + "\n")
                 met = r.get("metrics", {})

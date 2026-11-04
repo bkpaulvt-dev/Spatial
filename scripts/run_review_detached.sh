@@ -4,8 +4,7 @@
 #   bash scripts/run_review_detached.sh status     plain-language status: runner, gate, stage table, last lines, decisions file
 # Phone alerts: the topic file $BASE/ntfy_topic is used if it exists (never printed or committed). Decisions: edit $BASE/review_config.env.
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}
-export TMPDIR=/mnt/disk/bikashkumar/SpatialBench/tmp PIP_CACHE_DIR=/mnt/disk/bikashkumar/SpatialBench/.pip_cache CONDA_PKGS_DIRS=/mnt/disk/bikashkumar/SpatialBench/.conda_pkgs XDG_CACHE_HOME=/mnt/disk/bikashkumar/SpatialBench/.cache   # root (/) is full: temporary and cache files on /mnt/disk
-mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" "$CONDA_PKGS_DIRS" "$XDG_CACHE_HOME"
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}")")/deepmed2_env.sh"   # disk rule: nothing is written to / (CLAUDE.md)
 cd "$BASE/Spatial" 2>/dev/null || cd "$(dirname "$0")/.."
 PIDF="$BASE/review_pipeline.pid"; STATUS="$BASE/review_status.txt"; DONE="$BASE/review_done"
 running() { P=$(cat "$PIDF" 2>/dev/null); [ -n "$P" ] && kill -0 "$P" 2>/dev/null; }

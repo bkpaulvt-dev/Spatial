@@ -11,6 +11,7 @@ for (i in 0:(n - 1)) {
   cnts[[i + 1]] <- m; xys[[i + 1]] <- xym
 }
 g <- Reduce(intersect, lapply(cnts, rownames)); cnts <- lapply(cnts, function(m) m[g, , drop = FALSE])
+# BASS_NSAMPLE is set only by the dry run (nsample 200, burn-in 100); real runs: nsample 10000 (DLPFC) / package default (MERFISH), burn-in 2000 = package default, as the single-section runs
 set.seed(seed)
 ns <- Sys.getenv("BASS_NSAMPLE", "")   # dry runs only
 if (ds == "dlpfc") {

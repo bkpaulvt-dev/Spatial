@@ -5,8 +5,7 @@
 # Ends with PIPELINE_DONE or STOP: <reason>. Not included here (no code that passed the dry run yet): osmFISH, BaristaSeq, HER2+, prostate,
 # Allen MERFISH; see docs/NEWDATA_DEEPMED2.md. Visium HD / Xenium are deliberately skipped (docs/NEWDATA_REPORT.md).
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}
-export TMPDIR=/mnt/disk/bikashkumar/SpatialBench/tmp PIP_CACHE_DIR=/mnt/disk/bikashkumar/SpatialBench/.pip_cache CONDA_PKGS_DIRS=/mnt/disk/bikashkumar/SpatialBench/.conda_pkgs XDG_CACHE_HOME=/mnt/disk/bikashkumar/SpatialBench/.cache   # root (/) is full: temporary and cache files on /mnt/disk
-mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" "$CONDA_PKGS_DIRS" "$XDG_CACHE_HOME"
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}")")/deepmed2_env.sh"   # disk rule: nothing is written to / (CLAUDE.md)
 MIN_RAM=${MIN_RAM:-64}               # GB available before a tier may start
 export SPATIALBENCH_MAX_RSS_GB=${CAP_GB:-30}     # per-job cap (deviation from 12 GB, see docs/PREREGISTERED_SIM.md)
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
@@ -44,6 +43,7 @@ commit_small() {
   git -c credential.helper= -c credential.helper="!$BASE/bin/gh auth git-credential" push origin new-datasets 2>&1 | tail -1 | tee -a "$STATUS"
 }
 for N in 5 9 17; do
+  disk_guard 100 || { say "STOP: disk_guard failed (see message above)"; exit 6; }
   say "tier (cheapest $N methods): waiting for >= ${MIN_RAM} GB available RAM"
   for i in $(seq 1 36); do
     A=$(free -g | awk 'NR==2{print $7}'); [ "$A" -ge "$MIN_RAM" ] && break

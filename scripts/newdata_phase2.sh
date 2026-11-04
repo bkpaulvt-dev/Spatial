@@ -6,8 +6,7 @@
 # Datasets decided as NOT runnable (reasons in docs/NEWDATA_REPORT.md): osmFISH (region labels not documented as anatomical), HER2+ (data files encrypted),
 # prostate (spot annotations not confirmed in the deposit), Visium HD / Xenium (no domain labels; too large).
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}
-export TMPDIR=/mnt/disk/bikashkumar/SpatialBench/tmp PIP_CACHE_DIR=/mnt/disk/bikashkumar/SpatialBench/.pip_cache CONDA_PKGS_DIRS=/mnt/disk/bikashkumar/SpatialBench/.conda_pkgs XDG_CACHE_HOME=/mnt/disk/bikashkumar/SpatialBench/.cache   # root (/) is full: temporary and cache files on /mnt/disk
-mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" "$CONDA_PKGS_DIRS" "$XDG_CACHE_HOME"
+. "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}")")/deepmed2_env.sh"   # disk rule: nothing is written to / (CLAUDE.md)
 export SPATIALBENCH_MAX_RSS_GB=${CAP_GB:-30} OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 cd "$BASE/Spatial" || exit 1
 STATUS="$BASE/newdata_status.txt"
@@ -36,6 +35,7 @@ say "tier 1 done and pushed (or push skipped); starting the real-data phase with
 
 dataset_outcome() { echo "$(date '+%F %T') $1: $2" >> results/newdata_dataset_outcomes.txt; }
 
+disk_guard 100 || { say "STOP: disk_guard failed"; exit 6; }
 # 1. Allen MERFISH (the only real dataset that passed the label and licence checks)
 DS=allenmerfish
 say "dataset $DS: dry run (job listing + one real small job, linear diffusion seed 0 on ABCA1-103, scratch file)"

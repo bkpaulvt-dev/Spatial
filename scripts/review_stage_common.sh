@@ -1,8 +1,10 @@
 # Sourced by the review stage scripts: project environment only, R packages and temporary files on /mnt/disk (the root file system is full), helpers.
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}; cd "$BASE/Spatial" || exit 1
+. "$BASE/Spatial/scripts/deepmed2_env.sh"   # disk rule (CLAUDE.md)
+# disk_guard before every stage/download; a failing guard waits (up to 6 h, as the runbook says) and then exits 99 (skipped, reason in the log)
+for _i in $(seq 1 36); do disk_guard 100 && break; [ $_i -eq 36 ] && exit 99; sleep 600; done
 source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ] || { echo "not the project environment"; exit 2; }
-export XDG_CACHE_HOME="$BASE/.cache" PIP_CACHE_DIR="$BASE/.pip_cache" CONDA_PKGS_DIRS="$BASE/.conda_pkgs"; mkdir -p "$XDG_CACHE_HOME"
 export R_LIBS="$BASE/Rlib" R_LIBS_USER="$BASE/Rlib" TMPDIR="$BASE/tmp" MAKEFLAGS=-j4 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1; mkdir -p "$TMPDIR"
 export SPATIALBENCH_MAX_RSS_GB=${SPATIALBENCH_MAX_RSS_GB:-30}
 SCRATCH="$BASE/review_scratch"; mkdir -p "$SCRATCH"

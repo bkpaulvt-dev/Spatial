@@ -1,6 +1,8 @@
 #!/bin/bash
 # M5: multi-sample BASS (record name bass_multisample; never replaces the single-section BASS records): DLPFC (3 donor groups of 4 sections) and MERFISH (5 sections jointly), 3 seeds.
 # dry run (job list + one scratch group fit with 200 MCMC samples on MERFISH, separate cache) -> real run (authors' settings, 24 h / 30 GB per job).
+# NOTE: the real run uses exactly the settings of the existing single-section BASS records (configs/methods.yaml: DLPFC nsample 10000, C 20, sparkx 3000 genes, 20 PCs; MERFISH/STARmap package defaults, burn-in 2000);
+# the shortened burn-in (100) and nsample (200) apply to the DRY RUN only (REVIEW_DRY_NREP is set only on the dry-run command line).
 set -e
 source "$(dirname "$0")/review_stage_common.sh"
 rlib_ok BASS || { echo "R package BASS missing"; exit 1; }

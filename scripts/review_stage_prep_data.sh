@@ -3,6 +3,7 @@
 # project's own resumable downloaders and recorded SHA-256 checksums; one download at a time. Needed by R2, M5, M6 and R3.
 set -e
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}; cd "$BASE/Spatial"
+. "$BASE/Spatial/scripts/deepmed2_env.sh"; disk_guard 100 || exit 99
 source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"; export R_LIBS_USER="$BASE/Rlib"
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ]
 python scripts/download_dlpfc.py

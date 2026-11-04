@@ -3,6 +3,7 @@
 # same-seed rerun of one cheap method (linear diffusion, seed 0, same section) to measure the host difference in ARI directly.
 set -e
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}; cd "$BASE/Spatial"
+. "$BASE/Spatial/scripts/deepmed2_env.sh"; disk_guard 100 || exit 99
 source "$(conda info --base)/etc/profile.d/conda.sh"; conda activate "$BASE/env"; export R_LIBS_USER="$BASE/Rlib"
 [ "$(python -c 'import sys;print(sys.prefix)')" = "$BASE/env" ]
 python -W ignore scripts/review_queue.py --workers 1 --job stereo:E10.5_E2S1:linear_diffusion:0 --job stereo:E10.5_E2S1:deepst:0
