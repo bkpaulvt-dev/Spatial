@@ -20,13 +20,20 @@ def run_r(script, a, k, seed, ds, extra=(), timeout=24 * 3600, env=None):
         scipy.io.mmwrite(os.path.join(td, "counts.mtx"), sp.csr_matrix(a.X).T.tocoo())
         open(os.path.join(td, "genes.txt"), "w").write("\n".join(map(str, a.var_names)) + "\n")
         bc = [f"s{i}" for i in range(a.n_obs)]; open(os.path.join(td, "barcodes.txt"), "w").write("\n".join(bc) + "\n")
-        C = np.asarray(a.obsm["spatial"], float); row, col = _lattice(C)
+        C = np.asarray(a.obsm["spatial"], float)
+        row, col = (a.obs["array_row"].to_numpy(int), a.obs["array_col"].to_numpy(int)) if "array_row" in a.obs and "array_col" in a.obs else _lattice(C)
         pd.DataFrame({"x": C[:, 0], "y": C[:, 1], "row": row, "col": col}, index=bc).to_csv(os.path.join(td, "coords.csv"))
         p = subprocess.run(["Rscript", os.path.join(HERE, script), td, str(k), str(seed), ds, *map(str, extra)], capture_output=True, text=True,
                            timeout=timeout, env=dict(os.environ, **(env or {})))
         if p.returncode != 0:
             raise RuntimeError(f"{script} failed (exit code {p.returncode}; -9 = killed, e.g. out of memory): {p.stderr[-1200:]} | stdout: {p.stdout[-300:]}")
-        return pd.read_csv(os.path.join(td, "labels.csv")).set_index("barcode").loc[bc, "label"].to_numpy().astype(int)
+        global LAST_R_EMB
+        LAST_R_EMB = pd.read_csv(os.path.join(td, "emb.csv"), index_col=0).loc[bc].to_numpy(float) if os.path.exists(os.path.join(td, "emb.csv")) else None
+        lab = pd.read_csv(os.path.join(td, "labels.csv")).set_index("barcode").loc[bc, "label"]
+        return lab.fillna(-1).to_numpy().astype(int)   # a spot that the method dropped (its own quality filter) gets label -1 = unassigned (counted as wrong, never removed from the score)
+
+
+LAST_R_EMB = None
 
 
 def bayesspace_st(a, k, seed, ds):
@@ -162,7 +169,39 @@ def spatial_mgcn_a9(a, k, seed, ds):
     return {"labels": labs["F"], "emb": embs[200], "extra": {"ARI_rule_F": ari["F"], "ARI_rule_P": ari["P"], "ARI_rule_L": ari["L"], "plateau_epoch": float(t_p), "loss_end": float(L[-1])}}
 
 
-ADAPTERS = {"bayesspace_st": bayesspace_st, "bass_multisample": bass_multisample, "cellcharter": cellcharter, "mender": mender, "histar_official": histar_official, "spatial_mgcn_a9": spatial_mgcn_a9}
+def spatialpca(a, k, seed, ds):
+    lab = run_r("review_spatialpca.R", a, k, seed, ds)
+    emb = LAST_R_EMB
+    if emb is not None and np.isnan(emb).any():
+        emb = np.where(np.isnan(emb), np.nanmean(emb, axis=0), emb)    # dropped spots: column mean (they are also label -1)
+    return {"labels": lab, "emb": emb, "extra": {"n_unassigned": float((lab < 0).sum())}}
+
+
+def precast(a, k, seed, ds):
+    from spatialbench.data import VISIUM
+    lab = run_r("review_precast.R", a, k, seed, ds, extra=(int(ds in VISIUM),))
+    emb = LAST_R_EMB
+    if emb is not None and np.isnan(emb).any():
+        emb = np.where(np.isnan(emb), np.nanmean(emb, axis=0), emb)
+    return {"labels": lab, "emb": emb, "extra": {"n_unassigned": float((lab < 0).sum())}}
+
+
+HUMAN = {"dlpfc", "brca", "visiumhd_crc"}   # human datasets; all other registered datasets are mouse
+
+
+def novae_zero_shot(a, k, seed, ds):
+    from spatialbench.data import VISIUM
+    lab, emb, ver = run_env_worker("novae", "novae_worker.py", a, k, seed, ds, extra=("human" if ds in HUMAN else "mouse", int(ds in VISIUM)))
+    return {"labels": lab, "emb": emb, "extra": {}}
+
+
+def drsc(a, k, seed, ds):
+    from spatialbench.data import VISIUM
+    lab = run_r("review_drsc.R", a, k, seed, ds, extra=(int(ds in VISIUM),))
+    return {"labels": lab, "emb": LAST_R_EMB, "extra": {}}
+
+
+ADAPTERS = {"drsc": drsc, "novae": novae_zero_shot, "precast": precast, "spatialpca": spatialpca, "bayesspace_st": bayesspace_st, "bass_multisample": bass_multisample, "cellcharter": cellcharter, "mender": mender, "histar_official": histar_official, "spatial_mgcn_a9": spatial_mgcn_a9}
 
 
 _VER = {}
@@ -189,7 +228,7 @@ def version_of(method):
         except Exception:
             pass
         return f"{pkg} (version unknown)"
-    v = {"bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace") + "; gamma = platform default (2 for ST), differs from the Visium value 3", "bass_multisample": lambda: "BASS " + rpkg("BASS"),
+    v = {"drsc": lambda: "DR.SC " + rpkg("DR.SC"), "novae": lambda: freeze("novae", "novae") + "; zero-shot pretrained weights MICS-Lab/novae-human-0 (human) / novae-mouse-0 (mouse)", "spatialpca": lambda: "SpatialPCA " + rpkg("SpatialPCA"), "precast": lambda: "PRECAST " + rpkg("PRECAST"), "bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace") + "; gamma = platform default (2 for ST), differs from the Visium value 3", "bass_multisample": lambda: "BASS " + rpkg("BASS"),
          "cellcharter": lambda: freeze("m2", "cellcharter") + "; " + freeze("m2", "scvi-tools"), "mender": lambda: freeze("mender", "SOMENDER"),
          "histar_official": lambda: "official HiSTaR code, pinned commit 0039a3b", "spatial_mgcn_a9": lambda: "Spatial-MGCN repository commit cf4412d; rules F=epoch 200, P=loss plateau, L=epoch 400 (docs/PREREGISTERED_A9.md)"}.get(method, lambda: "")
     _VER[method] = v()
