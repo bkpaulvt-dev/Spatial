@@ -16,6 +16,10 @@ import argparse, json, os, socket, statistics, sys, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, ".."))
+# one-thread rule on the shared server: pools that ignore OMP_NUM_THREADS (numba, numexpr) are limited here, and scripts/thread_shim/sitecustomize.py (PYTHONPATH) applies a threadpoolctl limit of 1 in every job process
+for _v in ("OMP_NUM_THREADS", "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "NUMEXPR_NUM_THREADS", "NUMBA_NUM_THREADS", "VECLIB_MAXIMUM_THREADS"):
+    os.environ[_v] = "1"
+os.environ["PYTHONPATH"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), "thread_shim") + os.pathsep + os.environ.get("PYTHONPATH", "")
 sys.path[:0] = [ROOT, HERE]
 import yaml  # noqa: E402
 import bench_queue as bq  # noqa: E402
