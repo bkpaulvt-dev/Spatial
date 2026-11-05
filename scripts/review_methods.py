@@ -114,7 +114,55 @@ def bass_multisample(a, k, seed, ds):
     return {"labels": np.asarray(c["labels"][sec]), "emb": None, "extra": {"group_size": len(group), "R": c["R"], "joint_fit_wall_s": c["joint_fit_wall_s"]}}
 
 
-ADAPTERS = {"bayesspace_st": bayesspace_st, "bass_multisample": bass_multisample, "cellcharter": cellcharter, "mender": mender, "histar_official": histar_official}
+# ---- A9: Spatial-MGCN with pre-registered label-free stopping rules (docs/PREREGISTERED_A9.md); model, graphs, loss and preprocessing = new_methods.spatial_mgcn ----
+def spatial_mgcn_a9(a, k, seed, ds):
+    import importlib, io, contextlib, scanpy as sc, scipy.sparse as sp, torch
+    from sklearn.cluster import KMeans
+    from sklearn.metrics import adjusted_rand_score
+    import new_methods as nm
+    sys_path = list(__import__("sys").path); __import__("sys").path.insert(0, nm.MGCN_DIR)
+    U = importlib.import_module("utils"); Mo = importlib.import_module("models")
+    __import__("sys").path.remove(nm.MGCN_DIR)
+    nm._seed(seed)
+    a = a.copy()
+    if a.n_vars > 3000:
+        sc.pp.filter_genes(a, min_cells=100)
+        sc.pp.highly_variable_genes(a, flavor="seurat_v3", n_top_genes=3000)
+        a = a[:, a.var["highly_variable"]].copy()
+    X = a.X.toarray() if hasattr(a.X, "toarray") else np.asarray(a.X, dtype=np.float64)
+    a.X = X / np.maximum(X.sum(1, keepdims=True), 1) * 10000
+    sc.pp.scale(a, zero_center=False, max_value=10)
+    radius = 4.1 * nm._nn_spacing(a.obsm["spatial"])
+    with contextlib.redirect_stdout(io.StringIO()):
+        fadj = U.features_construct_graph(a.X, k=14)
+        sadj, graph_nei, graph_neg = U.spatial_construct_graph1(a, radius=radius)
+    nf = U.sparse_mx_to_torch_sparse_tensor(U.normalize_sparse_matrix(fadj + sp.eye(fadj.shape[0])))
+    ns = U.sparse_mx_to_torch_sparse_tensor(U.normalize_sparse_matrix(sadj + sp.eye(sadj.shape[0])))
+    gnei, gneg = torch.LongTensor(np.asarray(graph_nei)), torch.LongTensor(np.asarray(graph_neg))
+    feats = torch.FloatTensor(np.asarray(a.X))
+    model = Mo.Spatial_MGCN(nfeat=feats.shape[1], nhid1=128, nhid2=64, dropout=0)
+    opt = torch.optim.Adam(model.parameters(), lr=0.001, weight_decay=5e-4)
+    EP = 401; losses = []; embs = {}
+    for epoch in range(EP):
+        model.train(); opt.zero_grad()
+        com1, com2, emb, pi, disp, mean = model(feats, ns, nf)
+        loss = (1 * U.ZINB(pi, theta=disp, ridge_lambda=0).loss(feats, mean, mean=True)
+                + 10 * U.consistency_loss(com1, com2) + 0.1 * U.regularization_loss(emb, gnei, gneg))
+        loss.backward(); opt.step(); losses.append(float(loss.detach()))
+        if epoch >= 100: embs[epoch] = np.nan_to_num(emb.detach().numpy()).astype(np.float32)
+    L = np.asarray(losses)
+    t_p = next((t for t in range(100, EP) if abs(L[t - 50]) > 0 and (L[t - 50] - L[t]) / abs(L[t - 50]) < 0.001), EP - 1)
+    rule = {"F": 200, "P": int(t_p), "L": EP - 1}
+    labs = {r: KMeans(n_clusters=k, n_init=10, random_state=seed).fit_predict(embs[e]) for r, e in rule.items()}
+    y = a.obs["ground_truth"].to_numpy().astype(object); keep = np.array([isinstance(v, str) and v != "nan" for v in y])
+    ari = {r: float(adjusted_rand_score(y[keep], labs[r][keep])) for r in labs}   # reporting only: no label enters any selection
+    base = os.environ.get("BASE", "/mnt/disk/bikashkumar/SpatialBench")
+    d = os.path.join(base, "Spatial", "results", "review_a9_labels"); os.makedirs(d, exist_ok=True)
+    np.savez_compressed(os.path.join(d, f"{ds}__{os.environ.get('REVIEW_SECTION', '')}__s{seed}.npz"), losses=L, labels_F=labs["F"], labels_P=labs["P"], labels_L=labs["L"], epochs=np.array([200, t_p, EP - 1]))
+    return {"labels": labs["F"], "emb": embs[200], "extra": {"ARI_rule_F": ari["F"], "ARI_rule_P": ari["P"], "ARI_rule_L": ari["L"], "plateau_epoch": float(t_p), "loss_end": float(L[-1])}}
+
+
+ADAPTERS = {"bayesspace_st": bayesspace_st, "bass_multisample": bass_multisample, "cellcharter": cellcharter, "mender": mender, "histar_official": histar_official, "spatial_mgcn_a9": spatial_mgcn_a9}
 
 
 _VER = {}
@@ -143,6 +191,6 @@ def version_of(method):
         return f"{pkg} (version unknown)"
     v = {"bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace") + "; gamma = platform default (2 for ST), differs from the Visium value 3", "bass_multisample": lambda: "BASS " + rpkg("BASS"),
          "cellcharter": lambda: freeze("m2", "cellcharter") + "; " + freeze("m2", "scvi-tools"), "mender": lambda: freeze("mender", "SOMENDER"),
-         "histar_official": lambda: "official HiSTaR code, pinned commit 0039a3b"}.get(method, lambda: "")
+         "histar_official": lambda: "official HiSTaR code, pinned commit 0039a3b", "spatial_mgcn_a9": lambda: "Spatial-MGCN repository commit cf4412d; rules F=epoch 200, P=loss plateau, L=epoch 400 (docs/PREREGISTERED_A9.md)"}.get(method, lambda: "")
     _VER[method] = v()
     return _VER[method]
