@@ -2,10 +2,9 @@
 #   phase prep  = light work (downloads, installs, source checks); runs at once, one at a time
 #   phase heavy = benchmark runs; one heavy slot (the other slot belongs to the newdata pipeline, Amendment 2 of docs/PREREGISTERED_SIM.md)
 # A stage whose script does not exist yet is "blocked (not built)" and is picked up as soon as the file appears. Exit code 99 = skipped by decision.
-# Order = owner's build/run order (2026-11-04); R5 runs last; if cuts are needed drop D6/D7, M3, R5, M1 in that order.
+# Order = owner's build/run order (2026-11-04); M5 (multi-sample BASS, slow) just before R5, R5 last; if cuts are needed drop D6/D7, M3, R5, M1 in that order.
 prep_data|prep|scripts/review_stage_prep_data.sh
 bayesspace_stereo_st|heavy|scripts/review_stage_bayesspace_st.sh
-m5_bass_multisample|heavy|scripts/review_stage_m5.sh
 m2_cellcharter_mender|heavy|scripts/review_stage_m2.sh
 m6_fidelity_histar|heavy|scripts/review_stage_m6_histar.sh
 d8_allen_merfish|heavy|scripts/review_stage_d8.sh
@@ -20,4 +19,5 @@ d1_her2|heavy|scripts/review_stage_d1.sh
 d2_prostate|heavy|scripts/review_stage_d2.sh
 a10_cross_host|heavy|scripts/review_stage_a10.sh
 d6_d7_scalability|heavy|scripts/review_stage_d6d7.sh
+m5_bass_multisample|heavy|scripts/review_stage_m5.sh
 r5_tuning_arm|heavy|scripts/review_stage_r5.sh

@@ -1,4 +1,4 @@
-"""BayesSpace version check: 1.12.0 (installed here, used for Stereo-seq) vs 1.5.1 (the paper's Visium runs) on DLPFC 151673, seed 0, paper settings (run_r_method.R, platform Visium).
+"""BayesSpace version check: 1.12.0 (installed here, used for Stereo-seq) vs 1.5.1 (the paper's Visium runs) on DLPFC 151673, seed 0, paper settings (run_r_method.R, platform Visium, gamma = Visium default 3).
 Writes results/review_bayesspace_version_check.json."""
 import json, os
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))

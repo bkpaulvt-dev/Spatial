@@ -10,7 +10,7 @@ PIDF="$BASE/review_pipeline.pid"; STATUS="$BASE/review_status.txt"; DONE="$BASE/
 running() { P=$(cat "$PIDF" 2>/dev/null); [ -n "$P" ] && kill -0 "$P" 2>/dev/null; }
 if [ "$1" = "status" ]; then
   if running; then echo "The review runner is RUNNING (pid $(cat $PIDF))."; else echo "The review runner is NOT running."; fi
-  if grep -q PHASE2_DONE "$BASE/newdata_status.txt" 2>/dev/null; then echo "Gate: OPEN (the current plan has finished; heavy stages may run)."; else echo "Gate: CLOSED (heavy stages wait for the current plan to finish: PHASE2_DONE in newdata_status.txt); prep stages run now."; fi
+  echo "Gate: OPEN since Amendment 2 (the simulation pipeline uses one heavy slot, the review stages the other; heavy review stages start at once)."
   echo; echo "--- stages (name | phase | state)"
   grep -v '^[[:space:]]*#' scripts/review_stages.txt | grep -v '^$' | while IFS='|' read -r n ph sc; do
     if [ -f "$DONE/$n" ]; then st=done; elif [ -f "$DONE/$n.failed" ]; then st=FAILED; elif [ -f "$DONE/$n.skipped" ]; then st="skipped by decision"; elif [ ! -f "$sc" ]; then st="blocked: script not built yet"; else st="pending"; fi

@@ -32,7 +32,7 @@ def run_r(script, a, k, seed, ds, extra=(), timeout=24 * 3600, env=None):
 def bayesspace_st(a, k, seed, ds):
     """BayesSpace with platform 'ST' (square-lattice neighbours) on a bin/spot grid: same settings as the Visium run of run_r_method.R otherwise."""
     lab = run_r("review_bayesspace_st.R", a, k, seed, ds, env={"BSPACE_NREP": os.environ.get("REVIEW_DRY_NREP", "50000")})
-    return {"labels": lab, "emb": None, "extra": {"platform_ST": 1.0}}
+    return {"labels": lab, "emb": None, "extra": {"platform_ST": 1.0, "gamma": 2.0}}   # gamma = package default of platform ST (2); differs from the Visium value 3
 
 
 def run_env_worker(env, worker, a, k, seed, ds, extra=(), timeout=24 * 3600):
@@ -141,7 +141,7 @@ def version_of(method):
         except Exception:
             pass
         return f"{pkg} (version unknown)"
-    v = {"bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace"), "bass_multisample": lambda: "BASS " + rpkg("BASS"),
+    v = {"bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace") + "; gamma = platform default (2 for ST), differs from the Visium value 3", "bass_multisample": lambda: "BASS " + rpkg("BASS"),
          "cellcharter": lambda: freeze("m2", "cellcharter") + "; " + freeze("m2", "scvi-tools"), "mender": lambda: freeze("mender", "SOMENDER"),
          "histar_official": lambda: "official HiSTaR code, pinned commit 0039a3b"}.get(method, lambda: "")
     _VER[method] = v()
