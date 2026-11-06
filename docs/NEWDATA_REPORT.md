@@ -51,3 +51,5 @@ old code (it would have gone on to G3 with the 85 wrong records). It had no reco
 **Other finding on Allen (not infrastructure, needs a decision).** 6 `stagate` records on ABCA1-085 and ABCA1-103 (seeds 0-2) failed with the rpy2/mclust 6.1.3 error `dimnames ... not equal to array extent`, the same bug that was fixed for GraphST by calling `Mclust` inside an R function.
 STAGATE's own `mclust_R` is used unchanged; I did not touch it.
 **Restart allowance.** The simulation pipeline was relaunched at 09:33 (fresh counter: 3 attempts per tier); phase 2 was relaunched at 10:07 (3 attempts for the Allen queue; none used). The review runner retries a failed stage 3 times.
+**No `ok` record was affected** by the false memory kills: a job killed by the guard has `status = error`, never `ok`, so every `ok` record in all four result files is a completed run. The guard rule of the paper's Supplementary Note 6 (stop a job when the machine has under 0.8 GB left)
+produced, on the original machine, only records that are superseded by later `ok` records (the 19 original-benchmark `oom_killed` records listed above; verified for all of them).
