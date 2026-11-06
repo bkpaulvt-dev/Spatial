@@ -1,0 +1,9 @@
+{
+ "section": "dlpfc 151673",
+ "seed": 0,
+ "K": 7,
+ "n": 3639,
+ "ARI_wrapper_vs_plain_Rscript": 1.0,
+ "n_labels_differing_after_identity_relabel": 0,
+ "identical_label_vectors": true
+}

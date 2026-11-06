@@ -36,6 +36,24 @@ def mclust_eee(Z, k, seed):
     return np.array(res[-2]).astype(int)
 
 
+LAST_EXTRA = {}
+
+
+def mclust_R_wrapped(adata, num_cluster, modelNames="EEE", used_obsm="STAGATE", random_seed=2020):
+    """STAGATE's mclust_R, line for line (np seed, R set.seed, Mclust on the embedding), except that Mclust is called inside an R function: with mclust 6.1.3 the direct rpy2 call fails with
+    "length of 'dimnames' [2] not equal to array extent" (same bug and same remedy as the GraphST wrapper in adapters.py; owner-approved 2026-11-06). Equivalence check: scripts/review_stagate_mclust_check.py."""
+    import rpy2.robjects as ro, rpy2.robjects.numpy2ri as n2r
+    np.random.seed(random_seed)
+    ro.r.library("mclust")
+    n2r.activate()
+    ro.r["set.seed"](random_seed)
+    fit = ro.r("function(x, G, m) Mclust(x, G, m)$classification")
+    cl = np.array(fit(n2r.numpy2rpy(np.asarray(adata.obsm[used_obsm], dtype=np.float64)), num_cluster, modelNames)).astype(int)
+    adata.obs["mclust"] = cl
+    adata.obs["mclust"] = adata.obs["mclust"].astype("int").astype("category")
+    return adata
+
+
 def _lognorm_hvg(a, n_top=3000):
     """HVG (seurat_v3 on counts; all genes for targeted panels) -> normalize 1e4 -> log1p."""
     import scanpy as sc
@@ -53,7 +71,7 @@ def stagate(a, k, seed, ds):
     full-resolution pixels for DLPFC Visium (~1.1 spot spacings, ~6 neighbours; expressed in spot
     spacings because our coordinates are on another scale; same for every Visium dataset); KNN graph with 6 neighbours
     for single-cell data (no tutorial radius exists for our STARmap/MERFISH coordinates) and for the Stereo-seq bin50
-    grid (not a Visium lattice). Clustering: STAGATE's mclust_R (EEE)."""
+    grid (not a Visium lattice). Clustering: STAGATE's mclust_R (EEE), called through mclust_R_wrapped (see there)."""
     try:
         import torch_sparse  # noqa: F401  real extension if installed
     except ImportError:
@@ -68,7 +86,8 @@ def stagate(a, k, seed, ds):
             st.Cal_Spatial_Net(a, k_cutoff=6, model="KNN")
         a.uns["mean_neighbours"] = a.uns["Spatial_Net"].shape[0] / a.n_obs
         a = st.train_STAGATE(a, random_seed=seed, device=torch.device("cpu"), verbose=False)
-        a = st.mclust_R(a, used_obsm="STAGATE", num_cluster=k)
+        a = mclust_R_wrapped(a, used_obsm="STAGATE", num_cluster=k)
+    LAST_EXTRA.clear(); LAST_EXTRA["mclust_wrapper"] = 1.0     # recorded in every STAGATE record made with the wrapper
     return a.obs["mclust"].astype(int).to_numpy(), a.obsm["STAGATE"]
 
 

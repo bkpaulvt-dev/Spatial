@@ -113,7 +113,7 @@ def _from_new(name):
     def f(a, k, seed, ds):
         import new_methods
         lab, Z = new_methods.METHODS[name](a, k, seed, ds)
-        extra = dict(new_methods.LAST_ORACLE) if name == "spatial_mgcn" else {}
+        extra = dict(new_methods.LAST_ORACLE) if name == "spatial_mgcn" else dict(new_methods.LAST_EXTRA) if name == "stagate" else {}
         return {"labels": np.asarray(lab), "emb": None if Z is None else np.asarray(Z), "extra": extra}
     return f
 

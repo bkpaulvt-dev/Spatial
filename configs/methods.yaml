@@ -46,7 +46,8 @@ methods:
     settings: {hvg: 3000, hidden: [512, 30], epochs: 1000, lr: 0.001, radius: "1.1 spot spacings (tutorial: 150 full-resolution px) on Visium; 6-NN on single-cell data"}
     clustering: {official: "R mclust EEE"}
     deviations: ["radius expressed in spot spacings because our coordinates are on another scale (gives 5.8 neighbours per spot, as in the tutorial)",
-                 "torch_sparse replaced by a stub only if the compiled extension is unavailable (it was compiled from source here)"]
+                 "torch_sparse replaced by a stub only if the compiled extension is unavailable (it was compiled from source here)",
+                 "on the second server the call to R mclust is wrapped through rpy2 (a function that calls Mclust inside R and returns its classification; records made with it carry mclust_wrapper=1; ARI = 1 against plain Rscript on STAGATE seed 0, DLPFC 151673; results/review_stagate_mclust_check.json)"]
   sedr:
     publication: "Xu et al., Genome Med 2024;16:12"
     kind: deep masked graph autoencoder
