@@ -4,6 +4,7 @@
 # A stage whose script does not exist yet is "blocked (not built)" and is picked up as soon as the file appears. Exit code 99 = skipped by decision.
 # Order = owner's build/run order (2026-11-04); M5 (multi-sample BASS, slow) just before R5, R5 last; if cuts are needed drop D6/D7, M3, R5, M1 in that order.
 prep_data|prep|scripts/review_stage_prep_data.sh
+r0_retry_sim_tier1_false_oom|heavy|scripts/review_stage_retry_sim_tier1.sh
 bayesspace_stereo_st|heavy|scripts/review_stage_bayesspace_st.sh
 m2_cellcharter_mender|heavy|scripts/review_stage_m2.sh
 m6_fidelity_histar|heavy|scripts/review_stage_m6_histar.sh

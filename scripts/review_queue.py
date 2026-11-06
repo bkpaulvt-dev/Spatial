@@ -24,8 +24,21 @@ from bench_run import job_id  # noqa: E402
 HOST = socket.gethostname().lower()
 
 
+# A job killed while its own memory was small was killed by the machine-wide guard (spatialbench/resources.py kills when < 0.8 GB of the shared machine's RAM is left) or by the kernel because OTHER users
+# used the RAM: that is an infrastructure failure, not a "memory limit" of the method. Only a job that reached 80% of the per-job cap is a real memory limit (final); the others are retried with unchanged settings.
+CAP_GB = float(os.environ.get("SPATIALBENCH_MAX_RSS_GB", "30") or 30)
+def real_oom(res):
+    return bool(res.get("oom_killed")) and float(res.get("peak_rss_gb") or 0) >= 0.8 * CAP_GB
+def wait_ram(min_gb=25):
+    """Do not start a job while the shared machine has less than min_gb of RAM available (the owner's rule: pause under 25 GB)."""
+    import psutil, time
+    while psutil.virtual_memory().available < min_gb * 2 ** 30:
+        time.sleep(60)
+
+
 def run(job, timeout, threads):
     """Same as bench_queue.run (same record, same resource measurement) but runs scripts/review_bench_run.py, which also knows the methods of review_methods.py."""
+    wait_ram()
     ds, sec, m, seed = job
     jid = job_id(ds, sec, m, seed); runs = bq.RUNS
     env = dict(os.environ, OMP_NUM_THREADS=str(threads), MKL_NUM_THREADS=str(threads), OPENBLAS_NUM_THREADS=str(threads))
@@ -56,7 +69,7 @@ def main():
     if os.path.exists(a.out):
         for r in map(json.loads, open(a.out)):
             res = r.get("resources") or {}; attempts[r["id"]] = attempts.get(r["id"], 0) + 1
-            if r["status"] == "ok" or res.get("oom_killed") or res.get("timed_out") or attempts[r["id"]] >= a.max_attempts: done.add(r["id"])
+            if r["status"] == "ok" or real_oom(res) or res.get("timed_out") or attempts[r["id"]] >= a.max_attempts: done.add(r["id"])
             else: done.discard(r["id"])
     todo = [j for j in jobs if job_id(*j[:3], j[3]) not in done]
     print(f"{len(todo)} of {len(jobs)} jobs to run ({len(jobs) - len(todo)} already recorded)", flush=True)
@@ -68,7 +81,7 @@ def main():
             for fut in as_completed([ex.submit(run, j, a.timeout, 1) for j in batch]):
                 r = fut.result(); res = r.get("resources") or {}
                 r.update(host=HOST, extension="review", device=a.device, method_version=review_methods.version_of(r["method"]),
-                         outcome="ok" if r["status"] == "ok" else "time limit" if (res.get("timed_out") or "time limit (24 h)" in str(r.get("error", ""))) else "memory limit" if res.get("oom_killed") else "error")
+                         outcome="ok" if r["status"] == "ok" else "time limit" if (res.get("timed_out") or "time limit (24 h)" in str(r.get("error", ""))) else "memory limit" if real_oom(res) else "error")
                 open(a.out, "a").write(json.dumps(r) + "\n")
                 met = r.get("metrics", {})
                 print(f"{r['id']:<52} {r['outcome']:<12} ARI={met.get('ARI', float('nan')):.3f} t={res.get('wall_s', 0):.0f}s mem={res.get('peak_rss_gb', 0):.1f}GB", flush=True)

@@ -41,10 +41,26 @@ def worker_cap(w):
 def review_finished():
     try: t = open(REVIEW_STATUS).read(); return "PIPELINE_DONE" in t or "STOP:" in t
     except Exception: return False
+
+# A job killed while its own memory was small was killed by the machine-wide guard (spatialbench/resources.py kills when < 0.8 GB of the shared machine's RAM is left) or by the kernel because OTHER users
+# used the RAM: that is an infrastructure failure, not a "memory limit" of the method. Only a job that reached 80% of the per-job cap is a real memory limit (final); the others are retried with unchanged settings.
+CAP_GB = float(os.environ.get("SPATIALBENCH_MAX_RSS_GB", "30") or 30)
+def real_oom(res):
+    return bool(res.get("oom_killed")) and float(res.get("peak_rss_gb") or 0) >= 0.8 * CAP_GB
+def wait_ram(min_gb=25):
+    """Do not start a job while the shared machine has less than min_gb of RAM available (the owner's rule: pause under 25 GB)."""
+    import psutil, time
+    while psutil.virtual_memory().available < min_gb * 2 ** 30:
+        time.sleep(60)
 TIER3 = ("bass", "deepst", "spaceflow", "stagate", "graphst", "spatial_mgcn", "bayesspace", "ccst")
 REG = os.path.join(ROOT, "configs", "datasets_newdata.yaml")
 RUNS = os.path.join(ROOT, "results", "newdata_runs")
 ORIG = os.path.join(ROOT, "results", "benchmark_runs.jsonl")
+
+
+def run_guarded(j, timeout, threads):
+    wait_ram()
+    return bq.run(j, timeout, threads)
 
 
 def method_cost():
@@ -60,7 +76,7 @@ def method_cost():
 
 def final_error(r):
     res = r.get("resources") or {}
-    return r.get("status") != "ok" and (res.get("oom_killed") or res.get("timed_out"))
+    return r.get("status") != "ok" and (real_oom(res) or res.get("timed_out"))
 
 
 def has_data(ds, sec):
@@ -130,11 +146,12 @@ def main():
             while not review_finished():
                 time.sleep(600)
         with ThreadPoolExecutor(1 if m in SERIAL else a.workers) as ex:
-            futs = [ex.submit(bq.run, j, a.timeout, 1) for j in jobs]
+            futs = [ex.submit(run_guarded, j, a.timeout, 1) for j in jobs]
             for fut in as_completed(futs):
                 r = fut.result(); r["host"] = HOST; r["extension"] = "newdata"
                 res = r.get("resources") or {}
-                r["outcome"] = "ok" if r["status"] == "ok" else "time limit" if res.get("timed_out") else "memory limit" if res.get("oom_killed") else "error"
+                r["outcome"] = "ok" if r["status"] == "ok" else "time limit" if res.get("timed_out") else "memory limit" if real_oom(res) else "error"
+                if res.get("oom_killed") and not real_oom(res): r["infra_kill"] = True   # killed by machine-wide memory exhaustion (other users), retried
                 r["design"] = "reduced" if (r["method"] in TIER3 and r["dataset"].startswith("sim_")) else "full"
                 with open(a.out, "a") as f:
                     f.write(json.dumps(r) + "\n")

@@ -39,7 +39,7 @@ commit_small() {
   git -c user.name="Bikash Kumar Paul" -c user.email="bkpaul.vt@gmail.com" commit -qm "review: $1 (small files only)" 2>/dev/null
   git -c credential.helper= -c credential.helper="!$BASE/bin/gh auth git-credential" push origin new-datasets 2>&1 | tail -1 | tee -a "$STATUS"
 }
-wait_ram() { for i in $(seq 1 36); do A=$(free -g | awk 'NR==2{print $7}'); [ "$A" -ge 64 ] && return 0; say "only ${A} GB available; waiting 10 min"; sleep 600; done; return 1; }
+wait_ram() { n=0; while true; do A=$(free -g | awk 'NR==2{print $7}'); [ "$A" -ge 40 ] && return 0; n=$((n+1)); [ $((n % 6)) -eq 1 ] && say "only ${A} GB RAM available (need 40, other users); waiting (no STOP: it waits as long as needed)"; sleep 600; done; }
 run_stage() {   # name script
   for try in 1 2 3; do
     bash "$2" >> "$LOGS/$1.log" 2>&1 < /dev/null; rc=$?
@@ -58,7 +58,7 @@ while true; do
     if [ ! -f "$script" ]; then blocked="$blocked $name"; continue; fi
     if [ "$phase" = heavy ]; then
       gate_open || { waiting=1; continue; }
-      wait_ram || { say "STOP: RAM stayed below 64 GB"; exit 4; }
+      wait_ram
     fi
     disk_guard 100 || { say "disk_guard failed before stage $name; waiting 10 min"; sleep 600; continue; }
     set -a; source "$CONF"; set +a

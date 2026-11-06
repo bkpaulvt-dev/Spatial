@@ -6,7 +6,7 @@
 # Allen MERFISH; see docs/NEWDATA_DEEPMED2.md. Visium HD / Xenium are deliberately skipped (docs/NEWDATA_REPORT.md).
 BASE=${BASE:-/mnt/disk/bikashkumar/SpatialBench}
 . "$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}")")/deepmed2_env.sh"   # disk rule: nothing is written to / (CLAUDE.md)
-MIN_RAM=${MIN_RAM:-64}               # GB available before a tier may start
+MIN_RAM=${MIN_RAM:-40}               # GB available before a tier may start
 export SPATIALBENCH_MAX_RSS_GB=${CAP_GB:-30}     # per-job cap (deviation from 12 GB, see docs/PREREGISTERED_SIM.md)
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 cd "$BASE/Spatial" || exit 1
@@ -45,11 +45,11 @@ commit_small() {
 for N in 5 9 17; do
   disk_guard 100 || { say "STOP: disk_guard failed (see message above)"; exit 6; }
   say "tier (cheapest $N methods): waiting for >= ${MIN_RAM} GB available RAM"
-  for i in $(seq 1 36); do
+  n=0; while true; do
     A=$(free -g | awk 'NR==2{print $7}'); [ "$A" -ge "$MIN_RAM" ] && break
-    say "only ${A} GB available; waiting 10 min"; sleep 600
+    n=$((n+1)); [ $((n % 6)) -eq 1 ] && say "only ${A} GB available (need ${MIN_RAM}, other users); waiting (no STOP)"; sleep 600
   done
-  A=$(free -g | awk 'NR==2{print $7}'); [ "$A" -ge "$MIN_RAM" ] || { say "STOP: RAM stayed below ${MIN_RAM} GB (${A} GB)"; exit 4; }
+  A=$(free -g | awk 'NR==2{print $7}')
   say "tier (cheapest $N methods): running with ${A} GB available"
   for try in 1 2 3; do
     python -W ignore scripts/newdata_queue.py --datasets sim_bands sim_blocks --workers 2 --max-methods $N >> "$BASE/newdata_queue.log" 2>&1
