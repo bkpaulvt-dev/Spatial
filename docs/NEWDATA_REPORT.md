@@ -29,3 +29,25 @@ section already exceeded 12 GB for five methods). They were therefore not downlo
 
 ## Not done
 The extended hierarchical bootstrap (new real-data group next to the original 7-group result, G4) and the novelty check are not implemented: the original bootstrap lives inside `scripts/stats_cluster_aware.py`, which runs and writes its outputs at import, so it cannot be reused without touching existing results. G3 (a-e) is implemented in `scripts/newdata_g3.py`.
+
+## Incident 2026-11-05/06: records wrongly labelled "memory limit" (infrastructure kills), found and fixed
+**What was wrong.** The memory guard in `spatialbench/resources.py` kills a job when the cap (30 GB per job) is exceeded **or when less than 0.8 GB of the whole shared machine is left**, and in both cases sets
+`oom_killed = true` (record field `resources.oom_killed`, queue field `outcome = "memory limit"`, error text "killed (out of memory)"). On 2026-11-05 other users filled the RAM (available RAM 10-57 GB for hours),
+so our jobs were killed while their own memory was small. Signature: `oom_killed` with `resources.peak_rss_gb` far below the cap (0 to 18 GB; a real memory limit has a peak of about 30 GB). The queue treated every
+`oom_killed` record as final and never retried it. These records say nothing about the methods.
+**Counts (corrected).** In the newest records per id: Allen MERFISH 102 "memory limit" records, of which **85 are infrastructure kills (peak at most 3.9 GB)** and **17 are real memory limits** (graphst, peak 30.0-30.4 GB, i.e. the cap);
+simulation tier 1: 25 `pca_gmm` jobs on `sim_blocks` (peak at most 1.6 GB; 20 still open when this was written, 5 already recovered by the retry); BayesSpace on Stereo-seq (review stage): all 9 jobs (peak at most 18.1 GB).
+(An earlier message of mine said "127 Allen records": that number was 102 Allen + 25 simulation records, and not all Allen ones were false.)
+**Fix** (commit `ed7832d`, queue code only, no method code or settings): in `scripts/newdata_queue.py` and `scripts/review_queue.py` a kill counts as a real memory limit only if the peak reached 80% of the per-job cap (24 GB); any other
+`oom_killed` record is an "error" with `infra_kill = true` and is retried with unchanged settings (up to 3 attempts in total, counting the first); each job also waits until at least 25 GB of RAM is available before it starts.
+The runner and pipeline no longer STOP after 6 h of low RAM; they wait (40 GB needed to start a stage or tier). The old records stay in the files (newest record per id wins), so the history is visible.
+**Proof that no other records carry the same error.** I scanned every `oom_killed` record in all four result files (`benchmark_runs.jsonl`, `benchmark_runs_bigmem.jsonl`, `newdata_runs_deepmed2.jsonl`, `review_runs_deepmed2.jsonl`) and split them at 24 GB peak:
+below 24 GB: Allen 85, simulation 25, review BayesSpace-ST 9 (all listed above and all being retried), plus 19 records of the ORIGINAL benchmark (18 on Stereo-seq with the original 12 GB cap, peaks up to 12.3 GB, i.e. real cap hits, and 1 DLPFC record, nichepca seed 2, peak 6.7 GB);
+the original-benchmark ones are already superseded: all 15 Stereo-seq ids have a later `ok` record in `benchmark_runs_bigmem.jsonl`, and the DLPFC id has a later `ok` record (peak 7.2 GB). At or above 24 GB: 17 Allen graphst records (real). No other dataset has such records.
+**Simulation `pca_gmm` retry.** 25 `pca_gmm` jobs on `sim_blocks` (tier 1, full design) were affected. Their old records are NOT excluded from the history, but they are superseded by the retry (newest record per id wins); the headline analysis
+(`scripts/newdata_stats.py`) uses only `status == ok` records and is rerun after the retry, so the Delta contrast is computed with the complete tier-1 design, not with the 25 missing cells.
+**CCST job stopped on purpose.** PID 3770287 was `bench_run.py --method ccst --dataset allenmerfish --section ABCA1-066 --seed 1` (about 2 h 45 min into its run), started by the old phase-2 queue. I stopped it, together with that queue and the phase-2 script, because that queue still ran the
+old code (it would have gone on to G3 with the 85 wrong records). It had no record yet; the restarted phase 2 (new PID 384834, fixed queue) runs it again from the start (same job, unchanged settings).
+**Other finding on Allen (not infrastructure, needs a decision).** 6 `stagate` records on ABCA1-085 and ABCA1-103 (seeds 0-2) failed with the rpy2/mclust 6.1.3 error `dimnames ... not equal to array extent`, the same bug that was fixed for GraphST by calling `Mclust` inside an R function.
+STAGATE's own `mclust_R` is used unchanged; I did not touch it.
+**Restart allowance.** The simulation pipeline was relaunched at 09:33 (fresh counter: 3 attempts per tier); phase 2 was relaunched at 10:07 (3 attempts for the Allen queue; none used). The review runner retries a failed stage 3 times.
