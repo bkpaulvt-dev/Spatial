@@ -8,13 +8,24 @@ cnt <- as(readMM(file.path(dir, "counts.mtx")), "CsparseMatrix")
 rownames(cnt) <- readLines(file.path(dir, "genes.txt")); colnames(cnt) <- readLines(file.path(dir, "barcodes.txt"))
 xy <- read.csv(file.path(dir, "coords.csv"), row.names = 1); loc <- as.matrix(xy[, c("x", "y")]); rownames(loc) <- colnames(cnt)
 set.seed(seed); n <- ncol(cnt); whole <- nrow(cnt) > 3000
-obj <- if (whole) CreateSpatialPCAObject(counts = cnt, location = loc, project = "sp", gene.type = "spatial", sparkversion = "sparkx", numCores_spark = 1, gene.number = 3000, min.loctions = 20, min.features = 20)
-       else CreateSpatialPCAObject(counts = cnt, location = loc, project = "sp", gene.type = "custom", customGenelist = rownames(cnt), min.loctions = 20, min.features = 20)
+obj <- if (whole) {
+  CreateSpatialPCAObject(counts = cnt, location = loc, project = "sp", gene.type = "spatial", sparkversion = "sparkx", numCores_spark = 1, gene.number = 3000, min.loctions = 20, min.features = 20)
+} else {
+  CreateSpatialPCAObject(counts = cnt, location = loc, project = "sp", gene.type = "custom", customGenelist = rownames(cnt), min.loctions = 20, min.features = 20)
+}
 big <- n > 5000; sparse <- n > 20000
 cat("SpatialPCA", as.character(packageVersion("SpatialPCA")), "n", n, "fast", big, "sparse kernel", sparse, "\n")
 obj <- SpatialPCA_buildKernel(obj, kerneltype = "gaussian", bandwidthtype = "SJ", sparseKernel = sparse)
-obj <- if (big) SpatialPCA_EstimateLoading(obj, fast = TRUE, SpatialPCnum = 20, eigenvecnum = 20) else SpatialPCA_EstimateLoading(obj, fast = FALSE, SpatialPCnum = 20)
-obj <- if (big) SpatialPCA_SpatialPCs(obj, fast = TRUE, eigenvecnum = 20) else SpatialPCA_SpatialPCs(obj, fast = FALSE)
+obj <- if (big) {
+  SpatialPCA_EstimateLoading(obj, fast = TRUE, SpatialPCnum = 20, eigenvecnum = 20)
+} else {
+  SpatialPCA_EstimateLoading(obj, fast = FALSE, SpatialPCnum = 20)
+}
+obj <- if (big) {
+  SpatialPCA_SpatialPCs(obj, fast = TRUE, eigenvecnum = 20)
+} else {
+  SpatialPCA_SpatialPCs(obj, fast = FALSE)
+}
 Z <- obj@SpatialPCs                      # PCs x kept spots
 lab <- walktrap_clustering(clusternum = k, latent_dat = Z, knearest = 70)
 kept <- colnames(Z)

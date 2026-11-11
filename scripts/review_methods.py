@@ -69,6 +69,11 @@ def histar_official(a, k, seed, ds):
     return {"labels": lab, "emb": emb, "extra": {"used_fallback_mclust": float("inside an R function" in ver[1])}}
 
 
+def novae_zs(a, k, seed, ds):
+    lab, emb, ver = run_env_worker("novae", "novae_worker.py", a, k, seed, ds)
+    return {"labels": lab, "emb": emb, "extra": {}}
+
+
 def mender(a, k, seed, ds):
     from spatialbench.data import VISIUM
     lab, emb, ver = run_env_worker("mender", "mender_worker.py", a, k, seed, ds, extra=(int(ds in VISIUM),))
@@ -228,7 +233,7 @@ def version_of(method):
         except Exception:
             pass
         return f"{pkg} (version unknown)"
-    v = {"drsc": lambda: "DR.SC " + rpkg("DR.SC"), "novae": lambda: freeze("novae", "novae") + "; zero-shot pretrained weights MICS-Lab/novae-human-0 (human) / novae-mouse-0 (mouse)", "spatialpca": lambda: "SpatialPCA " + rpkg("SpatialPCA"), "precast": lambda: "PRECAST " + rpkg("PRECAST"), "bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace") + "; gamma = platform default (2 for ST), differs from the Visium value 3", "bass_multisample": lambda: "BASS " + rpkg("BASS"),
+    v = {"drsc": lambda: "DR.SC " + rpkg("DR.SC"), "novae": lambda: freeze("novae", "novae") + "; zero-shot pretrained weights MICS-Lab/novae-human-0 (human) / novae-mouse-0 (mouse)", "novae_zs": lambda: freeze("novae", "novae") + "; zero-shot pretrained weights from Hugging Face (prism-oncology/novae-human-0 or novae-mouse-0)", "spatialpca": lambda: "SpatialPCA " + rpkg("SpatialPCA"), "precast": lambda: "PRECAST " + rpkg("PRECAST"), "bayesspace": lambda: "BayesSpace " + rpkg("BayesSpace"), "bayesspace_st": lambda: "BayesSpace " + rpkg("BayesSpace") + "; gamma = platform default (2 for ST), differs from the Visium value 3", "bass_multisample": lambda: "BASS " + rpkg("BASS"),
          "cellcharter": lambda: freeze("m2", "cellcharter") + "; " + freeze("m2", "scvi-tools"), "mender": lambda: freeze("mender", "SOMENDER"),
          "histar_official": lambda: "official HiSTaR code, pinned commit 0039a3b", "spatial_mgcn_a9": lambda: "Spatial-MGCN repository commit cf4412d; rules F=epoch 200, P=loss plateau, L=epoch 400 (docs/PREREGISTERED_A9.md)"}.get(method, lambda: "")
     _VER[method] = v()

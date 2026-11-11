@@ -16,7 +16,9 @@ pre <- AddAdjList(pre, platform = if (vis == 1) "Visium" else "Other_SRT")
 pre <- AddParSetting(pre, Sigma_equal = FALSE, verbose = FALSE, int.model = NULL, seed = seed)
 cat("PRECAST", as.character(packageVersion("PRECAST")), "platform", if (vis == 1) "Visium" else "Other_SRT", "\n")
 pre <- PRECAST(pre, K = k)
+pre <- SelectModel(pre)                  # tutorial step: with one K it fills resList$cluster / resList$hZ with one entry per sample
 kept <- colnames(pre@seulist[[1]]); lab <- pre@resList$cluster[[1]]
+stopifnot(length(lab) == length(kept))
 full <- rep(NA_integer_, ncol(cnt)); names(full) <- colnames(cnt); full[kept] <- as.integer(lab)
 write.csv(data.frame(barcode = colnames(cnt), label = full), file.path(dir, "labels.csv"), row.names = FALSE)
 Z <- pre@resList$hZ[[1]]; E <- matrix(NA_real_, ncol(cnt), ncol(Z)); rownames(E) <- colnames(cnt); E[kept, ] <- Z

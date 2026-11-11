@@ -1,7 +1,7 @@
 #!/bin/bash
 # M1: SpatialPCA (R, github shangll123/SpatialPCA 1.3.0) and PRECAST (CRAN 1.9), tutorial settings (scripts/review_spatialpca.R, scripts/review_precast.R), on the 24 original sections and the real new sections, 3 seeds.
 # SpatialPCA needs O(n^2) memory: large sections may end as "memory limit" (30 GB cap) and are recorded as such. Dry run first (one small section per method, scratch records, never counted).
-# STATUS 2026-11-04: built, DRY RUN PENDING. This file is kept under the name review_stage_m1.sh.pending_dry_run so the runner (stage list entry scripts/review_stage_m1.sh) reports the stage as "not built yet" and cannot start it.
+# STATUS 2026-11-11: dry run PASSED after two script fixes (SpatialPCA else/brace, PRECAST SelectModel): PRECAST ARI 0.471 (259 s), SpatialPCA ARI 0.530 (1556 s) on DLPFC 151673 seed 0. --max-attempts 6 so the earlier failed osmFISH/BaristaSeq records (broken scripts) are rerun.
 # The SpatialPCA dry run was interrupted (server load about 68 on 20 threads, other users): redo it, and the PRECAST dry run, when load is below 18 (one dry run at a time, nice 10, 1 thread):
 #   run this script's dry-run section by hand; when both pass, rename the file to review_stage_m1.sh and log it in review_status.txt.
 set -e
@@ -17,5 +17,5 @@ sys.exit(0 if len(rs) >= 2 and all(r["status"] == "ok" and math.isfinite(r["metr
 PY
 echo "dry run passed; real run"
 python scripts/review_jobs.py --methods spatialpca precast > "$SCRATCH/m1_jobs.txt"
-python -W ignore scripts/review_queue.py --workers 1 --jobs-file "$SCRATCH/m1_jobs.txt" | tee "$SCRATCH/m1_real.log"
+python -W ignore scripts/review_queue.py --workers 1 --jobs-file "$SCRATCH/m1_jobs.txt" --max-attempts 6 | tee "$SCRATCH/m1_real.log"
 grep -q REVIEW_QUEUE_DONE "$SCRATCH/m1_real.log" || grep -q " 0 of .* jobs to run" "$SCRATCH/m1_real.log"
