@@ -1,0 +1,76 @@
+{
+ "S0": {
+  "a": 0.163779098151032,
+  "d": 0.21447704319164426,
+  "b": 0.11293160359683518,
+  "c": 0.0037012388377694935,
+  "e": 0.014564278320369455
+ },
+ "verdicts": [
+  {
+   "unit": "allenmerfish",
+   "finding": "a",
+   "statistic": "(a) ARI range over 20 single-start fits",
+   "n_units": 3,
+   "S": 0.1414024941341044,
+   "ci_low": 0.11203728543741727,
+   "ci_high": 0.1665721983524572,
+   "n0": 0.03,
+   "S0_original": 0.163779098151032,
+   "n_methods": 12,
+   "verdict": "replicates"
+  },
+  {
+   "unit": "allenmerfish",
+   "finding": "b",
+   "statistic": "(b) R mclust seed effect (ARI range, 10 seeds)",
+   "n_units": 3,
+   "S": 0.11877409461038246,
+   "ci_low": 0.10971833235275219,
+   "ci_high": 0.13583416013013835,
+   "n0": 0.03,
+   "S0_original": 0.11293160359683518,
+   "n_methods": 12,
+   "verdict": "replicates"
+  },
+  {
+   "unit": "allenmerfish",
+   "finding": "c",
+   "statistic": "(c) matched minus default ARI",
+   "n_units": 3,
+   "S": -0.019264379374481763,
+   "ci_low": -0.035771404341308814,
+   "ci_high": -0.00709183861366892,
+   "n0": 0.0,
+   "S0_original": 0.0037012388377694935,
+   "n_methods": 12,
+   "verdict": "reverses"
+  },
+  {
+   "unit": "allenmerfish",
+   "finding": "d",
+   "statistic": "(d) Spearman rho, log-likelihood vs ARI",
+   "n_units": 3,
+   "S": 0.013686257722748868,
+   "ci_low": -0.18600889600468573,
+   "ci_high": 0.29172932330827067,
+   "n0": 0.0,
+   "S0_original": 0.21447704319164426,
+   "n_methods": 12,
+   "verdict": "weakens"
+  },
+  {
+   "unit": "allenmerfish",
+   "finding": "e",
+   "statistic": "(e) K sensitivity: ARI(K) minus mean ARI(K+-1)",
+   "n_units": 3,
+   "S": 0.01404315460564567,
+   "ci_low": -0.01842469336073566,
+   "ci_high": 0.037688000263575785,
+   "n0": 0.0,
+   "S0_original": 0.014564278320369455,
+   "n_methods": 12,
+   "verdict": "weakens"
+  }
+ ]
+}
