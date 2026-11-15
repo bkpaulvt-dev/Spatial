@@ -162,6 +162,8 @@ numbers: stats
 	$(PYTHON) scripts/paper_numbers.py
 	$(PYTHON) scripts/paper_v2.py
 	$(PYTHON) scripts/coverage_matrix.py
+	$(PYTHON) scripts/newdata_stats.py
+	$(PYTHON) scripts/paper_newdata.py
 
 supplement: numbers
 	$(PYTHON) scripts/make_supplement.py

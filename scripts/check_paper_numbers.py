@@ -35,10 +35,12 @@ print(f"\n{len(claims) - bad}/{len(claims)} claims match.")
 
 # every macro used in main.tex must be defined (macros are generated from the same JSON by paper_v2.py)
 mac = open(os.path.join(ROOT, "results", "paper_macros.tex")).read()
+if os.path.exists(os.path.join(ROOT, "results", "paper_macros_newdata.tex")):   # simulation and whole-brain data (scripts/paper_newdata.py)
+    mac += open(os.path.join(ROOT, "results", "paper_macros_newdata.tex")).read()
 defined = set(re.findall(r"\\newcommand\{\\([A-Za-z]+)\}", mac))
 raw = open(os.path.join(ROOT, "paper", "main.tex")).read()
-used = {m for m in re.findall(r"\\([A-Za-z]+)", raw) if re.match(r"(mean[A-Z]|robust|overall|dLin|winsLin|pLin|gain|lot|rho[A-Z]|mc[A-Z]|mcs|mgcn|best|n[A-Z]|time|mem|rob[DLH]|std[DLH]|stat[A-Z]|pBest|rank[A-Z]|k[A-Z]|cavity|brcaC|peakB|deepst|list[A-Z]|sd[A-Z]|cpuR)", m)}
-undefined = sorted(m for m in used if m not in defined and m not in {"newcommand", "mathcal"})
+used = {m for m in re.findall(r"\\([A-Za-z]+)", raw) if re.match(r"(mean[A-Z]|robust|overall|dLin|winsLin|pLin|gain|lot|rho[A-Z]|mc[A-Z]|mcs|mgcn|best|n[A-Z]|time|mem|rob[DLH]|std[DLH]|stat[A-Z]|pBest|rank[A-Z]|k[A-Z]|cavity|brcaC|peakB|deepst|list[A-Z]|sd[A-Z]|cpuR|sim[A-Z]|al[A-Z]|gThree)", m)}
+undefined = sorted(m for m in used if m not in defined and m not in {"newcommand", "mathcal", "times"})
 print(f"{len(used) - len(undefined)}/{len(used)} macros used in the text are defined; undefined: {undefined}")
 unused = sorted(defined - set(re.findall(r"\\([A-Za-z]+)", raw)))
 print(f"{len(unused)} generated macros are unused (fine).")

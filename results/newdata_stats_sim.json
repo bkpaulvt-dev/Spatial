@@ -1,5 +1,5 @@
 {
- "n_records": 650,
+ "n_records": 675,
  "settings_with_delta": 9,
  "H1": {
   "delta_m1_minus_m7": 0.1625710290558713,
@@ -115,8 +115,8 @@
    },
    {
     "method": "pca_gmm",
-    "ari_mean": 0.8671617311154854,
-    "n_jobs": 12
+    "ari_mean": 0.8672887501783373,
+    "n_jobs": 15
    },
    {
     "method": "banksy_l0.2",
@@ -137,8 +137,8 @@
    },
    {
     "method": "pca_gmm",
-    "ari_mean": 0.8693798366547275,
-    "n_jobs": 4
+    "ari_mean": 0.8668062541133177,
+    "n_jobs": 15
    }
   ],
   "B12": [
@@ -192,6 +192,6 @@
   "banksy_l0.2": 135,
   "banksy_l0.8": 135,
   "linear_diffusion": 135,
-  "pca_gmm": 110
+  "pca_gmm": 135
  }
 }

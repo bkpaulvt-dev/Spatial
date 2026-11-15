@@ -9,6 +9,7 @@
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \newcommand{\figref}[1]{Figure~\ref{#1}}
 \input{../results/paper_macros.tex}
+\input{../results/paper_macros_newdata.tex}
 \input{supp_labels.tex}
 \setcitestyle{numbers,square}
 
@@ -41,7 +42,9 @@ neighbourhood-smoothing baseline (linear diffusion) had a higher mean ARI than \
 from the other \nRobUnres{} (exploratory); BASS and the baseline were the most likely to rank first. Its lead came from
 brain tissue: on breast cancer and embryo sections most methods, including PCA without smoothing, were slightly ahead.
 On fixed embeddings, random restarts of the same Gaussian mixture changed ARI by \lotMean{} on average (up to \lotMax),
-and R mclust's default fit depended on its random seed. Fit likelihood tracked ARI only on cortex. Our port of HiSTaR did not reproduce its published accuracy, and one method's released test scripts select its epoch using the labels. We recommend reporting clustering protocol and variance, never selecting
+and R mclust's default fit depended on its random seed. Fit likelihood tracked ARI only on cortex. In a pre-registered simulation, the advantage of smoothing over PCA fell from
+\simDAone{} ARI for wide layers to \simDAseven{} for layers three spots wide and \simDBthree{} for small random patches,
+and on three whole-brain MERFISH sections with atlas-derived regions the baseline was again among the most accurate methods. Our port of HiSTaR did not reproduce its published accuracy, and one method's released test scripts select its epoch using the labels. We recommend reporting clustering protocol and variance, never selecting
 runs with labels, and testing training-free baselines on several tissues.}
 
 \keywords{spatial transcriptomics, spatial domains, clustering, reproducibility, benchmarking}
@@ -78,7 +81,9 @@ initialisation of the mixture model and with the random seed of R mclust, and do
 \emph{Reproducibility}: do published results reproduce with the released code (here HiSTaR's DLPFC results), and does
 released code select models using the labels? The study design is summarised in \figref{fig:overview}. We find that a
 standard neighbourhood-smoothing baseline is among the most accurate methods on brain tissue but not on the other tissues, that the clustering step varies more than
-most differences between methods, and that released code can use the labels for model selection.
+most differences between methods, and that released code can use the labels for model selection. We then test one explanation for
+the tissue dependence, the size of the domains, with a pre-registered simulation, and repeat the analysis on whole-brain MERFISH sections whose
+domains come from registration to an anatomical atlas rather than from clustering.
 
 \begin{figure*}[t]
 \centering
@@ -116,6 +121,16 @@ tissue) of the annotation distributed with the SEDR analyses \citep{xu2024sedr}.
 E9.5 E1S1 (5913 bins, 12 annotated tissues), E10.5 E2S1 (8494 bins, 18) and E10.5 E1S1 (18,408 bins, 13), with the published
 tissue annotation. These two datasets were added after the analysis of the first three was complete, without changing any shared setting.
 In total, \nSections{} sections from four technologies (Supplementary Table~\STqc; Supplementary Note~\SNdata).
+Two further datasets were added after this analysis was complete and are analysed separately (see below).
+\textbf{Mouse whole brain (MERFISH).} Three coronal sections of one adult mouse from the Allen Brain Cell Atlas (Zhuang-ABCA-1
+\citep{zhang2023merfishbrain,yao2023abca}): of the \alNCand{} sections with more than 20,000 cells, those at the 25th, 50th and 75th percentile
+of the anterior--posterior position (\alCellsLo--\alCellsHi{} cells, 1122 genes). Domains are the divisions of the Allen Common Coordinate
+Framework (CCF) assigned to each cell by registration of the section to the atlas, not by clustering of the expression data; divisions with at
+least 1\% of a section's cells were kept (\alKLo--\alKHi{} domains), and the other cells were not scored.
+\textbf{Simulated tissue.} Square lattices of 120 $\times$ 120 spots with six domains whose expression profiles are those of layers L1--L6 of
+DLPFC section 151507 (negative-binomial counts, 5000 genes). In geometry A the six domains repeat $m\in\{1,2,4,7\}$ times as parallel bands
+(about 20, 10, 5 and 3 spots wide); in geometry B each $w\times w$ block, $w\in\{3,5,8,12,20\}$, takes one of the six domains at random
+(\figref{fig:newdata}A). Five tissues per setting (Supplementary Note~\SNnewdata).
 
 \subsection{Preprocessing}
 DLPFC, breast cancer and Stereo-seq (whole transcriptome; Stereo-seq bins without counts removed): genes in fewer than 50 spots or with fewer than 10 counts were removed, 2000 highly
@@ -204,6 +219,20 @@ gives every method the same input (process-tree sampling, one CPU thread per job
 agrees with the published pipelines to within the differences listed in Supplementary Table~\STagree. For the first three datasets
 the accuracy analyses use the published pipelines; for breast cancer and Stereo-seq they use the runner, which records both the
 method's own clustering and matched clustering.
+
+\subsection{Simulation and whole-brain data}
+Both datasets were run in the standardised runner with every method's code and settings unchanged, three seeds per method and the true
+number of domains, on a shared server (125 GB RAM, CPU, one thread per job) with a cap of 30 GB per job; their run times are not compared
+with the rest. They are reported separately from the main analysis and do not enter its bootstrap. For the simulation, the design, the
+primary contrast and the decision rules were committed before any simulated tissue existed (Supplementary Note~\SNnewdata). The primary
+contrast is $\Delta$, the ARI of linear diffusion minus that of PCA, each with its default 3-start mixture, averaged over seeds; per setting
+we report its mean over the five tissues with a 95\% percentile bootstrap interval over tissues. H1: $\Delta$ is larger for $m=1$ than for
+$m=7$ and does not increase with $m$. H2: $\Delta$ is smallest for $w=3$, lower than for $m=7$, and does not decrease with $w$. Each needs a
+difference above 0.03 ARI with an interval excluding zero. On the whole-brain sections, five findings of the main analysis were re-tested
+with the same protocols on the seed-0 embeddings, with a verdict rule fixed in advance: with $S_0$ the value in the main analysis and $n_0$ a
+null value (0.03 ARI for the two ranges, 0 otherwise), a finding \emph{replicates} if the new value lies on the same side of $n_0$ as $S_0$ with
+a 95\% interval (bootstrap over sections) excluding $n_0$, \emph{reverses} if it lies on the other side with the interval excluding $n_0$, and
+\emph{weakens} otherwise.
 
 \section{Results}
 
@@ -353,6 +382,54 @@ by the matched-clustering mean over the five datasets. SpaGCN, BASS and BayesSpa
 \label{fig:matched}
 \end{figure*}
 
+\subsection{The benefit of smoothing depends on domain size}
+The results above suggest that smoothing helps where domains are large and contiguous. The pre-registered simulation tests this with the
+expression differences between domains held fixed and only their geometry varied (\figref{fig:newdata}B,C; Supplementary Table~\STsim).
+With layered bands, the advantage of linear diffusion over PCA fell from \simDAone{} ARI (95\% interval \simDAoneLo{} to \simDAoneHi) for bands
+20 spots wide to \simDAseven{} (\simDAsevenLo{} to \simDAsevenHi) for bands about three spots wide (difference \simHone, \simHoneLo{} to
+\simHoneHi; H1 \simHoneVerdict). With random blocks of $3\times3$ spots, smoothing was harmful: linear diffusion reached \simLinBthree{}
+against \simPcaBthree{} for PCA ($\Delta$ \simDBthree, \simDBthreeLo{} to \simDBthreeHi; difference from the narrowest bands \simHtwo,
+\simHtwoLo{} to \simHtwoHi; H2 \simHtwoVerdict). $\Delta$ rose with block size, was indistinguishable from zero at $w=8$ (\simDBeight,
+\simDBeightLo{} to \simDBeightHi) and reached \simDBtwenty{} for $w=20$. PCA, which ignores location, stayed between \simPcaLo{} and \simPcaHi{}
+in every setting. In an exploratory comparison, the edge-preserving AnisoST lost little on the smallest blocks (\simAnisoBthree{} at $w=3$),
+whereas on the real single-cell data it was less accurate than linear diffusion; in the simulation every spot carries its domain's mean
+profile, without the cell-type mixing of single-cell data. So far the simulation covers \simNMethods{} methods (\simNRuns{} runs); the
+others have not yet been run on it.
+
+\subsection{Whole-brain MERFISH: atlas-derived domains}
+On the three whole-brain MERFISH sections, whose domains come from registration to the CCF rather than from clustering, \alNOk{} of the
+\alNJobs{} planned runs finished (\figref{fig:newdata}D; Supplementary Table~\STallen). Among the \alNComplete{} methods that finished every
+section, the highest mean ARIs with matched clustering were those of STAGATE (\alStagate), linear diffusion (\alLin), BASS
+(\alBass) and SpaceFlow (\alSpaceflow), against \alPca{} for PCA: on these large anatomical divisions smoothing raised ARI by about 0.28, in line with
+the simulation. With each method's own clustering, SpaceFlow (\alSpaceflowDef) and NichePCA (\alNichepcaDef), which use Leiden, were ahead of
+linear diffusion (\alLinDef), whereas STAGATE fell to \alStagateDef{} with its R mclust step. AnisoST was again much less accurate than linear
+diffusion (\alAniso), as on the hypothalamus MERFISH data. Several methods did not finish: \alNoneDone{} produced no result (SEDR: the R mclust
+error that GraphST and STAGATE had shown on this server, left unchanged; SpaGCN: its length-scale search returned no value; Spatial-MGCN: the
+30 GB cap), and four methods finished only part of their nine runs (\alPartial), because of the memory cap or of stops by the shared server's memory guard (Supplementary
+Note~\SNnewdata). Missing runs are reported as such and not imputed, so this comparison is descriptive.
+
+The findings on the clustering step were re-tested on the same sections (\gThreeNMethods{} methods with an embedding). The ARI range over
+20 single-start fits of one embedding (\gThreeA, 95\% interval \gThreeALo{} to \gThreeAHi; main analysis \gThreeARef) and the dependence
+of R mclust's default fit on its seed (range \gThreeB, \gThreeBLo{} to \gThreeBHi; main analysis \gThreeBRef) both replicated. Matched
+clustering, which gained \gThreeCRef{} on average in the main analysis, was slightly worse than the methods' own clustering here (\gThreeC,
+\gThreeCLo{} to \gThreeCHi; the verdict rule calls this a reversal), and likelihood was not related to ARI (median Spearman $\rho$ \gThreeD,
+\gThreeDLo{} to \gThreeDHi), as on the hypothalamus MERFISH data; the effect of changing $K$ by one weakened (\gThreeE, \gThreeELo{} to
+\gThreeEHi). With three sections these intervals are wide.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{nar_fig6_newdata.pdf}
+\caption{Domain size and atlas-derived domains. (\textbf{A}) Simulated tissues (120 $\times$ 120 spots, six domains with the expression
+profiles of DLPFC layers L1--L6): layered bands repeated $m$ times and random $w\times w$ blocks (one tissue each). (\textbf{B}, \textbf{C})
+Mean ARI over five tissues and three seeds per setting for the \simNMethods{} methods run so far (default clustering); band width $120/(6m)$
+and block side on a log scale. Linear diffusion minus PCA per setting, with intervals: Supplementary Table~\STsim. (\textbf{D}) Three
+coronal sections of the Allen whole-brain MERFISH atlas; domains are CCF divisions from registration to the atlas. Bars: mean ARI with
+matched clustering (BASS: internal clustering) over the sections that finished; symbols: per-section means over seeds; black dash: mean
+with each method's own clustering. Bar colour: method family as in \figref{fig:accuracy}; pale bars and asterisks: fewer than three
+sections finished. Runs that did not finish and why: Supplementary Table~\STallen.}
+\label{fig:newdata}
+\end{figure*}
+
 \subsection{HiSTaR's published DLPFC accuracy was not reproduced}
 With our PyTorch port of the official code and its published defaults, HiSTaR reached a median ARI over the twelve DLPFC sections of
 0.509 (mean 0.491, 95\% bootstrap interval over sections 0.454--0.525) with the 3-start GMM, and 0.449 (mean, seed 0)
@@ -385,13 +462,18 @@ smoothing, and the methods were close to each other. The clustering step was a l
 variation than most differences between methods: random initialisation of the same mixture model spanned \lotMean{} ARI on a fixed
 embedding, the default fit of R mclust, the final step of GraphST, STAGATE and SEDR, depended on a fixed but arbitrary random seed, and
 better likelihood did not reliably mean better domains. Reproducibility was limited both by the clustering step and by choices in
-released code, including selecting a reported epoch with the labels.
+released code, including selecting a reported epoch with the labels. A pre-registered simulation showed that the advantage of
+smoothing depends on domain size, and on whole-brain MERFISH sections with atlas-derived domains the baseline was again among the most
+accurate methods, while the variance of the clustering step replicated.
 
 Why does simple smoothing do so well on brain tissue? On layered tissue such as cortex, domains are large, contiguous regions, and
 averaging each spot with its neighbours removes most of the sampling noise that separates spots of the same layer; much of what a
 graph encoder learns may be this smoothing. In the breast cancer section and the embryo sections the methods performed similarly,
-and smoothing gave no gain over PCA alone. We did not test why. Domains there may be smaller, interleaved and defined partly by
-cell composition, so that a fixed amount of smoothing tuned on cortex blurs them; the annotation itself may have been derived partly from
+and smoothing gave no gain over PCA alone. The simulation supports one explanation: with the expression differences between
+domains held fixed, the gain from smoothing fell steadily as the domains became narrower and turned into a large loss for small, interleaved
+patches, and on the whole-brain sections, whose anatomical divisions are large, smoothing again gave a large gain over PCA. Domains in the
+breast cancer and embryo sections may be smaller, interleaved and defined partly by cell composition, so that a fixed amount of smoothing
+tuned on cortex blurs them. The simulation does not exclude other explanations: the annotation itself may have been derived partly from
 expression clustering (the MOSTA ``Cavity'' class and the Stereo-seq tissues), which would favour methods similar to that clustering; and on the square bin grid the
 six-nearest-neighbour graph has ties and a different physical scale. Neighbourhood-composition methods such as CellCharter
 \citep{varrone2024cellcharter} and MENDER \citep{yuan2024mender} take a related smoothing-like view. The brain/other contrast also rests on one breast cancer
@@ -402,7 +484,9 @@ differences of a few hundredths on that one section may be close to noise. On si
 best-fitting mixture can then describe cell types rather than regions, which may explain why likelihood and ARI disagree there. For a
 practitioner, the results suggest including a smoothing baseline as a reference, choosing the clustering step deliberately and reporting its
 variance. These results agree with recent benchmarks \citep{explanatory2026,hu2024gbbench,nar2025bench} and add a direct measurement
-of clustering variance on fixed embeddings for \lotNMethods{} methods across four technologies.
+of clustering variance on fixed embeddings for \lotNMethods{} methods across four technologies. For the choice of method, the
+simulation suggests a rule of thumb: smoothing with a fixed neighbourhood helps when domains are many spots wide and hurts when they are
+only a few spots wide, where in the simulation an edge-preserving rule or no smoothing did better.
 
 \paragraph{Recommendations.}
 (1) Report the clustering protocol: algorithm, implementation and version, initialisation, number of starts, random seeds and how
@@ -430,7 +514,11 @@ covers a smaller physical area than on Visium; on the square bin grid a six-near
 bins. The initialisation and R
 mclust experiments use one seed-0 embedding per section and method and do not include training-seed variance. Three of the five
 datasets are brain tissue, and the non-brain data comprise one breast cancer section and three embryo sections of one study;
-Slide-seq, Xenium and Visium HD data and sections with more than about 20,000 spots are not covered, and no simulated data were used.
+Slide-seq, Xenium and Visium HD data are not covered, and sections with more than about 20,000 cells only through the three whole-brain
+MERFISH sections, on which several methods did not finish within 30 GB or failed (Supplementary Table~\STallen); those results are
+descriptive and outside the main bootstrap. The simulation uses one generator (independent negative-binomial counts with fixed domain
+profiles, without cell-type mixing or spatial autocorrelation within a domain), and so far covers \simNMethods{} of the 16 comparators
+and the reference; the deep methods have not been run on it.
 The STARmap and MERFISH annotations were distributed with the BASS analyses, and BASS was among the most accurate methods on these
 data. The MOSTA tissue annotation was derived partly from clustering of the expression data and then curated, which may favour
 methods similar to that clustering, and the breast cancer annotation was distributed with the SEDR analyses; we did not verify
@@ -444,8 +532,11 @@ annotations: BASS-Analysis repository (\url{https://github.com/zhengli09/BASS-An
 studies \citep{wang2018starmap,moffitt2018merfish} (the origin of the annotations is discussed in Limitations). Breast cancer: 10x Genomics dataset V1\_Breast\_Cancer\_Block\_A\_Section\_1
 (\url{https://www.10xgenomics.com/datasets/human-breast-cancer-block-a-section-1-1-standard-1-1-0}) \citep{tenx2020brca}, annotation from the SEDR analyses repository \citep{xu2024sedr}.
 Stereo-seq: MOSTA atlas, CNGB STOmics database STDS0000058 (\url{https://db.cngb.org/stomics/mosta/}) \citep{chen2022mosta}.
+Whole-brain MERFISH: Allen Brain Cell Atlas, Zhuang-ABCA-1 raw counts, cell metadata and CCF registration
+(\url{https://allen-brain-cell-atlas.s3.us-west-2.amazonaws.com/}, release 20230830) \citep{zhang2023merfishbrain,yao2023abca}.
+Simulated tissues: generated by \texttt{scripts/simulate\_domains.py} from DLPFC section 151507.
 Exact file URLs, repository commits and SHA-256 checksums are listed in \texttt{configs/datasets.yaml} and
-\texttt{data/CHECKSUMS.sha256}. Code, download scripts with checksums, per-run results and the scripts that generate
+\texttt{data/CHECKSUMS.sha256} (new datasets: \texttt{configs/datasets\_newdata.yaml}). Code, download scripts with checksums, per-run results and the scripts that generate
 every number, table and figure: \todo{GitHub URL and Zenodo DOI}.
 
 \section*{Supplementary data}
