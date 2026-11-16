@@ -34,18 +34,18 @@ reproducibility of spatial domain identification methods}
 \revised{Date}{0}{Year}
 \accepted{Date}{0}{Year}
 
-\abstract{Spatial domain identification methods are usually compared by small differences in adjusted Rand index (ARI),
-mostly on one tissue and one run. We benchmarked \nMethodsPub{} published methods and three training-free baselines
-on \nSections{} sections of brain, breast cancer and mouse embryo from 10x Visium, STARmap, MERFISH and Stereo-seq,
-separating each learned embedding from its clustering step. With the same clustering for every embedding, a training-free
-neighbourhood-smoothing baseline (linear diffusion) had a higher mean ARI than \nRobBetter{} of \nRobTot{} comparators and could not be separated
-from the other \nRobUnres{} (exploratory); BASS and the baseline were the most likely to rank first. Its lead came from
-brain tissue: on breast cancer and embryo sections most methods, including PCA without smoothing, were slightly ahead.
-On fixed embeddings, random restarts of the same Gaussian mixture changed ARI by \lotMean{} on average (up to \lotMax),
-and R mclust's default fit depended on its random seed. Fit likelihood tracked ARI only on cortex. In a pre-registered simulation, the advantage of smoothing over PCA fell from
-\simDAone{} ARI for wide layers to \simDAseven{} for layers three spots wide and \simDBthree{} for small random patches,
-and on three whole-brain MERFISH sections with atlas-derived regions the baseline was again among the most accurate methods. Our port of HiSTaR did not reproduce its published accuracy, and one method's released test scripts select its epoch using the labels. We recommend reporting clustering protocol and variance, never selecting
-runs with labels, and testing training-free baselines on several tissues.}
+\abstract{Identifying spatial domains, tissue regions of coherent gene expression such as cortical layers, is a first step in
+analysing spatial transcriptomics data. Many methods,
+from Bayesian models to graph neural networks, report gains of a few hundredths in adjusted Rand index (ARI), mostly on one human
+cortex dataset and from single runs whose clustering step is rarely examined. How much of such a gain reflects the method,
+rather than the clustering step, the tissue or the chosen run, is unknown. We benchmarked \nMethodsPub{} published methods and three
+training-free baselines on \nSections{} sections from four technologies, clustering every learned embedding in the same way and
+refitting the clustering step on fixed embeddings. A smoothing baseline was more accurate than \nRobBetter{} of \nRobTot{}
+comparators, was not separated from the rest, and led only on brain tissue. On a
+fixed embedding, random restarts of one mixture model changed ARI by \lotMean{} on average (up to \lotMax). A pre-registered simulation
+showed that smoothing helps large domains and hurts small ones, and whole-brain data replicated the clustering variance. Released code
+of one method selected its reported epoch using the labels. We recommend reporting the clustering protocol and its variance,
+label-free model selection and multi-tissue baselines.}
 
 \keywords{spatial transcriptomics, spatial domains, clustering, reproducibility, benchmarking}
 
@@ -54,36 +54,82 @@ runs with labels, and testing training-free baselines on several tissues.}
 
 \section{Introduction}
 
-Spatial transcriptomics measures gene expression at thousands of locations in a tissue section
-while retaining their coordinates. Identifying \emph{spatial domains}, regions with coherent
-expression such as cortical layers, is one of the first analyses of such data, and many methods
-have been proposed for it, from Bayesian and probabilistic models \citep{zhao2021bayesspace,liu2023precast},
-spatially aware dimension reduction \citep{shang2022spatialpca} and neighbourhood-augmented features
-\citep{singhal2024banksy,varrone2024cellcharter,yuan2024mender} to graph neural networks
-\citep{hu2021spagcn,dong2022stagate,long2023graphst} and hierarchical graph variational
-autoencoders such as HiSTaR \citep{yu2025histar}.
+Spatial transcriptomics measures gene expression at thousands of locations in a tissue section while retaining their coordinates,
+from spots about 55~\textmu m wide on 10x Visium arrays \citep{maynard2021dlpfc} to single cells in imaging assays such as STARmap and
+MERFISH \citep{wang2018starmap,moffitt2018merfish} and binned DNA-nanoball arrays in Stereo-seq \citep{chen2022mosta}. Identifying
+\emph{spatial domains}, regions with coherent expression such as cortical layers or tumour regions, is one of the first analyses of such
+data, and later steps, such as finding region-specific genes or comparing tissues, build on it. Because the true domains are rarely
+known, methods are judged by their agreement with expert annotations, almost always measured by the adjusted Rand index (ARI)
+\citep{hubert1985ari}.
 
-Most of these methods are evaluated on the twelve manually annotated human dorsolateral prefrontal
-cortex (DLPFC) sections \citep{maynard2021dlpfc} and report median adjusted Rand index (ARI) \citep{hubert1985ari}
-improvements of a few hundredths over previous methods \citep{dong2022stagate,long2023graphst,yu2025histar}. Several
-(for example GraphST, STAGATE and SEDR) share the same last step: the learned embedding is clustered once with the
-EEE Gaussian mixture of the R package mclust \citep{scrucca2016mclust}. Benchmarks have found that rankings depend strongly
-on the dataset \citep{yuan2024benchmark,nar2025bench}, that deep methods vary with the random seed \citep{hu2024gbbench}, that
-replacing each method's clustering algorithm changes results \citep{nar2025bench}, and that preprocessing and clustering
-choices often matter more than architectural novelty \citep{explanatory2026}. Simple training-free pipelines can also be
-competitive \citep{nichepca2025,do2026graphbg}. What these studies do not measure directly is how much of the variation
-comes from the clustering step itself when the embedding is held fixed.
+Many methods have been proposed. Bayesian and probabilistic models cluster spots directly under a spatial prior: BayesSpace places a
+Potts-type prior on neighbouring spots of the Visium lattice \citep{zhao2021bayesspace}, BASS infers cell types and domains jointly in a
+hierarchical model that can span several sections \citep{li2022bass}, and PRECAST combines a probabilistic embedding with clustering and
+alignment of several sections \citep{liu2023precast}. SpatialPCA adds a spatial kernel to dimension reduction \citep{shang2022spatialpca}.
+Neighbourhood-feature methods augment each spot or cell with information from its surroundings: BANKSY appends the neighbourhood mean and
+gradient of expression \citep{singhal2024banksy}, CellCharter aggregates features over neighbourhoods of increasing size
+\citep{varrone2024cellcharter}, and MENDER summarises the cell-type composition around each cell at several ranges \citep{yuan2024mender}.
+The largest group are graph neural networks that learn an embedding of each spot from its expression and that of its neighbours: SpaGCN
+with graph convolution \citep{hu2021spagcn}, STAGATE with a graph attention autoencoder \citep{dong2022stagate}, GraphST with graph
+contrastive learning \citep{long2023graphst}, SEDR with a masked graph autoencoder \citep{xu2024sedr}, HiSTaR with a hierarchical graph
+variational autoencoder \citep{yu2025histar}, and others \citep{ren2022spaceflow,li2022ccst,wang2023spatialmgcn,xu2022deepst}. Training-free
+pipelines have also been proposed: NichePCA aggregates neighbour expression before principal component analysis \citep{nichepca2025}, and
+GraphBG uses spectral graph convolutions inside a Bayesian model \citep{do2026graphbg}.
 
-We benchmark \nMethodsPub{} published methods and three training-free baselines along three axes. \emph{Accuracy}: how do the
-methods compare across four technologies and three tissue types when their embeddings are clustered in the same way, and how does this change with
-each method's own clustering? \emph{Robustness}: on a \emph{fixed} embedding, how much does ARI change with the random
-initialisation of the mixture model and with the random seed of R mclust, and does selecting fits by likelihood help?
-\emph{Reproducibility}: do published results reproduce with the released code (here HiSTaR's DLPFC results), and does
-released code select models using the labels? The study design is summarised in \figref{fig:overview}. We find that a
-standard neighbourhood-smoothing baseline is among the most accurate methods on brain tissue but not on the other tissues, that the clustering step varies more than
-most differences between methods, and that released code can use the labels for model selection. We then test one explanation for
-the tissue dependence, the size of the domains, with a pre-registered simulation, and repeat the analysis on whole-brain MERFISH sections whose
-domains come from registration to an anatomical atlas rather than from clustering.
+Most of these methods are evaluated on the twelve manually annotated sections of human dorsolateral prefrontal cortex (DLPFC)
+\citep{maynard2021dlpfc}, and successive papers report median ARI improvements of a few hundredths
+\citep{dong2022stagate,long2023graphst,yu2025histar}. Three features of this practice make such differences hard to interpret. First, a
+learned method is a pipeline of two steps, an embedding and a clustering of that embedding, and several methods (for example GraphST,
+STAGATE and SEDR) share the same last step: the embedding is clustered once with the EEE Gaussian mixture of the R package mclust
+\citep{scrucca2016mclust} under a fixed random seed. A reported number therefore mixes the quality of the embedding with one draw of the
+clustering step. Second, DLPFC is a layered tissue with large, contiguous domains, so a method tuned and tested on it may not transfer to
+tissues with smaller or interleaved domains. Third, results usually come from a single run, so the choice of run, epoch or seed is part
+of the result.
+
+Independent benchmarks have addressed parts of this. They found that rankings depend strongly on the dataset
+\citep{yuan2024benchmark,nar2025bench}, that deep methods vary with the random seed \citep{hu2024gbbench}, that replacing each method's
+clustering algorithm changes results \citep{nar2025bench}, and that preprocessing and clustering choices often matter more than
+architectural novelty \citep{explanatory2026}; simple training-free pipelines can also be competitive \citep{nichepca2025,do2026graphbg}.
+Three questions remain open. (i) These studies compare methods with their own or with substituted clustering algorithms, but they do not
+measure directly how much ARI varies when the embedding is held fixed and only the clustering step is repeated. (ii) Why simple smoothing
+is competitive, and on which tissues, has to our knowledge not been tested in an experiment that varies only the geometry of the domains.
+(iii) Whether released code uses the annotation to select the reported model has, to our knowledge, not been checked systematically.
+
+Here we address these questions with a benchmark designed to separate the two steps of each method (\figref{fig:overview}). We run
+\nMethodsPub{} published methods and three training-free baselines on \nSections{} sections from four technologies and three tissue types.
+For question (i), we cluster every embedding with the same \emph{matched} clustering, a 20-start Gaussian mixture that keeps the most
+likely fit without looking at the labels, alongside each method's own clustering; and we hold one embedding per section and method fixed
+and refit it 20 times from single random starts and with R mclust under ten random seeds. For question (ii), we compare a standard
+neighbourhood-smoothing baseline, linear diffusion, with every method on each tissue, and test the resulting explanation in a
+pre-registered simulation that varies only the size and arrangement of domains and on whole-brain MERFISH sections whose domains come from
+registration to an anatomical atlas rather than from clustering. For question (iii), we try to reproduce one recent method's published
+accuracy and screen the released code of the benchmarked methods for label use.
+
+Several design choices keep these comparisons fair. The unit of statistical analysis is the donor or dataset, not the section, with
+intervals from a hierarchical bootstrap; the baseline settings were frozen on four development sections before any other data were
+analysed; every published method ran with its authors' defaults, and none was developed by us; the simulation's hypotheses and decision
+rules were committed before any simulated tissue existed; and every number in the paper is regenerated by scripts from per-run records.
+Relative to the benchmarks above, the new elements are the direct measurement of clustering-step variance on fixed embeddings, the
+controlled test of domain size, and the audit of released code for label-based model selection. Our contributions are:
+\begin{enumerate}
+\item \textbf{C1, accuracy depends on the tissue.} With matched clustering, linear diffusion had a higher mean ARI than \nRobBetter{} of
+\nRobTot{} comparators and could not be separated from the other \nRobUnres; BASS and the baseline were the most likely to rank first
+(\pBestBass{} and \pBestLin{} of bootstrap resamples). The lead came from brain tissue, where the baseline exceeded the average comparator
+by \dBrain{} ARI; on breast cancer and mouse embryo it trailed by \dOtherAbs.
+\item \textbf{C2, the clustering step varies more than the differences usually reported between methods.} On fixed embeddings, 20
+single-start fits of the same mixture changed ARI by \lotMean{} on average (up to \lotMax), and changing only the random seed of R mclust
+changed it by \mcsSeedMeanBig{} on average (up to \mcsSeedMax); both effects replicated on whole-brain data.
+\item \textbf{C3, a better-fitting clustering is not a better domain map.} Log-likelihood tracked ARI on cortex (median Spearman $\rho$
+\rhoDlpfcMed{} on DLPFC) but not on the other tissues (\rhoMerfishMed{} on MERFISH), and replacing each method's clustering by matched
+clustering raised mean ARI by more than 0.005 for \nGainPos{} of \nGainTot{} methods and lowered it for \nGainNeg.
+\item \textbf{C4, smoothing helps large domains and hurts small ones.} In the simulation, the advantage of linear diffusion over PCA fell
+from \simDAone{} ARI for wide layers to \simDAseven{} for narrow ones and \simDBthree{} for small random patches; on whole-brain sections,
+whose anatomical divisions are large, linear diffusion reached \alLin{} against \alPca{} for PCA.
+\item \textbf{C5, published results depend on choices in released code.} Our port of HiSTaR reached a median DLPFC ARI of 0.509 against a
+reported 0.65, and Spatial-MGCN's released test scripts select the reported epoch by ARI against the labels, which raised its DLPFC ARI by
+\mgcnLeakDlpfc.
+\end{enumerate}
+From these results we derive recommendations for evaluating and reporting spatial domain methods (Discussion).
 
 \begin{figure*}[t]
 \centering
@@ -237,6 +283,8 @@ a 95\% interval (bootstrap over sections) excluding $n_0$, \emph{reverses} if it
 \section{Results}
 
 \subsection{Linear diffusion is among the most accurate methods on brain tissue}
+\emph{Claim tested (C1, first part): when every embedding is clustered in the same way, a training-free smoothing baseline is as accurate as
+most published methods.}
 Every method completed every section it applies to (all \nSections{} sections; BayesSpace, the 13 Visium sections), including the 17 jobs that first exceeded the memory cap, so the comparisons below have no missing cells (Supplementary Table~\STcov).
 With matched clustering, linear diffusion had a mean ARI of \meanLinDlpfc, \meanLinStarmap{} and \meanLinMerfish{} on DLPFC,
 STARmap and MERFISH, \meanLinBrca{} on breast cancer and \meanLinStereo{} on Stereo-seq (\figref{fig:accuracy}A; per-dataset
@@ -255,9 +303,12 @@ runner instead of the published pipelines gave a similar picture, with a differe
 \nRobUnresRunner{} unresolved; first rank BASS \pBestBassRunner, linear diffusion \pBestLinRunner; Supplementary
 Table~\STstatsrunner). With each method's default clustering \nStdBetter{}
 of \nStdTot{} comparisons favoured the baseline and \nStdUnres{} (\listStdUnres) were unresolved (Supplementary
-Table~\STstats).
+Table~\STstats). \emph{Evidence for C1:} under a common clustering protocol the baseline was more accurate than \nRobBetter{} of
+\nRobTot{} comparators and could not be separated from the other \nRobUnres; these data do not show that it is better than the best
+published methods, and BASS ranked first more often.
 
 \subsection{The lead of the baseline depends on the tissue}
+\emph{Claim tested (C1, second part): the baseline's lead is specific to brain tissue.}
 With matched clustering, no comparator had a higher mean ARI than linear
 diffusion on DLPFC, \nAheadStarmap{} on STARmap and \nAheadMerfish{} on MERFISH (BASS in both cases; BASS was also ahead in an
 equal-weight average of the three brain datasets, \overallBass{} against \overallLin), but \nAheadBrca{} of \nCmpBrca{} comparators were ahead on breast
@@ -278,9 +329,13 @@ shown in \figref{fig:maps} and, for breast cancer and Stereo-seq, in Supplementa
 The edge-preserving variant AnisoST did not improve on linear diffusion overall (MERFISH: 0.363 vs 0.497), although on DLPFC it
 was more accurate on spots at layer boundaries (by 0.025, 9 of 12 sections, Wilcoxon signed-rank $p=0.034$, uncorrected;
 Supplementary Figure~\SFboundary); at single-cell resolution neighbouring cells often differ by cell type, so an edge-preserving
-rule blocks the smoothing needed to reveal regions.
+rule blocks the smoothing needed to reveal regions. \emph{Evidence for C1:} the baseline's overall lead rested on the three brain
+datasets, where it exceeded the average comparator by \dBrain{} ARI; on breast cancer and Stereo-seq it trailed by \dOtherAbs, and
+\nAheadBrca{} of \nCmpBrca{} and \nAheadStereo{} of \nCmpStereo{} comparators were ahead of it. Why this happens is tested below (C4).
 
 \subsection{Number of domains, seed variability and cost}
+\emph{Scope of C1: the comparisons above give every method the annotated number of domains and average over training seeds; here we
+check how far they depend on these choices.}
 
 Every method was given the annotated number of domains $K$. Changing $K$ by one changed ARI by \kOneAvg{} on average (\kOneMean{} in the
 worse direction, up to \kOneMax{}; Supplementary Table~\STk). BIC did not provide a usable label-free choice: within $K\pm2$ it selected the largest value in
@@ -291,7 +346,8 @@ depends on giving every method the true $K$.
 Seed-to-seed variability differed between methods: HiSTaR's standard deviation of ARI was \sdHistarDlpfc{} on DLPFC and \sdHistarStarmap{} on
 STARmap, against \sdBaseLo--\sdBaseHi{} for the training-free baselines (Supplementary Table~\STseeds). The median time per job on one CPU
 thread ranged from under 30 s for the baselines and BANKSY to about \timeMinCcst{} min for CCST, and CCST took more than 5 h on the largest
-Stereo-seq section (Supplementary Table~\STres).
+Stereo-seq section (Supplementary Table~\STres). \emph{Consequence for C1:} the baseline's lead holds when the true number of domains is
+given; with a label-free choice of $K$, \kAboveLinBic{} moved ahead of it (rank \kLinBicRank), so C1 is a statement about known $K$.
 
 \begin{figure*}[t]
 \centering
@@ -326,13 +382,17 @@ cancer and Stereo-seq are in Supplementary Figure~\SFmapsnew.}
 \end{figure*}
 
 \subsection{Random initialisation of the clustering step changes ARI on a fixed embedding}
+\emph{Claim tested (C2, first part): with the embedding held fixed, the random start of the clustering step alone changes ARI by more
+than the differences usually reported between methods.}
 \figref{fig:robust}A shows the ARI of 20 single-start fits of the same mixture model on each fixed embedding. Across the
 \lotN{} embeddings of \lotNMethods{} methods and baselines, the ARI range within an embedding was \lotMean{} on average and reached
 \lotMax{} (\lotWorstMethod, \lotWorstSection). The training-free baselines were not immune: the mean range was \lotMeanLin{} for
 linear diffusion, against \lotLo{} for \lotLoName{} and \lotHi{} for \lotHiName{} (Supplementary Table~\STlottery). The best of
 the 20 fits by ARI exceeded the average single fit by \lotOracle: choosing a clustering run by its agreement with the labels,
 explicitly or implicitly by trying several seeds, would inflate a result by more than the few hundredths typically reported
-between successive methods. Every fit for three representative methods is shown in Supplementary Figure~\SFlottery.
+between successive methods. Every fit for three representative methods is shown in Supplementary Figure~\SFlottery. \emph{Evidence for C2:} across \lotN{}
+fixed embeddings the mean range of \lotMean{} ARI, and the gain of \lotOracle{} from picking the best fit by the labels, exceed the few
+hundredths that separate successive published methods.
 
 \begin{figure*}[t]
 \centering
@@ -349,6 +409,8 @@ values, including the largest ranges, are in Supplementary Tables~\STlottery{} a
 \end{figure*}
 
 \subsection{The default fit of R mclust depends on its random seed}
+\emph{Claim tested (C2, second part): the clustering step of GraphST, STAGATE and SEDR, R mclust with a fixed seed, gives a result that
+depends on that seed.}
 For data with more than 2000 observations, R mclust initialises the EM algorithm by hierarchical agglomeration on a random subset
 of 2000 observations drawn with R's random number generator, so its default fit depends on the R seed. The published pipelines fix
 this seed (2020 in STAGATE and GraphST, 2023 in SEDR), which makes their result reproducible but tied to an arbitrary choice. Across
@@ -357,9 +419,12 @@ the \mcsNBig{} embeddings with more than 2000 spots or cells, changing only the 
 1050 cells, were initialised on all cells and did not vary. Initialising on all observations makes the fit deterministic, but it remained sensitive to noise far below
 the measurement noise: adding 1\% noise changed ARI by \mcsJitMean{} on average (up to \mcsJitMax; on the 18,408-bin Stereo-seq section, where one
 full-data fit takes about \mcsFullMinBig{} min, only for \mcsJitNBig{} embeddings). Among embeddings with more than 2000 observations, the full-data fit
-fell outside the range of the ten seeded fits for \mcsFullOutside\% (Supplementary Table~\STmclust).
+fell outside the range of the ten seeded fits for \mcsFullOutside\% (Supplementary Table~\STmclust). \emph{Evidence for C2:} a
+number published from these pipelines is one draw from a distribution whose range was \mcsSeedMeanBig{} ARI on average and above 0.1
+for \mcsSeedGt\% of the embeddings.
 
 \subsection{Selecting fits by likelihood helps on cortex but not on the other tissues}
+\emph{Claim tested (C3): choosing the clustering with the highest likelihood is not a general remedy for the variance shown above.}
 A natural fix is to run many starts and keep the most likely fit. On the same embedding and model, the best-likelihood fit beat the
 average single start by more than 0.005 ARI for \lotBLUp{} of \lotNMethods{} methods and was worse for \lotBLDown{} (Supplementary Table~\STlottery).
 Replacing each method's default clustering by matched clustering changed mean ARI by more than 0.005 upwards for \nGainPos{} of
@@ -370,7 +435,8 @@ related on DLPFC (median Spearman $\rho$ \rhoDlpfcMed) and STARmap (\rhoStarmapM
 \rhoMerfishMed; negative for \rhoNegMerfish{} of \lotNMethods{} methods), breast cancer (\rhoBrcaMed) or Stereo-seq
 (\rhoStereoMed). On MERFISH the best-fitting mixture may separate cell types rather than anatomical regions.
 Better optimisation of the mixture model is therefore not the same as better domains, and the clustering protocol alone can
-reorder methods.
+reorder methods. \emph{Evidence for C3:} likelihood and ARI were positively related only on the two cortex datasets, and matched
+clustering raised mean ARI by more than 0.005 for \nGainPos{} of \nGainTot{} methods and lowered it for \nGainNeg.
 
 \begin{figure*}[t]
 \centering
@@ -383,7 +449,8 @@ by the matched-clustering mean over the five datasets. SpaGCN, BASS and BayesSpa
 \end{figure*}
 
 \subsection{The benefit of smoothing depends on domain size}
-The results above suggest that smoothing helps where domains are large and contiguous. The pre-registered simulation tests this with the
+\emph{Claim tested (C4): the benefit of smoothing depends on the size and arrangement of the domains.} The tissue dependence above
+suggests that smoothing helps where domains are large and contiguous. The pre-registered simulation tests this with the
 expression differences between domains held fixed and only their geometry varied (\figref{fig:newdata}B,C; Supplementary Table~\STsim).
 With layered bands, the advantage of linear diffusion over PCA fell from \simDAone{} ARI (95\% interval \simDAoneLo{} to \simDAoneHi) for bands
 20 spots wide to \simDAseven{} (\simDAsevenLo{} to \simDAsevenHi) for bands about three spots wide (difference \simHone, \simHoneLo{} to
@@ -394,10 +461,12 @@ against \simPcaBthree{} for PCA ($\Delta$ \simDBthree, \simDBthreeLo{} to \simDB
 in every setting. In an exploratory comparison, the edge-preserving AnisoST lost little on the smallest blocks (\simAnisoBthree{} at $w=3$),
 whereas on the real single-cell data it was less accurate than linear diffusion; in the simulation every spot carries its domain's mean
 profile, without the cell-type mixing of single-cell data. So far the simulation covers \simNMethods{} methods (\simNRuns{} runs); the
-others have not yet been run on it.
+others have not yet been run on it. \emph{Evidence for C4:} both hypotheses fixed before the data existed were supported, so the
+domain-size explanation rests on a controlled experiment, within the limits of one generator and the methods run so far.
 
 \subsection{Whole-brain MERFISH: atlas-derived domains}
-On the three whole-brain MERFISH sections, whose domains come from registration to the CCF rather than from clustering, \alNOk{} of the
+\emph{Claims tested (C4 and C2 on new real data): smoothing should help on large anatomical divisions, and the clustering step should
+vary as before.} On the three whole-brain MERFISH sections, whose domains come from registration to the CCF rather than from clustering, \alNOk{} of the
 \alNJobs{} planned runs finished (\figref{fig:newdata}D; Supplementary Table~\STallen). Among the \alNComplete{} methods that finished every
 section, the highest mean ARIs with matched clustering were those of STAGATE (\alStagate), linear diffusion (\alLin), BASS
 (\alBass) and SpaceFlow (\alSpaceflow), against \alPca{} for PCA: on these large anatomical divisions smoothing raised ARI by about 0.28, in line with
@@ -414,7 +483,9 @@ of R mclust's default fit on its seed (range \gThreeB, \gThreeBLo{} to \gThreeBH
 clustering, which gained \gThreeCRef{} on average in the main analysis, was slightly worse than the methods' own clustering here (\gThreeC,
 \gThreeCLo{} to \gThreeCHi; the verdict rule calls this a reversal), and likelihood was not related to ARI (median Spearman $\rho$ \gThreeD,
 \gThreeDLo{} to \gThreeDHi), as on the hypothalamus MERFISH data; the effect of changing $K$ by one weakened (\gThreeE, \gThreeELo{} to
-\gThreeEHi). With three sections these intervals are wide.
+\gThreeEHi). With three sections these intervals are wide. \emph{Evidence for C4 and C2:} smoothing gave a large gain over PCA
+(\alLin{} against \alPca), as C4 predicts, and both sources of clustering variance replicated; the gain from matched clustering, part of
+C3, did not.
 
 \begin{figure*}[t]
 \centering
@@ -431,6 +502,7 @@ sections finished. Runs that did not finish and why: Supplementary Table~\STalle
 \end{figure*}
 
 \subsection{HiSTaR's published DLPFC accuracy was not reproduced}
+\emph{Claim tested (C5, first part): published accuracy may not be reproduced from released code with its defaults.}
 With our PyTorch port of the official code and its published defaults, HiSTaR reached a median ARI over the twelve DLPFC sections of
 0.509 (mean 0.491, 95\% bootstrap interval over sections 0.454--0.525) with the 3-start GMM, and 0.449 (mean, seed 0)
 when its embedding was clustered with R mclust as in the official pipeline, compared with a reported
@@ -438,9 +510,11 @@ median of 0.65 over the twelve sections and 0.718 on section 151673 \citep{yu202
 Possible causes include per-section tuning of the loss weights (described in the HiSTaR supplement), unpublished preprocessing,
 the shared PCA input of this benchmark (our port received the same principal components as the other methods) and the choice of
 seed; the results above show that the clustering step alone can produce per-section differences of this size.
-We report these numbers to document what our port of the released code and its defaults reproduce (we did not run the official code), not to question the method itself.
+We report these numbers to document what our port of the released code and its defaults reproduce (we did not run the official code), not to question the method itself. \emph{Evidence for C5:} with
+the published defaults, our port reached a median DLPFC ARI of 0.509 against a reported 0.65.
 
 \subsection{Released code of one method selects the reported epoch using the labels}
+\emph{Claim tested (C5, second part): released code can use the annotation to select the reported result.}
 Spatial-MGCN's released test scripts (\texttt{DLPFC\_test.py}, \texttt{HBC\_test.py}) compute ARI against the annotation at every
 training epoch and keep the best epoch for reporting. Applying the same selection rule in our runs (seed 0, \mgcnLeakN{} sections),
 this label-selected epoch had a mean ARI of \mgcnOracleDlpfc{} on DLPFC, \mgcnOracleStarmap{} on STARmap and \mgcnOracleMerfish{}
@@ -450,7 +524,8 @@ agreement with the labels is a form of label leakage: on DLPFC it makes the meth
 baselines (\mgcnOracleDlpfc{} against \meanLinDlpfc) when its label-free result is not. On the breast cancer section, for which
 the released repository provides a configuration, the inflation was smaller (\mgcnLeakBrca{} ARI over \mgcnLeakBrcaN{} seeds), but that is a tuned configuration that can carry its own label influence. An automated screen of the released
 repositories (11 benchmarked methods and three further spatial methods) for other patterns of label use, with every candidate line read by hand, is reported in Supplementary
-Table~\STaudit{} and Supplementary Note~\SNaudit.
+Table~\STaudit{} and Supplementary Note~\SNaudit. \emph{Evidence for C5:} Spatial-MGCN's released test scripts select the reported
+epoch by ARI against the labels, which raised its DLPFC ARI by \mgcnLeakDlpfc{} in our runs, and the screen found no other case of a result chosen by agreement with the labels.
 
 \section{Discussion}
 We benchmarked \nMethodsPub{} published methods and three training-free baselines on \nSections{} sections from four
