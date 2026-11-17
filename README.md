@@ -5,6 +5,8 @@ Spatial-domain identification for spatial transcriptomics.
 * **`docs/HiCAST.md`**: summary of the HiSTaR paper (Yu et al., *J. Transl. Med.*
   2025), its weaknesses (including bugs found in the official code), the design of
   **HiCAST**, the proposed successor, and an honest benchmark on all 12 DLPFC slices.
+* **`docs/CytoWorldModel.md`**: separate topic, proposal only: literature scan and
+  staged plan for an action-conditioned world model in cytopathology.
 * **`hicast/histar.py`**: faithful PyTorch port of the official HiSTaR code (MIT).
 * **`hicast/model.py`**: HiCAST: expression-aware graph, per-spot hop attention,
   hierarchical VAE with deterministic inference, local–global contrast, attention
