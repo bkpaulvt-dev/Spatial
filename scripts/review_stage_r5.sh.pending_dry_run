@@ -1,0 +1,38 @@
+#!/bin/bash
+# R5 equal-tuning arm, cheap methods (docs/PREREGISTERED_TUNING.md, committed before any R5 result).
+# 1) dry run: configuration 0 (= Arm A) of each method on DLPFC 151507 seed 0, scratch only; must reproduce the Arm A ARI (|diff| <= 0.001).
+# 2) tuning phase: 5 methods x 10 configurations x 6 dev sections, seed 0 (300 jobs).
+# 3) selection (scripts/r5_select.py, rule S), results/r5_selected.json committed BEFORE the tuned run.
+# 4) tuned run: r5__<method>__tuned on the 24 original sections x 3 seeds (360 jobs); then scripts/r5_analysis.py.
+set -e
+source "$(dirname "$0")/review_stage_common.sh"
+rm -f "$SCRATCH/r5_dry.jsonl"; rm -rf "$SCRATCH/r5_runs"
+J=(); for m in linear_diffusion anisost pca_gmm banksy nichepca; do J+=(--job "dlpfc:151507:r5__${m}__c0:0"); done
+python -W ignore scripts/review_queue.py --workers 1 --timeout 7200 --out "$SCRATCH/r5_dry.jsonl" --runs-dir "$SCRATCH/r5_runs" "${J[@]}"
+python - "$SCRATCH/r5_dry.jsonl" <<'PY'
+import json, math, sys
+arm = {"linear_diffusion": "linear_diffusion", "anisost": "anisost", "pca_gmm": "pca_gmm", "banksy": "banksy_l0.8", "nichepca": "nichepca"}
+ref = {}
+for l in open("results/benchmark_runs.jsonl"):
+    r = json.loads(l)
+    if r["dataset"] == "dlpfc" and str(r["section"]) == "151507" and r["seed"] == 0 and r["status"] == "ok": ref[r["method"]] = r["metrics"]["ARI"]
+rs = {json.loads(l)["method"]: json.loads(l) for l in open(sys.argv[1])}
+bad = 0
+for m, a in arm.items():
+    r = rs.get(f"r5__{m}__c0")
+    ok = r is not None and r["status"] == "ok" and math.isfinite(r["metrics"]["ARI"])
+    d = (r["metrics"]["ARI"] - ref[a]) if ok and a in ref else float("nan")
+    print(f"{m:17s}", "ok" if ok else "FAIL", "ARI=%.4f" % r["metrics"]["ARI"] if ok else str((r or {}).get("error", ""))[:300], "Arm A=%.4f diff=%+.4f" % (ref.get(a, float("nan")), d))
+    bad += (not ok) or not (abs(d) <= 0.001)
+sys.exit(1 if bad else 0)
+PY
+echo "dry run passed; tuning phase"
+python scripts/r5_tuning.py > "$SCRATCH/r5_tune_jobs.txt"
+python -W ignore scripts/review_queue.py --workers 1 --jobs-file "$SCRATCH/r5_tune_jobs.txt" | tee "$SCRATCH/r5_tune.log"
+python scripts/r5_select.py | tee "$SCRATCH/r5_select.log"
+git add results/r5_selected.json && git commit -q -m "R5: selected configurations (rule S, dev sections, seed 0), frozen before the tuned run" && git push -q origin new-datasets || true
+echo "tuned run"
+python scripts/review_jobs.py --groups original --methods r5__linear_diffusion__tuned r5__anisost__tuned r5__pca_gmm__tuned r5__banksy__tuned r5__nichepca__tuned > "$SCRATCH/r5_tuned_jobs.txt"
+python -W ignore scripts/review_queue.py --workers 1 --jobs-file "$SCRATCH/r5_tuned_jobs.txt" | tee "$SCRATCH/r5_tuned.log"
+python scripts/r5_analysis.py | tee "$SCRATCH/r5_analysis.log"
+grep -q REVIEW_QUEUE_DONE "$SCRATCH/r5_tuned.log" || grep -q " 0 of .* jobs to run" "$SCRATCH/r5_tuned.log"

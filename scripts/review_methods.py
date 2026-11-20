@@ -216,7 +216,10 @@ def version_of(method):
     """Package / code version string of a review method, stored in every record (field method_version)."""
     if method in _VER:
         return _VER[method]
-    base = os.environ.get("BASE", "/mnt/disk/bikashkumar/SpatialBench")
+    if method.startswith("r5__"):   # R5 equal-tuning arm (scripts/r5_tuning.py): version = method plus the exact configuration
+        import r5_tuning
+        _VER[method] = r5_tuning.version(method); return _VER[method]
+    base =os.environ.get("BASE", "/mnt/disk/bikashkumar/SpatialBench")
 
     def rpkg(name):
         try:
@@ -238,3 +241,10 @@ def version_of(method):
          "histar_official": lambda: "official HiSTaR code, pinned commit 0039a3b", "spatial_mgcn_a9": lambda: "Spatial-MGCN repository commit cf4412d; rules F=epoch 200, P=loss plateau, L=epoch 400 (docs/PREREGISTERED_A9.md)"}.get(method, lambda: "")
     _VER[method] = v()
     return _VER[method]
+
+
+# R5 equal-tuning arm (docs/PREREGISTERED_TUNING.md): new method names only (r5__<method>__c<j>, r5__<method>__tuned); existing adapters unchanged.
+import sys as _sys
+_sys.path.insert(0, HERE)
+import r5_tuning as _r5  # noqa: E402
+ADAPTERS.update(_r5.ADAPTERS)
