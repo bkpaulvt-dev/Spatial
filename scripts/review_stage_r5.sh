@@ -1,4 +1,5 @@
 #!/bin/bash
+# STATUS 2026-11-22: dry run PASSED (2026-11-20): configuration 0 reproduces Arm A exactly on DLPFC 151507 seed 0 for all 5 methods (diff 0.0000); stage enabled.
 # R5 equal-tuning arm, cheap methods (docs/PREREGISTERED_TUNING.md, committed before any R5 result).
 # 1) dry run: configuration 0 (= Arm A) of each method on DLPFC 151507 seed 0, scratch only; must reproduce the Arm A ARI (|diff| <= 0.001).
 # 2) tuning phase: 5 methods x 10 configurations x 6 dev sections, seed 0 (300 jobs).
@@ -30,7 +31,9 @@ echo "dry run passed; tuning phase"
 python scripts/r5_tuning.py > "$SCRATCH/r5_tune_jobs.txt"
 python -W ignore scripts/review_queue.py --workers 1 --jobs-file "$SCRATCH/r5_tune_jobs.txt" | tee "$SCRATCH/r5_tune.log"
 python scripts/r5_select.py | tee "$SCRATCH/r5_select.log"
-git add results/r5_selected.json && git commit -q -m "R5: selected configurations (rule S, dev sections, seed 0), frozen before the tuned run" && git push -q origin new-datasets || true
+git add results/r5_selected.json && git commit -q -m "R5: selected configurations (rule S, dev sections, seed 0), frozen before the tuned run
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>" && git -c credential.helper= -c credential.helper="!$BASE/bin/gh auth git-credential" push -q origin new-datasets || true
 echo "tuned run"
 python scripts/review_jobs.py --groups original --methods r5__linear_diffusion__tuned r5__anisost__tuned r5__pca_gmm__tuned r5__banksy__tuned r5__nichepca__tuned > "$SCRATCH/r5_tuned_jobs.txt"
 python -W ignore scripts/review_queue.py --workers 1 --jobs-file "$SCRATCH/r5_tuned_jobs.txt" | tee "$SCRATCH/r5_tuned.log"
