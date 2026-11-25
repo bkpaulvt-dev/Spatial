@@ -1,5 +1,5 @@
 {
- "n_records": 650,
+ "n_records": 1143,
  "settings_with_delta": 9,
  "H1": {
   "delta_m1_minus_m7": 0.1625710290558713,
@@ -34,12 +34,17 @@
     "n_jobs": 15
    },
    {
-    "method": "banksy_l0.2",
-    "ari_mean": 0.9072868901704892,
+    "method": "histar",
+    "ari_mean": 0.9807837469224747,
     "n_jobs": 15
    }
   ],
   "A2": [
+   {
+    "method": "histar",
+    "ari_mean": 0.9905668968617398,
+    "n_jobs": 15
+   },
    {
     "method": "linear_diffusion",
     "ari_mean": 0.9896169471327337,
@@ -49,14 +54,14 @@
     "method": "anisost",
     "ari_mean": 0.98385430182811,
     "n_jobs": 15
-   },
-   {
-    "method": "pca_gmm",
-    "ari_mean": 0.8641301052100604,
-    "n_jobs": 15
    }
   ],
   "A4": [
+   {
+    "method": "histar",
+    "ari_mean": 0.9798902223498908,
+    "n_jobs": 15
+   },
    {
     "method": "linear_diffusion",
     "ari_mean": 0.9686039554934304,
@@ -66,14 +71,14 @@
     "method": "anisost",
     "ari_mean": 0.9667126267595908,
     "n_jobs": 15
-   },
-   {
-    "method": "banksy_l0.2",
-    "ari_mean": 0.8869609690073617,
-    "n_jobs": 15
    }
   ],
   "A7": [
+   {
+    "method": "histar",
+    "ari_mean": 0.957789105188795,
+    "n_jobs": 15
+   },
    {
     "method": "anisost",
     "ari_mean": 0.8835777923771914,
@@ -82,11 +87,6 @@
    {
     "method": "pca_gmm",
     "ari_mean": 0.8655000546319196,
-    "n_jobs": 15
-   },
-   {
-    "method": "linear_diffusion",
-    "ari_mean": 0.8340226638951922,
     "n_jobs": 15
    }
   ],
@@ -102,8 +102,8 @@
     "n_jobs": 15
    },
    {
-    "method": "banksy_l0.2",
-    "ari_mean": 0.7575690024564296,
+    "method": "histar",
+    "ari_mean": 0.8677441419876128,
     "n_jobs": 15
    }
   ],
@@ -114,13 +114,13 @@
     "n_jobs": 15
    },
    {
-    "method": "pca_gmm",
-    "ari_mean": 0.8671617311154854,
-    "n_jobs": 12
+    "method": "histar",
+    "ari_mean": 0.9399449612336388,
+    "n_jobs": 15
    },
    {
-    "method": "banksy_l0.2",
-    "ari_mean": 0.7988784718617292,
+    "method": "pca_gmm",
+    "ari_mean": 0.8672887501783373,
     "n_jobs": 15
    }
   ],
@@ -131,14 +131,14 @@
     "n_jobs": 15
    },
    {
-    "method": "banksy_l0.2",
-    "ari_mean": 0.8723468834002149,
+    "method": "histar",
+    "ari_mean": 0.934389452706858,
     "n_jobs": 15
    },
    {
-    "method": "pca_gmm",
-    "ari_mean": 0.8693798366547275,
-    "n_jobs": 4
+    "method": "banksy_l0.2",
+    "ari_mean": 0.8723468834002149,
+    "n_jobs": 15
    }
   ],
   "B12": [
@@ -148,13 +148,13 @@
     "n_jobs": 15
    },
    {
-    "method": "linear_diffusion",
-    "ari_mean": 0.9460264702593241,
+    "method": "histar",
+    "ari_mean": 0.9551247299438493,
     "n_jobs": 15
    },
    {
-    "method": "banksy_l0.2",
-    "ari_mean": 0.8872239206680881,
+    "method": "linear_diffusion",
+    "ari_mean": 0.9460264702593241,
     "n_jobs": 15
    }
   ],
@@ -170,28 +170,299 @@
     "n_jobs": 15
    },
    {
-    "method": "banksy_l0.2",
-    "ari_mean": 0.8962703848025676,
+    "method": "histar",
+    "ari_mean": 0.9303948418880733,
     "n_jobs": 15
    }
   ]
  },
  "reduced_design_ari": {
-  "A1": [],
-  "A2": [],
-  "A4": [],
-  "A7": [],
-  "B3": [],
-  "B5": [],
-  "B8": [],
-  "B12": [],
-  "B20": []
+  "A1": [
+   {
+    "method": "bass",
+    "ari_mean": 0.9938509811059432
+   },
+   {
+    "method": "stagate",
+    "ari_mean": 0.9935242643203973
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.9827943461442289
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.9751281727303606
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.9613271346918529
+   },
+   {
+    "method": "deepst",
+    "ari_mean": 0.8989331829842252
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.8025632463540524
+   }
+  ],
+  "A2": [
+   {
+    "method": "stagate",
+    "ari_mean": 0.992195131380604
+   },
+   {
+    "method": "bass",
+    "ari_mean": 0.9877367854137215
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.9759008474852154
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.9528211261742543
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.9509065083040811
+   },
+   {
+    "method": "deepst",
+    "ari_mean": 0.838813278893256
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.6277408381230958
+   }
+  ],
+  "A4": [
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.9859166094355726
+   },
+   {
+    "method": "stagate",
+    "ari_mean": 0.9782208627280292
+   },
+   {
+    "method": "bass",
+    "ari_mean": 0.9744739836821144
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.9322642148547645
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.8542391414050551
+   },
+   {
+    "method": "deepst",
+    "ari_mean": 0.7729859428005081
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.6292696278410173
+   }
+  ],
+  "A7": [
+   {
+    "method": "stagate",
+    "ari_mean": 0.940553487512189
+   },
+   {
+    "method": "bass",
+    "ari_mean": 0.9378491058477958
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.9142621731632148
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.9113633698419727
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.6359396517006247
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.5917941599886604
+   },
+   {
+    "method": "deepst",
+    "ari_mean": 0.5181550119003049
+   }
+  ],
+  "B3": [
+   {
+    "method": "deepst",
+    "ari_mean": 0.9731739893001612
+   },
+   {
+    "method": "stagate",
+    "ari_mean": 0.8634216505007218
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.8000683100410607
+   },
+   {
+    "method": "bass",
+    "ari_mean": 0.7361303459175534
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.33638598764725286
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.22974782434818491
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.22943501244603715
+   }
+  ],
+  "B5": [
+   {
+    "method": "deepst",
+    "ari_mean": 0.9912671090948058
+   },
+   {
+    "method": "bass",
+    "ari_mean": 0.9641042051600142
+   },
+   {
+    "method": "stagate",
+    "ari_mean": 0.9432953438212344
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.8552223846250344
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.4574169625899787
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.4078964685796013
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.3431101586447813
+   }
+  ],
+  "B8": [
+   {
+    "method": "deepst",
+    "ari_mean": 0.9922135080757226
+   },
+   {
+    "method": "bass",
+    "ari_mean": 0.9755684419082625
+   },
+   {
+    "method": "stagate",
+    "ari_mean": 0.9526265305593233
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.8983047511968675
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.5791227812204424
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.49371670411594953
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.32226551313138085
+   }
+  ],
+  "B12": [
+   {
+    "method": "bass",
+    "ari_mean": 0.9899544077623978
+   },
+   {
+    "method": "deepst",
+    "ari_mean": 0.982228815316489
+   },
+   {
+    "method": "stagate",
+    "ari_mean": 0.9800352058724582
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.9429807083157222
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.7728747848804677
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.6777327651504587
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.4859177231864237
+   }
+  ],
+  "B20": [
+   {
+    "method": "bass",
+    "ari_mean": 0.9911163536878178
+   },
+   {
+    "method": "stagate",
+    "ari_mean": 0.9903786833411191
+   },
+   {
+    "method": "graphst",
+    "ari_mean": 0.9463596184400878
+   },
+   {
+    "method": "ccst",
+    "ari_mean": 0.9087983082902599
+   },
+   {
+    "method": "deepst",
+    "ari_mean": 0.6631609892257637
+   },
+   {
+    "method": "spatial_mgcn",
+    "ari_mean": 0.6377545562045824
+   },
+   {
+    "method": "spaceflow",
+    "ari_mean": 0.42160949628050026
+   }
+  ]
  },
  "coverage_jobs_ok_per_method": {
   "anisost": 135,
   "banksy_l0.2": 135,
   "banksy_l0.8": 135,
+  "bass": 9,
+  "ccst": 9,
+  "deepst": 9,
+  "graphst": 9,
+  "histar": 135,
   "linear_diffusion": 135,
-  "pca_gmm": 110
+  "nichepca": 135,
+  "pca_gmm": 135,
+  "spaceflow": 9,
+  "spagcn": 135,
+  "spatial_mgcn": 9,
+  "stagate": 9
  }
 }

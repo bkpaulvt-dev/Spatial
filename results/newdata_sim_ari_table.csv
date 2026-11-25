@@ -26,6 +26,51 @@ banksy_l0.8,B,5,0.6603026154363054,15,full (5 replicates x 3 seeds)
 banksy_l0.8,B,8,0.7526095740563167,15,full (5 replicates x 3 seeds)
 banksy_l0.8,B,12,0.7963121298273489,15,full (5 replicates x 3 seeds)
 banksy_l0.8,B,20,0.8230021619563976,15,full (5 replicates x 3 seeds)
+bass,A,1,0.9938509811059432,1,"reduced (seed 0, replicate 0)"
+bass,A,2,0.9877367854137215,1,"reduced (seed 0, replicate 0)"
+bass,A,4,0.9744739836821144,1,"reduced (seed 0, replicate 0)"
+bass,A,7,0.9378491058477958,1,"reduced (seed 0, replicate 0)"
+bass,B,3,0.7361303459175534,1,"reduced (seed 0, replicate 0)"
+bass,B,5,0.9641042051600142,1,"reduced (seed 0, replicate 0)"
+bass,B,8,0.9755684419082625,1,"reduced (seed 0, replicate 0)"
+bass,B,12,0.9899544077623978,1,"reduced (seed 0, replicate 0)"
+bass,B,20,0.9911163536878178,1,"reduced (seed 0, replicate 0)"
+ccst,A,1,0.9827943461442289,1,"reduced (seed 0, replicate 0)"
+ccst,A,2,0.9759008474852154,1,"reduced (seed 0, replicate 0)"
+ccst,A,4,0.8542391414050551,1,"reduced (seed 0, replicate 0)"
+ccst,A,7,0.6359396517006247,1,"reduced (seed 0, replicate 0)"
+ccst,B,3,0.22943501244603715,1,"reduced (seed 0, replicate 0)"
+ccst,B,5,0.4078964685796013,1,"reduced (seed 0, replicate 0)"
+ccst,B,8,0.5791227812204424,1,"reduced (seed 0, replicate 0)"
+ccst,B,12,0.6777327651504587,1,"reduced (seed 0, replicate 0)"
+ccst,B,20,0.9087983082902599,1,"reduced (seed 0, replicate 0)"
+deepst,A,1,0.8989331829842252,1,"reduced (seed 0, replicate 0)"
+deepst,A,2,0.838813278893256,1,"reduced (seed 0, replicate 0)"
+deepst,A,4,0.7729859428005081,1,"reduced (seed 0, replicate 0)"
+deepst,A,7,0.5181550119003049,1,"reduced (seed 0, replicate 0)"
+deepst,B,3,0.9731739893001612,1,"reduced (seed 0, replicate 0)"
+deepst,B,5,0.9912671090948058,1,"reduced (seed 0, replicate 0)"
+deepst,B,8,0.9922135080757226,1,"reduced (seed 0, replicate 0)"
+deepst,B,12,0.982228815316489,1,"reduced (seed 0, replicate 0)"
+deepst,B,20,0.6631609892257637,1,"reduced (seed 0, replicate 0)"
+graphst,A,1,0.9613271346918529,1,"reduced (seed 0, replicate 0)"
+graphst,A,2,0.9528211261742543,1,"reduced (seed 0, replicate 0)"
+graphst,A,4,0.9322642148547645,1,"reduced (seed 0, replicate 0)"
+graphst,A,7,0.9113633698419727,1,"reduced (seed 0, replicate 0)"
+graphst,B,3,0.8000683100410607,1,"reduced (seed 0, replicate 0)"
+graphst,B,5,0.8552223846250344,1,"reduced (seed 0, replicate 0)"
+graphst,B,8,0.8983047511968675,1,"reduced (seed 0, replicate 0)"
+graphst,B,12,0.9429807083157222,1,"reduced (seed 0, replicate 0)"
+graphst,B,20,0.9463596184400878,1,"reduced (seed 0, replicate 0)"
+histar,A,1,0.9807837469224747,15,full (5 replicates x 3 seeds)
+histar,A,2,0.9905668968617398,15,full (5 replicates x 3 seeds)
+histar,A,4,0.9798902223498908,15,full (5 replicates x 3 seeds)
+histar,A,7,0.957789105188795,15,full (5 replicates x 3 seeds)
+histar,B,3,0.8677441419876128,15,full (5 replicates x 3 seeds)
+histar,B,5,0.9399449612336388,15,full (5 replicates x 3 seeds)
+histar,B,8,0.934389452706858,15,full (5 replicates x 3 seeds)
+histar,B,12,0.9551247299438493,15,full (5 replicates x 3 seeds)
+histar,B,20,0.9303948418880733,15,full (5 replicates x 3 seeds)
 linear_diffusion,A,1,0.9956202133004527,15,full (5 replicates x 3 seeds)
 linear_diffusion,A,2,0.9896169471327337,15,full (5 replicates x 3 seeds)
 linear_diffusion,A,4,0.9686039554934304,15,full (5 replicates x 3 seeds)
@@ -35,12 +80,57 @@ linear_diffusion,B,5,0.7775189220163742,15,full (5 replicates x 3 seeds)
 linear_diffusion,B,8,0.8637587745047697,15,full (5 replicates x 3 seeds)
 linear_diffusion,B,12,0.9460264702593241,15,full (5 replicates x 3 seeds)
 linear_diffusion,B,20,0.9822214155169852,15,full (5 replicates x 3 seeds)
+nichepca,A,1,0.9669221482271362,15,full (5 replicates x 3 seeds)
+nichepca,A,2,0.8046469081496487,15,full (5 replicates x 3 seeds)
+nichepca,A,4,0.7587743296322258,15,full (5 replicates x 3 seeds)
+nichepca,A,7,0.5855996069127082,15,full (5 replicates x 3 seeds)
+nichepca,B,3,0.3637408225073784,15,full (5 replicates x 3 seeds)
+nichepca,B,5,0.6007688253983098,15,full (5 replicates x 3 seeds)
+nichepca,B,8,0.6605057026523807,15,full (5 replicates x 3 seeds)
+nichepca,B,12,0.8634999031867776,15,full (5 replicates x 3 seeds)
+nichepca,B,20,0.9155023478008004,15,full (5 replicates x 3 seeds)
 pca_gmm,A,1,0.8645265749813088,15,full (5 replicates x 3 seeds)
 pca_gmm,A,2,0.8641301052100604,15,full (5 replicates x 3 seeds)
 pca_gmm,A,4,0.8687540582919289,15,full (5 replicates x 3 seeds)
 pca_gmm,A,7,0.8655000546319196,15,full (5 replicates x 3 seeds)
 pca_gmm,B,3,0.8689632317042835,15,full (5 replicates x 3 seeds)
-pca_gmm,B,5,0.8671617311154854,12,full (5 replicates x 3 seeds)
-pca_gmm,B,8,0.8693798366547275,4,full (5 replicates x 3 seeds)
-pca_gmm,B,12,0.8751149777003817,11,full (5 replicates x 3 seeds)
-pca_gmm,B,20,0.8332522658653189,8,full (5 replicates x 3 seeds)
+pca_gmm,B,5,0.8672887501783373,15,full (5 replicates x 3 seeds)
+pca_gmm,B,8,0.8668062541133177,15,full (5 replicates x 3 seeds)
+pca_gmm,B,12,0.8727043703113343,15,full (5 replicates x 3 seeds)
+pca_gmm,B,20,0.812647975942914,15,full (5 replicates x 3 seeds)
+spaceflow,A,1,0.8025632463540524,1,"reduced (seed 0, replicate 0)"
+spaceflow,A,2,0.6277408381230958,1,"reduced (seed 0, replicate 0)"
+spaceflow,A,4,0.6292696278410173,1,"reduced (seed 0, replicate 0)"
+spaceflow,A,7,0.5917941599886604,1,"reduced (seed 0, replicate 0)"
+spaceflow,B,3,0.33638598764725286,1,"reduced (seed 0, replicate 0)"
+spaceflow,B,5,0.3431101586447813,1,"reduced (seed 0, replicate 0)"
+spaceflow,B,8,0.49371670411594953,1,"reduced (seed 0, replicate 0)"
+spaceflow,B,12,0.4859177231864237,1,"reduced (seed 0, replicate 0)"
+spaceflow,B,20,0.42160949628050026,1,"reduced (seed 0, replicate 0)"
+spagcn,A,1,0.841796410011423,15,full (5 replicates x 3 seeds)
+spagcn,A,2,0.8099765711835293,15,full (5 replicates x 3 seeds)
+spagcn,A,4,0.8203478991641194,15,full (5 replicates x 3 seeds)
+spagcn,A,7,0.828197498057637,15,full (5 replicates x 3 seeds)
+spagcn,B,3,0.6729529905429971,15,full (5 replicates x 3 seeds)
+spagcn,B,5,0.7868108522920981,15,full (5 replicates x 3 seeds)
+spagcn,B,8,0.762812133249341,15,full (5 replicates x 3 seeds)
+spagcn,B,12,0.8221498407672138,15,full (5 replicates x 3 seeds)
+spagcn,B,20,0.748396310088369,15,full (5 replicates x 3 seeds)
+spatial_mgcn,A,1,0.9751281727303606,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,A,2,0.9509065083040811,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,A,4,0.9859166094355726,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,A,7,0.9142621731632148,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,B,3,0.22974782434818491,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,B,5,0.4574169625899787,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,B,8,0.32226551313138085,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,B,12,0.7728747848804677,1,"reduced (seed 0, replicate 0)"
+spatial_mgcn,B,20,0.6377545562045824,1,"reduced (seed 0, replicate 0)"
+stagate,A,1,0.9935242643203973,1,"reduced (seed 0, replicate 0)"
+stagate,A,2,0.992195131380604,1,"reduced (seed 0, replicate 0)"
+stagate,A,4,0.9782208627280292,1,"reduced (seed 0, replicate 0)"
+stagate,A,7,0.940553487512189,1,"reduced (seed 0, replicate 0)"
+stagate,B,3,0.8634216505007218,1,"reduced (seed 0, replicate 0)"
+stagate,B,5,0.9432953438212344,1,"reduced (seed 0, replicate 0)"
+stagate,B,8,0.9526265305593233,1,"reduced (seed 0, replicate 0)"
+stagate,B,12,0.9800352058724582,1,"reduced (seed 0, replicate 0)"
+stagate,B,20,0.9903786833411191,1,"reduced (seed 0, replicate 0)"
