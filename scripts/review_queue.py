@@ -42,7 +42,7 @@ def run(job, timeout, threads):
     ds, sec, m, seed = job
     jid = job_id(ds, sec, m, seed); runs = bq.RUNS
     env = dict(os.environ, OMP_NUM_THREADS=str(threads), MKL_NUM_THREADS=str(threads), OPENBLAS_NUM_THREADS=str(threads))
-    cmd = [sys.executable, os.path.join(HERE, "review_bench_run.py"), "--method", m, "--dataset", ds, "--section", sec, "--seed", str(seed), "--out", runs] + (["--save-emb"] if seed == 0 else [])
+    cmd = [sys.executable, os.path.join(HERE, "review_bench_run.py"), "--method", m, "--dataset", ds, "--section", sec, "--seed", str(seed), "--out", runs] + (["--save-emb"] if seed == 0 or os.environ.get("REVIEW_SAVE_EMB_ALL") == "1" else [])   # crossed-seed experiment: embeddings of every seed
     res = bq.measure_command(cmd, timeout=timeout, env=env)
     path = os.path.join(runs, jid + ".json")
     rec = json.load(open(path)) if os.path.exists(path) else {"id": jid, "method": m, "dataset": ds, "section": sec, "seed": seed, "status": "error", "error": "no result file"}
