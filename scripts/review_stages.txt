@@ -23,3 +23,4 @@ d6_d7_scalability|heavy|scripts/review_stage_d6d7.sh
 m5_bass_multisample|heavy|scripts/review_stage_m5.sh
 r5_tuning_arm|heavy|scripts/review_stage_r5.sh
 cs_crossed_seed|heavy|scripts/review_stage_cs.sh
+cavity_rescore|heavy|scripts/review_stage_cavity.sh
