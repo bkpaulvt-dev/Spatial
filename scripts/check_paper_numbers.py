@@ -18,7 +18,7 @@ claims = [
  ("HiSTaR + R mclust DLPFC", "placeholder"),   # replaced below
  # HiSTaR seed SD: now the macros \\sdHistarDlpfc and \\sdHistarStarmap (scripts/paper_v2.py)
  ("AnisoST vs lin MERFISH", f"(MERFISH: {f(v2['means']['merfish']['anisost'])} vs {f(v2['means']['merfish']['linear_diffusion'])})"),
- ("boundary", f"(by {f(v1['boundary_acc_boundary']['delta'])}, {v1['boundary_acc_boundary']['wins']} of 12 sections, Wilcoxon signed-rank $p={f(v1['boundary_acc_boundary']['p'])}$"),
+ # retired in V3 (section-level Wilcoxon replaced by donor-level macros \vsBound...):  ("boundary", f"(by {f(v1['boundary_acc_boundary']['delta'])}, {v1['boundary_acc_boundary']['wins']} of 12 sections, Wilcoxon signed-rank $p={f(v1['boundary_acc_boundary']['p'])}$"),
 ]
 # HiSTaR clustered with R mclust (seed-0 embeddings) is computed from the mclust results directly
 import glob, pandas as pd

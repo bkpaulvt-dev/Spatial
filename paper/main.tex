@@ -317,6 +317,17 @@ whose annotation provenance is unknown, and Stereo-seq, whose annotation was der
 first in about \pBestBassExpert{} and \pBestLinExpert{} of the resamples (Supplementary Table~\STstatsexpert). On the three brain datasets alone, the baseline was ahead of \nRobBetterBrain{} of \nRobTotBrain{} comparators, and BASS and linear diffusion ranked first in \pBestBassBrain{} and \pBestLinBrain{} of the resamples (Supplementary Table~\STstatsbrain). Example partitions are
 shown in \figref{fig:maps} and, for breast cancer and Stereo-seq, in Supplementary Figure~\SFmapsnew.
 
+Where on the tissue does smoothing gain? Scoring each annotated spot or cell as correct when its cluster maps to its
+domain under a one-to-one matching, and comparing linear diffusion with PCA on all 24 sections (three seeds; Supplementary Table~\STbound),
+the gain of diffusion was small next to annotation boundaries (\vcBoundOne{} accuracy for spots one spacing from another domain, equal-weight
+mean of the seven groups) and grew with the distance from the boundary (\vcBoundTwo{} at two spacings, \vcBoundMid{} at three to four,
+\vcBoundFar{} at five to eight and \vcBoundDeep{} beyond eight). In the breast cancer section and the Stereo-seq sections the gain was close
+to zero or negative at every distance (beyond eight spacings \vcBoundDeepBrca{} and \vcBoundDeepStereo{}). Domain prevalence showed no
+consistent pattern (\vcPrevSmall{} for domains with less than 5\% of the spots, in the \vcPrevSmallN{} groups that have them, against
+\vcPrevLarge{} for domains above 20\%). The six-nearest-neighbour graph spans about one spot spacing on Visium (median \vcKnnVisium{}~\textmu m)
+and two to three cell spacings on STARmap and MERFISH, and ten smoothing steps reach further. Smoothing therefore helps mainly in domain
+interiors, which large layered domains have in abundance, rather than at boundaries.
+
 The edge-preserving variant AnisoST did not improve on linear diffusion overall (MERFISH: 0.363 vs 0.497), although on DLPFC it
 was more accurate on spots at layer boundaries (by \vsBoundMean{} on average; \vsBoundBrA, \vsBoundBrB{} and \vsBoundBrC{} in the three donors, descriptive with three
 groups; Supplementary Figure~\SFboundary); at single-cell resolution neighbouring cells often differ by cell type, so an edge-preserving
@@ -574,7 +585,8 @@ edge-preserving variant and several deep and Bayesian methods remained accurate.
 with large, contiguous domains, not a generally best method.
 
 Why does simple smoothing do so well on brain tissue? On layered tissue such as cortex, domains are large, contiguous regions, and
-averaging each spot with its neighbours removes most of the sampling noise that separates spots of the same layer; much of what a
+averaging each spot with its neighbours removes most of the sampling noise that separates spots of the same layer; consistent with this,
+its gain over PCA was concentrated in domain interiors and small at boundaries; much of what a
 graph encoder learns may be this smoothing. In the breast cancer section and the embryo sections the methods performed similarly,
 and smoothing gave no gain over PCA alone. We did not test why. Domains there may be smaller, interleaved and defined partly by
 cell composition, so that a fixed amount of smoothing tuned on cortex blurs them; the annotation itself may have been derived partly from

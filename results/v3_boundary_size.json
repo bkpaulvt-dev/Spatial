@@ -1,0 +1,203 @@
+{
+ "distance": {
+  "1": {
+   "per_group": {
+    "Br5292": 0.0846,
+    "Br5595": -0.005,
+    "Br8100": 0.0178,
+    "brca": 0.0077,
+    "merfish": 0.0616,
+    "starmap": 0.0067,
+    "stereo": -0.0583
+   },
+   "group_mean": 0.01646885659618625,
+   "n_groups": 7,
+   "n_spots": 28838
+  },
+  "2": {
+   "per_group": {
+    "Br5292": 0.1209,
+    "Br5595": 0.0236,
+    "Br8100": 0.067,
+    "brca": -0.0101,
+    "merfish": 0.1049,
+    "starmap": 0.229,
+    "stereo": -0.036
+   },
+   "group_mean": 0.07134013701567225,
+   "n_groups": 7,
+   "n_spots": 19583
+  },
+  "3-4": {
+   "per_group": {
+    "Br5292": 0.1153,
+    "Br5595": 0.0633,
+    "Br8100": 0.1591,
+    "brca": -0.0042,
+    "merfish": 0.2204,
+    "starmap": 0.3188,
+    "stereo": -0.0126
+   },
+   "group_mean": 0.12288963189186866,
+   "n_groups": 7,
+   "n_spots": 26887
+  },
+  "5-8": {
+   "per_group": {
+    "Br5292": 0.1053,
+    "Br5595": 0.0253,
+    "Br8100": 0.2995,
+    "brca": -0.1226,
+    "merfish": 0.3086,
+    "starmap": 0.3415,
+    "stereo": 0.0189
+   },
+   "group_mean": 0.13949680348568413,
+   "n_groups": 7,
+   "n_spots": 20593
+  },
+  ">8": {
+   "per_group": {
+    "Br5292": 0.0536,
+    "Br5595": 0.1045,
+    "Br8100": 0.344,
+    "brca": 0.0,
+    "merfish": 0.4027,
+    "starmap": 0.3005,
+    "stereo": -0.0152
+   },
+   "group_mean": 0.17001109712411794,
+   "n_groups": 7,
+   "n_spots": 19548
+  }
+ },
+ "prevalence": {
+  "10-20%": {
+   "per_group": {
+    "Br5292": 0.2243,
+    "Br5595": 0.1049,
+    "Br8100": 0.1988,
+    "brca": -0.1462,
+    "merfish": 0.3183,
+    "starmap": 0.4489,
+    "stereo": -0.1784
+   },
+   "group_mean": 0.13864996413930045,
+   "n_groups": 7,
+   "n_spots": 34686
+  },
+  "5-10%": {
+   "per_group": {
+    "Br5292": 0.2281,
+    "Br5595": -0.1641,
+    "Br8100": 0.0087,
+    "brca": 0.0237,
+    "merfish": 0.2842,
+    "starmap": 0.1415,
+    "stereo": 0.0086
+   },
+   "group_mean": 0.07582129775258929,
+   "n_groups": 7,
+   "n_spots": 19402
+  },
+  "<5%": {
+   "per_group": {
+    "Br5292": 0.3164,
+    "brca": 0.0997,
+    "merfish": 0.3297,
+    "starmap": -0.1275,
+    "stereo": 0.0937
+   },
+   "group_mean": 0.14243406546752696,
+   "n_groups": 5,
+   "n_spots": 13042
+  },
+  ">20%": {
+   "per_group": {
+    "Br5292": -0.0144,
+    "Br5595": 0.095,
+    "Br8100": 0.0784,
+    "merfish": 0.2522,
+    "starmap": 0.2679,
+    "stereo": -0.0349
+   },
+   "group_mean": 0.10737362684669756,
+   "n_groups": 6,
+   "n_spots": 48319
+  }
+ },
+ "neighbourhood": {
+  "brca": {
+   "knn6_spacings": 1.01,
+   "knn6_um": 100.59
+  },
+  "dlpfc": {
+   "knn6_spacings": 1.01,
+   "knn6_um": 101.04
+  },
+  "merfish": {
+   "knn6_spacings": 2.43,
+   "knn6_um": 31.9
+  },
+  "starmap": {
+   "knn6_spacings": 2.22,
+   "knn6_um": 368.6
+  },
+  "stereo": {
+   "knn6_spacings": 1.41,
+   "knn6_um": NaN
+  }
+ },
+ "ari_check": [
+  {
+   "dataset": "brca",
+   "method": "linear_diffusion",
+   "ari": 0.5446
+  },
+  {
+   "dataset": "brca",
+   "method": "pca_gmm",
+   "ari": 0.5616
+  },
+  {
+   "dataset": "dlpfc",
+   "method": "linear_diffusion",
+   "ari": 0.569
+  },
+  {
+   "dataset": "dlpfc",
+   "method": "pca_gmm",
+   "ari": 0.4165
+  },
+  {
+   "dataset": "merfish",
+   "method": "linear_diffusion",
+   "ari": 0.497
+  },
+  {
+   "dataset": "merfish",
+   "method": "pca_gmm",
+   "ari": 0.13
+  },
+  {
+   "dataset": "starmap",
+   "method": "linear_diffusion",
+   "ari": 0.7333
+  },
+  {
+   "dataset": "starmap",
+   "method": "pca_gmm",
+   "ari": 0.295
+  },
+  {
+   "dataset": "stereo",
+   "method": "linear_diffusion",
+   "ari": 0.3061
+  },
+  {
+   "dataset": "stereo",
+   "method": "pca_gmm",
+   "ari": 0.3487
+  }
+ ]
+}

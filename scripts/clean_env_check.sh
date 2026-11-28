@@ -6,11 +6,13 @@
 set -e
 BASE=/mnt/disk/bikashkumar/SpatialBench; . "$BASE/Spatial/scripts/deepmed2_env.sh"; cd "$BASE/Spatial"
 V="$BASE/envs/clean_check"; rm -rf "$V"; "$BASE/env/bin/python" -m venv "$V"
-# two passes: compiled torch extensions need torch at build time (pip's build isolation hides it)
-grep -v -i -E "^(torch[_-](scatter|sparse|cluster|spline)|pyg)" environment/requirements-lock-deepmed2.txt > "$BASE/tmp/lock_pass1.txt"
-grep -i -E "^(torch[_-](scatter|sparse|cluster|spline)|pyg)" environment/requirements-lock-deepmed2.txt > "$BASE/tmp/lock_pass2.txt" || true
-"$V/bin/pip" install -q --no-cache-dir --no-deps -r "$BASE/tmp/lock_pass1.txt" 2>&1 | tail -3   # exact lock: every pinned version, no resolver
-"$V/bin/pip" install -q --no-cache-dir --no-deps --no-build-isolation -r "$BASE/tmp/lock_pass2.txt" 2>&1 | tail -3 || echo "pass 2 (torch extensions) failed: not needed for this check"
+# two passes: (1) every pinned wheel without the resolver (exact lock); (2) best effort, one at a time, the packages that compile from
+# source or come from git (torch extensions, louvain, SEDR, STAGATE_pyG): they are needed only by some deep methods, not by this check
+PAT="^(torch[_-](scatter|sparse|cluster|spline)|louvain|SEDR|STAGATE)"
+grep -v -E "$PAT" environment/requirements-lock-deepmed2.txt | grep -v "^#" > "$BASE/tmp/lock_pass1.txt"
+grep -E "$PAT" environment/requirements-lock-deepmed2.txt > "$BASE/tmp/lock_pass2.txt" || true
+"$V/bin/pip" install -q --no-cache-dir --no-deps -r "$BASE/tmp/lock_pass1.txt" 2>&1 | tail -3
+while read -r req; do "$V/bin/pip" install -q --no-cache-dir --no-deps --no-build-isolation "$req" >/dev/null 2>&1 && echo "pass 2: $req installed" || echo "pass 2: $req not installed (not needed for this check)"; done < "$BASE/tmp/lock_pass2.txt"
 "$V/bin/pip" install -q --no-cache-dir -e . 2>/dev/null || true
 OUT=results/clean_env_check.txt; T=$(mktemp -d -p "$BASE/tmp")
 { echo "clean-environment check, $(date '+%F %T'), venv $V (python $("$V/bin/python" -V 2>&1))"
