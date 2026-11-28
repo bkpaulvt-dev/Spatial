@@ -1,0 +1,8 @@
+clean-environment check, 2026-11-28 12:41:14, venv /mnt/disk/bikashkumar/SpatialBench/envs/clean_check (python Python 3.13.16)
+linear_diffusion: clean env ARI 0.588019, recorded 0.588019, difference +0.00e+00 MATCH
+pca_gmm: clean env ARI 0.487628, recorded 0.487628, difference +0.00e+00 MATCH
+paper_review_numbers.py ran
+results/paper_macros_review.tex identical
+results/supp/v2_extra.tex identical
+results/supp/v2_allen.tex identical
+Figure 6 regenerated in the clean environment
