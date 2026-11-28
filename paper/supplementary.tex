@@ -9,6 +9,7 @@
 \captionsetup{labelformat=empty,justification=raggedright,singlelinecheck=false}
 \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
 \input{supp_labels.tex}
+\input{supp_labels_v2.tex}
 \begin{document}
 \begin{center}{\Large\bfseries Supplementary Information}\\[4pt]
 Benchmarking the accuracy, robustness and reproducibility of spatial domain identification methods\end{center}
@@ -143,6 +144,21 @@ All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited
 \begin{table}[!htbp]\centering
 \caption*{\textbf{Supplementary Table S23.} Which method was run in which experiment (sections completed / expected; seeds). n/a: the experiment needs an embedding and the method clusters internally.}
 \input{../results/supp/coverage.tex}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S24.} Methods added after the first analysis, on the 24 original sections (standardised runner, each method's own clustering, mean over seeds and sections). Last column: linear diffusion (runner) minus the method, hierarchical bootstrap over groups (5000 resamples, 95\% percentile interval). Novae failed on MERFISH; multi-sample BASS was run on the DLPFC donors and MERFISH only; the official HiSTaR code on DLPFC only.}
+\resizebox{\linewidth}{!}{\input{../results/supp/v2_extra.tex}}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S25.} Held-out Allen MERFISH sections (Zhuang-ABCA-1 .066, .085, .103; CCF division labels): jobs, finished jobs, memory-limit records (30 GB cap) and mean ARI over the sections with at least one finished job (number of sections in brackets). Descriptive; methods with fewer than three sections are not comparable with the others.}
+\input{../results/supp/v2_allen.tex}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S26.} osmFISH (somatosensory cortex) and BaristaSeq (visual cortex) from the SDMBench release: mean ARI (own clustering, three seeds). The derivation of these labels is not documented; values are reported without interpretation. --: failed or not run.}
+\input{../results/supp/v2_sdm.tex}
 \end{table}
 
 \clearpage\section*{Supplementary Figures}
