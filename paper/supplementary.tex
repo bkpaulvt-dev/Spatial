@@ -161,6 +161,46 @@ All runs used one CPU thread per job (BLAS and OpenMP thread counts were limited
 \input{../results/supp/v2_sdm.tex}
 \end{table}
 
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S27.} Annotation provenance of every label set (from the dataset registries; ``verified: no'' = not checked against the original study).}
+\resizebox{\linewidth}{!}{\input{../results/supp/v3_provenance.tex}}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S28.} Main comparison (matched clustering) as paired group-level effects: linear diffusion minus each method in each DLPFC donor and study (seeds averaged within sections, sections paired), the equal-weight group mean (primary), the equal-weight mean of the five datasets, and the group mean without the twelve DLPFC sections, each with a 95\% bootstrap interval that resamples groups (or datasets) and sections jointly for the pair. BayesSpace: Visium sections only; without DLPFC a single section (no interval).}
+\resizebox{\linewidth}{!}{\input{../results/supp/v3_paired.tex}}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S29.} Crossed training-seed $\times$ clustering-seed experiment (docs/PREREGISTERED\_CROSSED\_SEED.md): within-embedding variation over 20 single starts and between-seed variation of the restart-averaged ARI, for the Gaussian mixture and for $k$-means, and likelihood (or inertia) selection over 1, 3 and 20 starts.}
+\resizebox{\linewidth}{!}{\input{../results/supp/v3_cs.tex}}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S30.} MOSTA Cavity sensitivity: ARI of the seed-0 reruns on the three Stereo-seq sections scored on all annotated bins and with Cavity bins excluded from scoring only (prediction and graph unchanged).}
+\input{../results/supp/v3_cavity.tex}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S31.} Linear diffusion minus PCA by distance to the nearest annotation boundary and by domain prevalence on the 24 sections (accuracy under one-to-one Hungarian matching; seeds 0--2; per group and equal-weight group mean; descriptive).}
+\resizebox{\linewidth}{!}{\input{../results/supp/v3_bound.tex}}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S32.} HiSTaR official code and our port on the twelve DLPFC sections, paired by section and seed (own clustering, standardised runner).}
+{\small\input{../results/supp/v3_histar_pairs.tex}}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S33.} Allen MERFISH: outcome of every job by method and seed (ok; mem: 30 GB cap reached; err: error, including infrastructure kills that failed on every repeat). One entry per section.}
+\input{../results/supp/v3_allen_completion.tex}
+\end{table}
+
+\begin{table}[!htbp]\centering
+\caption*{\textbf{Supplementary Table S34.} Jobs that did not finish OK, by record file and outcome; the full list with host, threads, memory cap, peak memory, reason and number of attempts is results/v3\_failures.csv.}
+\input{../results/supp/v3_failures_summary.tex}
+\end{table}
+
 \clearpage\section*{Supplementary Figures}
 \begin{figure}[H]\centering
 \includegraphics[width=0.9\linewidth,height=0.78\textheight,keepaspectratio]{v2_fig1_lottery.png}

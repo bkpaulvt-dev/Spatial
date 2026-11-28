@@ -298,7 +298,18 @@ def fig_protocol():
     # F: change of mean ARI when the default clustering is replaced by matched clustering (mean over all sections, as in the text)
     axf = axs[ND]; UP, DOWN = "#5e3c99", "#8c510a"
     axf.axvline(0, color=INK2, lw=0.7, zorder=1); axf.axvspan(-0.005, 0.005, color="#e9e9e6", lw=0, zorder=0)
+    V3 = os.environ.get("FIG_V3") == "1"   # manuscript V3: group-level effect (equal weight per donor/study) with its 95% bootstrap interval
+    MMD = json.load(open(R("v3_paired_effects.json")))["matched_minus_default"] if V3 else {}
     for yy, m in zip(y, ms):
+        if V3:
+            v = MMD.get(m)
+            if v is None: continue
+            gw = v["group_weighted"]; d_ = gw["d"]; col = UP if d_ > 0 else DOWN; sig = gw["lo"] > 0 or gw["hi"] < 0
+            axf.plot([gw["lo"], gw["hi"]], [yy, yy], color=col, lw=1.0, zorder=2)
+            axf.plot(d_, yy, "o", ms=4.8, mfc=col if sig else "white", mec=col, mew=1.1, zorder=3)
+            axf.text(0.215, yy, f"{d_:+.3f}".replace("-", "\u2212"), ha="left", va="center", fontsize=7, color=INK)
+            pg = v["per_group"]; axf.text(0.47, yy, f"{sum(1 for x in pg.values() if x > 0)}/{len(pg)}", ha="right", va="center", fontsize=7, color=INK)
+            continue
         g = GAIN.get(gkey(m))
         if g is None: continue
         col = UP if g["delta"] > 0 else DOWN; sig = g["p"] < 0.05
@@ -308,20 +319,23 @@ def fig_protocol():
         axf.text(0.108, yy, txt, ha="left", va="center", fontsize=7, color=INK)
         axf.text(0.338, yy, f"{g['wins']}/{g['n']}", ha="right", va="center", fontsize=7, color=INK)
     axf.set_xlim(-0.1, 0.34); axf.spines["bottom"].set_bounds(-0.1, 0.1); axf.set_xticks([-0.1, -0.05, 0, 0.05, 0.1]); axf.set_xticklabels(["\u22120.1", "", "0", "", "0.1"])
+    if os.environ.get("FIG_V3") == "1":
+        axf.set_xlim(-0.21, 0.47); axf.spines["bottom"].set_bounds(-0.2, 0.2); axf.set_xticks([-0.2, -0.1, 0, 0.1, 0.2]); axf.set_xticklabels(["\u22120.2", "", "0", "", "0.2"])
     axf.grid(axis="x", color=GRID, lw=0.5); axf.set_axisbelow(True); axf.set_xlabel("Change in mean ARI")
     axf.set_title("Matched minus\ndefault", pad=4)
-    axf.text(0.108, n - 0.3, "change", ha="left", va="bottom", fontsize=7, color=INK2)
-    axf.text(0.338, n - 0.3, "wins", ha="right", va="bottom", fontsize=7, color=INK2)
+    V3_ = os.environ.get("FIG_V3") == "1"
+    axf.text(0.215 if V3_ else 0.108, n - 0.3, "change", ha="left", va="bottom", fontsize=7, color=INK2)
+    axf.text(0.47 if V3_ else 0.338, n - 0.3, "up" if os.environ.get("FIG_V3") == "1" else "wins", ha="right", va="bottom", fontsize=7, color=INK2)
     for a, s in zip(axs[1:], "BCDEF"):
         letter(fig, a.get_position().x0 - 0.012, 0.995, s)
     h = [Line2D([], [], marker="o", ls="", mfc="white", mec=INK, ms=4.8, label="Default clustering (method's own pipeline)"),
          Line2D([], [], marker="o", ls="", mfc=INK, mec=INK, ms=4.2, label="Matched clustering (20-start Gaussian mixture)"),
          Line2D([], [], marker="o", ls="", mfc=UP, mec=UP, ms=4.8, label="F: matched higher"),
-         Line2D([], [], marker="o", ls="", mfc=DOWN, mec=DOWN, ms=4.8, label="F: matched lower; filled: p < 0.05, uncorrected")]
+         Line2D([], [], marker="o", ls="", mfc=DOWN, mec=DOWN, ms=4.8, label=("F: matched lower; filled: 95% group-level interval excludes 0" if os.environ.get("FIG_V3") == "1" else "F: matched lower; filled: p < 0.05, uncorrected"))]
     fig.legend(handles=h, loc="lower left", ncol=2, frameon=False, bbox_to_anchor=(0.12, 0.055), columnspacing=1.6, handletextpad=0.3)
     fig.legend(handles=family_handles(), loc="lower left", ncol=3, frameon=False, bbox_to_anchor=(0.12, 0.0), columnspacing=1.6,
                handletextpad=0.3, title=None)
-    save(fig, "nar_fig4_protocol")
+    save(fig, "nar_fig4_protocol_v3" if os.environ.get("FIG_V3") == "1" else "nar_fig4_protocol")
 
 
 # ---------------------------------------------------------------- Figure 5: domain maps, DLPFC 151673 (default clustering)

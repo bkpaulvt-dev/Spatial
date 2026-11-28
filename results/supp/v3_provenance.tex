@@ -1,0 +1,12 @@
+% Revision V3 item 3a: annotation provenance (from configs/datasets.yaml and configs/datasets_newdata.yaml; "verified: no" = not checked against the original study)
+\begin{tabular}{p{2.3cm}p{4.2cm}p{4.6cm}p{2.6cm}p{4.4cm}}\toprule
+Dataset & Source of the labels & Derivation (as documented) & Granularity & Possible dependence on benchmarked methods \\\midrule
+DLPFC (Visium) & Maynard et al. 2021, \texttt{layer\_guess\_reordered}, via SEDR\_analyses & Manual layer annotation from cytoarchitecture and marker genes (expert; verified: no) & 7 layers (5 for donor Br5595) & Showcase data of most methods; settings of several methods were set on it \\
+STARmap mPFC & BASS-Analysis repository (column \texttt{z}) & Not documented (unknown) & 4 layers & Distributed with the analyses of BASS, a benchmarked method \\
+MERFISH hypothalamus & BASS-Analysis repository (column \texttt{z}) & Believed to be the original study's atlas registration (reference atlas; verified: no) & 8 regions & Distributed with the analyses of BASS \\
+Breast cancer (Visium) & SEDR\_analyses (commit 00084465), \texttt{fine\_annot\_type} and \texttt{annot\_type} & Described by the source as manual pathologist annotation (expert; who drew it and whether expression was used: not confirmed) & 20 regions (primary); 4 classes (coarse) & Distributed with the analyses of SEDR; showcase data of several methods \\
+Stereo-seq embryo (MOSTA) & Chen et al. 2022, \texttt{obs['annotation']} & Unsupervised clustering of bin50 expression, then named by markers and anatomy (partly algorithm-derived; verified: no); includes a low-count `Cavity' class & 12, 18 and 13 tissues & Clustering-derived labels favour clustering-like methods (circularity) \\
+Allen MERFISH (Zhuang-ABCA-1) & ABC Atlas CCFv3 registration (\texttt{ccf\_coordinates.csv}) & Registration of each cell to the Allen CCF, mapped to CCF divisions (reference atlas; verified) & 11, 11 and 7 divisions & None known; atlas-based, not expression clustering \\
+osmFISH (SDMBench) & SDMBench file, \texttt{obs['Region']} & Not documented (unknown) & 11 regions & Unknown \\
+BaristaSeq (SDMBench) & SDMBench files, \texttt{obs['layer']} & Not documented (unknown); anatomical layer names & 6 layers & Unknown \\
+\bottomrule\end{tabular}

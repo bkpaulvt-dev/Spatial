@@ -35,7 +35,10 @@ def boot(delta, level):
     G = [np.array(x) for x in g.values()]
     if not G:
         return None
-    point = float(np.mean([x.mean() for x in G])); dr = np.empty(B)
+    point = float(np.mean([x.mean() for x in G]))
+    if len(G) < 2:   # a single group: no interval (e.g. BayesSpace without DLPFC = breast cancer only)
+        return dict(d=point, lo=float("nan"), hi=float("nan"), units=1, sections=int(sum(len(x) for x in G)), verdict="single group")
+    dr = np.empty(B)
     for i in range(B):
         ci = rng.integers(0, len(G), len(G)); dr[i] = np.mean([rng.choice(G[c], len(G[c])).mean() for c in ci])
     lo, hi = np.percentile(dr, [2.5, 97.5])
@@ -94,7 +97,7 @@ with open(R("supp/v3_paired.tex"), "w") as fh:
     fh.write("\\begin{tabular}{l" + "r" * 7 + "lll}\\toprule\nMethod & Br5292 & Br5595 & Br8100 & STARmap & MERFISH & Breast & Stereo & Group-weighted & Dataset-weighted & No DLPFC \\\\\\midrule\n")
     for m, c in sorted(out["comparisons"].items(), key=lambda kv: -kv[1]["group_weighted"]["d"]):
         pg = c["per_group"]; cells = [f(pg[g]["d"]) if g in pg else "--" for g in GORDER]
-        def ci(x): return "--" if not x else f"{x['d']:+.3f} ({x['lo']:+.3f}, {x['hi']:+.3f})"
+        def ci(x): return "--" if not x else (f"{x['d']:+.3f} (one group)" if x["units"] < 2 else f"{x['d']:+.3f} ({x['lo']:+.3f}, {x['hi']:+.3f})")
         fh.write(f"{c['label']} & " + " & ".join(cells) + f" & {ci(c['group_weighted'])} & {ci(c['dataset_weighted'])} & {ci(c['no_dlpfc'])} \\\\\n")
         k = NAMEK(m)
         for tag, x in (("G", c["group_weighted"]), ("D", c["dataset_weighted"]), ("N", c["no_dlpfc"])):
